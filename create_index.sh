@@ -70,7 +70,7 @@ function create_gnu_index ()
         find -L . -mount -depth -maxdepth 1 -type d ! -name '.' -printf "      <a href=\"%f\">%-43f@_@%Td-%Tb-%TY %Tk:%TM  -\n"|sort -d|sed 's,\([\ ]\+\)@_@,/</a>\1,g'
  
         # print the footer html
-        echo "</pre><address>Apache Server at ${DOMAIN}</address></body></html>";
+        echo "</pre><address>Github.com Server at ${DOMAIN}</address></body></html>";
  
     # finally save the output of the subshell to index.html
     )  > $F;
