@@ -1,0 +1,46 @@
+<html>
+	<head>
+		<title>Centaurus Key Importer</title>
+		<link rel="stylesheet" href="style.css" />
+	</head>
+
+	<body>
+		<form>
+			<div>
+				<label>Secret key:</label> <input id="seed" type="text">
+				<input type="button" onclick="generate()" value="Generate QR Code">
+			</div>
+
+			<div id="qrcode"></div>
+		</form>
+
+		<script src="js/aes.js"></script>
+		<script src="js/stellar-sdk.js"></script>
+		<script src="js/qrcode.js"></script>
+		<script>
+			var generate = function () {
+
+				var seed = document.getElementById('seed').value;
+				var address = StellarSdk.Keypair.fromSeed(seed).address();
+
+				var plain = JSON.stringify({
+					address: address,
+					seed: seed
+				});
+
+				var pwd = '';
+				var backupString = CryptoJS.AES.encrypt(plain, pwd);
+
+				document.getElementById('qrcode').innerHTML = "";
+				var qrcode = new QRCode('qrcode', {
+					text: "centaurus:backup003" + backupString,
+					width: 256,
+					height: 256,
+					colorDark : "#000000",
+					colorLight : "#ffffff",
+					correctLevel : QRCode.CorrectLevel.L
+				});
+			};
+		</script>
+	</body>
+</html>

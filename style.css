@@ -1,0 +1,19 @@
+form {
+	width: 600px;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 80px;
+}
+
+#seed {
+	width: 400px;
+}
+
+#qrcode {
+	width: 256px;
+	margin-top: 40px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+
