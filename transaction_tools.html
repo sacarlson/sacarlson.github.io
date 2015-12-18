@@ -30,12 +30,14 @@ port: <input id="port" size="6" />  secure
   <input id="close" type="button" value="Disconnect" /><br />
 <input id="save" type="button" value="save_seed" /> 
 <input id="restore" type="button" value="restore_seed" />
+<input id="delete_key" type="button" value="delete_seed_key" />
 <input id="list_seed_keys" type="button" value="list_seed_keys" />
 <input id="swap_seed_dest" type="button" value="swap_seed_dest" /><br />
-seed nick name or public ID:<input id="seed_nick" size="60" value = "seed" /><br /> 
+seed nick name or public ID:<input id="seed_nick" size="60" value = "seed1" /><br /> 
 encrypt/decrypt seed pass phrase:<input id="pass_phrase" size="60" /><br /> 
 seed:<input id="seed" size="60" />
-<input id="decrypt_seed" type="button" value="decrypt_seed" /><br /> 
+<input id="decrypt_seed" type="button" value="decrypt_seed" />
+<input id="encrypt_seed" type="button" value="encrypt_seed" /><br /> 
 account:<input id="account" size="60" /><br />
 account native balance: <input id="balance" size="40" /><br />
 Asset type <input id="asset_type" size="5" /> balance: <input id="CHP_balance" size="40" /><br />
@@ -55,7 +57,7 @@ Send Transaction Info: <br />
 <input id="send_payment" type="button" value="send_payment" />
 <input id="merge_accounts" type="button" value="merge_accounts" />
 <input id="email_funds" type="button" value="email_funds" />
-to: <input id="email_address" type="text" value="email_address" />
+to: <input id="email_address" type="text" size="25" value="sacarlson_2000@yahoo.com" />
 <br />
 memo: <input id="memo" size="25" />
 <select name="memo_mode" id="memo_mode" value='auto'>

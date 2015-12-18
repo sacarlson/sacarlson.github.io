@@ -39,7 +39,21 @@
       var email_flag = false;
       var transaction;
 
-      seed.value = 'SA3CKS64WFRWU7FX2AV6J6TR4D7IRWT7BLADYFWOSJGQ4E5NX7RLDAEQ'; 
+     
+      seed.value = restore_seed("seed1", "");
+      console.log("seed.value: " + seed.value);
+     
+      console.log("account.value.length: " + account.value.length);
+      if (account.value.length == 0) {
+        key = StellarSdk.Keypair.random();
+        account.value = key.address();
+        seed.value = key.seed();
+        save_seed("seed1", "", seed.value );
+      } else {
+         account.value = StellarSdk.Keypair.fromSeed(seed.value).address();
+      }
+      //seed.value = 'SA3CKS64WFRWU7FX2AV6J6TR4D7IRWT7BLADYFWOSJGQ4E5NX7RLDAEQ'; 
+      //account.value = 'GAMCHGO4ECUREZPKVUCQZ3NRBZMK6ESEQVHPRZ36JLUZNEH56TMKQXEB'
 
       var env_b64 = window.location.href.match(/\?env_b64=(.*)/);
       var encrypted_seed = window.location.href.match(/\?seed=(.*)/);
@@ -50,7 +64,7 @@
       }
       if (json_param != null) {
         //escape(str)
-        console.log("json_param detecte");
+        console.log("json_param detected");
         json_param = unescape(json_param[1]);
         var params = JSON.parse(json_param);
         console.log(params);
@@ -94,14 +108,21 @@
       
       memo.value = "scotty_is_cool";
       amount.value = "1"; 
-      if (typeof asset_type.value == "undefined") {     
+      console.log("asset_type: " + (typeof asset_type.value));
+      console.log("asset_type.length: " + asset_type.value.length);
+      if (typeof asset_type.value == "undefined" || asset_type.value.length == 0) {     
         asset_type.value = "AAA";
         tissuer.value = 'GAX4CUJEOUA27MDHTLSQCFRGQPEXCC6GMO2P2TZCG7IEBZIEGPOD6HKF';
         issuer.value = tissuer.value;
         tasset.value = 'AAA';
       }
-      destination.value = 'GDVYGXTUJUNVSJGNEX75KUDTANHW35VQZEZDDIFTIQT6DNPHSX3I56RY';
-      dest_seed.value = "SBV5OHE3LGOHC6CBRMSV3ZQNTT4CM7I7L37KAAU357YDDPER2GNP2WWL";      
+      
+      dest_seed.value = restore_seed("seed2", "");
+      console.log("dest_seed.value: " + dest_seed.value);
+      destination.value = StellarSdk.Keypair.fromSeed(dest_seed.value).address();
+      console.log("dest: " + destination.value);    
+      //destination.value = 'GDVYGXTUJUNVSJGNEX75KUDTANHW35VQZEZDDIFTIQT6DNPHSX3I56RY';
+      //dest_seed.value = "SBV5OHE3LGOHC6CBRMSV3ZQNTT4CM7I7L37KAAU357YDDPER2GNP2WWL";      
 
       StellarSdk.Network.useTestNet();
       //StellarSdk.Memo.text("sacarlson");
@@ -712,6 +733,32 @@
         update_balances();          
       });
       
+      function save_seed(seed_nick_name_, pass_phrase_, seed_ ) {
+        if (typeof(Storage) !== "undefined") {
+          var encrypted = CryptoJS.AES.encrypt(seed_, pass_phrase_);       
+          // Store
+          localStorage.setItem(seed_nick_name_, encrypted);
+          //seed.value = "seed saved to local storage"        
+        }else {
+          message.textContent = "Sorry, your browser does not support Web Storage...";
+        }
+      }
+
+      function restore_seed(seed_nick_name_, pass_phrase_) {
+        if (typeof(Storage) !== "undefined") {
+          // Retrieve
+          var encrypted = localStorage.getItem(seed_nick_name_);
+          if (encrypted != null) {
+            var seed_ = CryptoJS.AES.decrypt(encrypted, pass_phrase_).toString(CryptoJS.enc.Utf8);
+          } else {
+            seed_ = "";
+          }
+          return seed_
+        }else {
+          message.textContent = "Sorry, your browser does not support Web Storage...";
+        }     
+      }
+
       save.addEventListener("click", function(event) {         
         if (typeof(Storage) !== "undefined") {
           var encrypted = CryptoJS.AES.encrypt(seed.value, pass_phrase.value);       
@@ -735,6 +782,23 @@
         }        
       });
 
+      delete_key.addEventListener("click", function(event) {
+        // delete key_id from LocalStorage 
+        console.log("deleting key "+ seed_nick.value);              
+        localStorage.removeItem(seed_nick.value);
+        message.textContent = "seed_nick: " + seed_nick.value + " deleted from LocalStorage";   
+        //display_localstorage_keylist();        
+      });
+
+      function display_localstorage_keylist() {
+        var result = "";
+        for ( var i = 0, len = localStorage.length; i < len; ++i ) {
+          //console.log(  localStorage.key( i ) );
+          result = result + localStorage.key( i ) + ", ";
+        }
+        message.textContent = result;
+      }
+
       list_seed_keys.addEventListener("click", function(event) {
         var result = "";
         for ( var i = 0, len = localStorage.length; i < len; ++i ) {
@@ -753,6 +817,8 @@
         amount.value = 20.1;
         issuer.value = "";
         asset.value = "native";
+        //save_seed("seed1", "", seed.value );
+        save_seed("seed2", "", dest_seed.value )
       });
             
       send_payment.addEventListener("click", function(event) {
@@ -773,10 +839,22 @@
         update_key();
         var temp_key = StellarSdk.Keypair.fromSeed(dest_seed.value);
         destination.value = temp_key.address();
+        save_seed("seed1", "", seed.value );
+        save_seed("seed2", "", dest_seed.value )
       });
 
       decrypt_seed.addEventListener("click", function(event) {
-        seed.value = CryptoJS.AES.decrypt(seed.value, pass_phrase.value).toString(CryptoJS.enc.Utf8);
+        var temp = CryptoJS.AES.decrypt(seed.value, pass_phrase.value).toString(CryptoJS.enc.Utf8);
+        console.log("length temp: " + temp.length);
+        if (temp.length > 0) {
+          seed.value = temp;
+        } else {
+          message.textContent = "bad pass phrase for decrypt_seed";
+        }
+      });
+
+      encrypt_seed.addEventListener("click", function(event) {
+        seed.value = CryptoJS.AES.encrypt(seed.value, pass_phrase.value);  
       });
 
       send_tx.addEventListener("click", function(event) {
