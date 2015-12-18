@@ -2,7 +2,8 @@
    
     // Initialize everything when the window finishes loading
     window.addEventListener("load", function(event) {
-     
+      StellarSdk.Network.useTestNet();
+
       var network_testnet = document.getElementById("network_testnet");
       var message = document.getElementById("message");
       var account = document.getElementById("account");
@@ -38,22 +39,28 @@
       var key;
       var email_flag = false;
       var transaction;
-
-     
+      
       seed.value = restore_seed("seed1", "");
-      console.log("seed.value: " + seed.value);
-     
-      console.log("account.value.length: " + account.value.length);
-      if (account.value.length == 0) {
+      //seed.value = 'SA3CKS64WFRWU7FX2AV6J6TR4D7IRWT7BLADYFWOSJGQ4E5NX7RLDAEQ';
+      //seed.value = 'SAPUDAQ72EA5SWTFAJG7Z4KQ62PUXN7SBUC4EOYNEZITVFSTHOIHGGCA'; 
+      console.log("seed.value: " + seed.value);     
+      console.log("seed.value.length: " + seed.value.length);
+            
+      //key = StellarSdk.Keypair.fromSeed(seed.value);
+      if (seed.value.length == 0) {
         key = StellarSdk.Keypair.random();
+        console.log("key ok");
         account.value = key.address();
+        console.log("account ok");
         seed.value = key.seed();
+        console.log("seed ok");
         save_seed("seed1", "", seed.value );
       } else {
          account.value = StellarSdk.Keypair.fromSeed(seed.value).address();
       }
       //seed.value = 'SA3CKS64WFRWU7FX2AV6J6TR4D7IRWT7BLADYFWOSJGQ4E5NX7RLDAEQ'; 
       //account.value = 'GAMCHGO4ECUREZPKVUCQZ3NRBZMK6ESEQVHPRZ36JLUZNEH56TMKQXEB'
+   
 
       var env_b64 = window.location.href.match(/\?env_b64=(.*)/);
       var encrypted_seed = window.location.href.match(/\?seed=(.*)/);
@@ -119,12 +126,14 @@
       
       dest_seed.value = restore_seed("seed2", "");
       console.log("dest_seed.value: " + dest_seed.value);
-      destination.value = StellarSdk.Keypair.fromSeed(dest_seed.value).address();
-      console.log("dest: " + destination.value);    
+      if (dest_seed.value.length != 0) {
+        destination.value = StellarSdk.Keypair.fromSeed(dest_seed.value).address();
+        console.log("dest: " + destination.value); 
+      }   
       //destination.value = 'GDVYGXTUJUNVSJGNEX75KUDTANHW35VQZEZDDIFTIQT6DNPHSX3I56RY';
       //dest_seed.value = "SBV5OHE3LGOHC6CBRMSV3ZQNTT4CM7I7L37KAAU357YDDPER2GNP2WWL";      
 
-      StellarSdk.Network.useTestNet();
+      //StellarSdk.Network.useTestNet();
       //StellarSdk.Memo.text("sacarlson");
       //var hostname = "horizon-testnet.stellar.org";
             
