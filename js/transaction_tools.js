@@ -39,6 +39,8 @@
       var key;
       var email_flag = false;
       var transaction;
+      var server_mode = "horizon";
+    //var server_mode = "mss_server";
       
       seed.value = restore_seed("seed1", "");
       //seed.value = 'SA3CKS64WFRWU7FX2AV6J6TR4D7IRWT7BLADYFWOSJGQ4E5NX7RLDAEQ';
@@ -243,7 +245,7 @@
       }
        
       function get_account_info(account,params,callback) {
-        if (network.value === "mss_server") {
+        if (server_mode === "mss_server") {
           socket_open_flag = true;
         }else {
           console.log("get_account_info horizon mode");
@@ -265,8 +267,31 @@
         message.textContent = JSON.stringify(param);
       }
 
+       function update_balances_set(account_obj,params) {
+        console.log("params: " + params.asset_code1 + " 2" + params.asset_code2);
+        //console.log("account_obj");
+        //console.log(account_obj);     
+        display_balance(account_obj,{to_id:params.to_id1,
+          asset_code:params.asset_code1,
+          detail:false}
+        );   
+        if (params.asset_code2 == "XLM" || params.asset_code2 == "native"){
+          console.log("was XLM");
+          //account_obj.balances.xlm = balance.value;
+          //params.asset_code2 = "native";
+        } else {
+          display_balance(account_obj,{
+            to_id:params.to_id2,
+            asset_code:params.asset_code2,
+            detail:params.detail}
+          );
+        }
+      }
 
-      function display_balance(account_obj,params) {          
+      function display_balance(account_obj,params) { 
+          console.log("account_obj2");
+          console.log(account_obj); 
+          console.log("asset_code: " + params.asset_code);        
           var balance = 0;
           console.log("display_balance account_obj");
           console.log(account_obj);
@@ -295,24 +320,10 @@
         account.value = key.address();
       }
       
-      function update_balances_set(account_obj,params) {
-        display_balance(account_obj,{to_id:params.to_id1,
-          asset_code:params.asset_code1,
-          detail:false}
-        );
-        if (params.asset_code2 == "XLM"){
-          CHP_balance.value = balance.value;
-          return;
-        }
-        display_balance(account_obj,{
-          to_id:params.to_id2,
-          asset_code:params.asset_code2,
-          detail:params.detail}
-        );
-      }
+     
 
       function update_balances() {
-        if (network.value === "mss_server"){
+        if (server_mode === "mss_server"){
           console.log("update_balances mss mode");
           get_balance_updates_mss();
           return
@@ -502,7 +513,7 @@
         }
      
       function createTransaction(key,operation) {
-        if (network.value === "mss_server") {
+        if (server_mode === "mss_server") {
           console.log("start mss trans");
           createTransaction_mss(key,operation);
         } else {
@@ -663,6 +674,7 @@
       change_network.addEventListener("click", function(event) { 
         console.log("mode: " + network.value);        
         if(network.value === "testnet" ) {
+          server_mode = "horizon";
           close.disabled = true;
           open.disabled = true;
           StellarSdk.Network.useTestNet();
@@ -676,6 +688,7 @@
           update_balances();
           start_effects_stream();
         }else if (network.value === "live" ){
+          server_mode = "horizon";
           console.log("mode Live!!");  
           close.disabled = true;
           open.disabled = true;
@@ -691,6 +704,7 @@
           update_balances();
           start_effects_stream();
         }else if (network.value === "live_default" ){
+          server_mode = "horizon";
           console.log("mode Live!!");  
           close.disabled = true;
           open.disabled = true;
@@ -707,6 +721,7 @@
           update_balances();
           start_effects_stream();
         }else if (network.value === "testnet_default" ){
+          server_mode = "horizon";
           console.log("mode testnet_default");  
           close.disabled = true;
           open.disabled = true;
@@ -722,9 +737,28 @@
           reset_horizon_server();
           update_balances();
           start_effects_stream();
-        }else {
+        }else if (network.value === "mss_server_live") {
           //mss-server mode
-          console.log("start mss-server mode");          
+          server_mode = "mss_server";
+          console.log("start mss-server LIVE! mode");          
+          paymentsEventSource.close();
+          server = false;
+          close.disabled = false;
+          console.log("here " + url.value.indexOf("horizon"));
+          if (Number(url.value.indexOf("horizon")) == 0) {
+            console.log("url had horizon at start so will set default");
+            url.value = "ws://zipperhead.ddns.net";
+            port.value = "9494";
+            secure.value = "false";
+          }
+          //StellarSdk.Network.useTestNet();
+          StellarSdk.Network.usePublicNetwork();
+          create_socket();
+          current_mode.value = "MSS-server LIVE! mode";
+        }else  {
+          //mss-server mode testnet
+          server_mode = "mss_server";
+          console.log("start mss-server testnet mode");          
           paymentsEventSource.close();
           server = false;
           close.disabled = false;
@@ -867,7 +901,7 @@
       });
 
       send_tx.addEventListener("click", function(event) {
-        if (network.value == "mss_server") {
+        if (server_mode == "mss_server") {
           console.log("send_tx mss_server mode");
           submitTransaction_mss_b64(envelope_b64.value);
         } else {
