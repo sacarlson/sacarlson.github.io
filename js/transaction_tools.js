@@ -153,6 +153,22 @@
     
       update_balances();
       start_effects_stream();
+      
+      var xmlhttp = new XMLHttpRequest();
+
+    
+      xmlhttp.onreadystatechange = function() {
+              console.log("onreadystatechange");
+              console.log("readystate: " + xmlhttp.readyState + " xmlhttp.status: " + xmlhttp.status);
+              if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                console.log("responseText: " + xmlhttp.responseText);
+                var myArr = JSON.parse(xmlhttp.responseText);
+                console.log("xmlhttp response");                
+                console.log(myArr);
+                console.log(myArr.account_id);
+                account.value = myArr.account_id;
+              }
+      };
 
           function email_funds_now () {
              var mail = "mailto:" + email_address.value +"?subject= Stellar funds transmittal for: " + amount.value + " of asset: "+ asset.value + "&body=Click on the link bellow to collect the funds I have sent you for the amount of " + amount.value + " of asset type: "+ asset.value + " to the accountID " + destination.value + " secret seed if contained: " + dest_seed.value  + "  just click Link: http://sacarlson.github.io/transaction_tools.html?json={%22env_b64%22:%22" + envelope_b64.value + "%22}   " +  ". From within the wallet just hit send_tx button to transact the issued transaction and verify balance received.   Or if you prefer other methods of receiving the transaction the Stellar envelope base64: " + envelope_b64.value;
@@ -162,6 +178,28 @@
         window.open(encodeURI(mail));
           }
 
+          function federation_lookup(){
+            console.log("federation_lookup click detected");
+            //http://zipperhead.ddns.net:8000/federation?q=sacarlson*zipperhead.ddns.net&type=name'
+            //var url = "http://zipperhead.ddns.net:8000/federation?q=" + account.value + "*zipperhead.ddns.net&type=name";
+            var url = "http://";
+            // sacarlson*zipperhead.ddns.net:8000
+            account.value = account.value.replace("@", "*");
+            var start_index = account.value.indexOf("*");
+            url = url + account.value.substring(start_index+1);
+            console.log("url: " + url);
+            url = url + "/federation?q=" + account.value + "&type=name";
+            console.log("url+: " + url);
+            //var url = "http://zipperhead.ddns.net/text.txt";
+            //var url = "http://poker.surething.biz/files/test.php";
+            //var xmlhttp = new XMLHttpRequest();
+            xmlhttp.open("GET", url, true);
+            //xmlhttp.withCredential = "true";
+            xmlhttp.send();            
+          }
+
+         
+          
           function attachToPaymentsStream(opt_startFrom) {
             console.log("start attacheToPaymentsStream");
             var futurePayments = server.effects().forAccount(account.value);
@@ -355,6 +393,7 @@
         }
 
       function sendPaymentTransaction() {
+        console.log("sendPaymentTransaction");
         var key = StellarSdk.Keypair.fromSeed(seed.value);
         if (asset.value== "native") {
           var asset_obj = new StellarSdk.Asset.native();
@@ -372,6 +411,7 @@
             message.textContent = "destination account not active, can only send native";
             return;
           }
+          console.log("asset: " + asset.value + " issuer: " + issuer.value);
           var asset_obj = new StellarSdk.Asset(asset.value, issuer.value);
           message.textContent = "started payment: ";
           createPaymentTransaction(key,asset_obj);
@@ -492,7 +532,7 @@
             .addSigner(key)
             .build();
            if ( email_flag != true ) { 
-             console.log("horizon mode email_flag detected");                               
+             console.log("horizon mode sending tx");                               
              server.submitTransaction(transaction); 
            }          
           })
@@ -501,6 +541,7 @@
             //console.log(transaction.toEnvelope().toXDR().toString("base64"));
             envelope_b64.value = transaction.toEnvelope().toXDR().toString("base64");
             if ( email_flag ) {
+              console.log("horizon mode email_flag detected");  
               email_funds_now ();
               email_flag = false;
             }  
@@ -919,6 +960,10 @@
         email_flag = true;
         sendPaymentTransaction();
         
+      });
+
+      fed_lookup.addEventListener("click", function(event) {
+        federation_lookup();
       });
 
   });
