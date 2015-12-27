@@ -10,7 +10,9 @@
       var seed = document.getElementById("seed");          
       var balance = document.getElementById("balance");
       var thresh_set = document.getElementById("thresh_set"); 
-      var master_weight = document.getElementById("master_weight");      
+      var master_weight = document.getElementById("master_weight");  
+      var home_domain = document.getElementById("home_domain"); 
+      var home_domain_now = document.getElementById("home_domain_now");    
       var url = document.getElementById("url");
       var open = document.getElementById("open");
       var close = document.getElementById("close");
@@ -24,6 +26,7 @@
       var paymentsEventSource;
       var server;
 
+      home_domain_now.value = "";
       //merge_accounts.disabled = true;
       network.value ="testnet";
       console.log("just after var");
@@ -32,7 +35,7 @@
       //create_socket();
       close.disabled = true;
       open.disabled = true;
-           
+      //balance.value = 0;     
       seed.value = 'SA3CKS64WFRWU7FX2AV6J6TR4D7IRWT7BLADYFWOSJGQ4E5NX7RLDAEQ'; 
         
       StellarSdk.Network.useTestNet();
@@ -150,11 +153,31 @@
       }
 
 
-      function display_balance(account_obj,params) {          
+      function display_balance(account_obj,params) { 
+          console.log("account_obj");
+          console.log(account_obj); 
+          console.log("asset_code: " + params.asset_code);        
           var balance = 0;
+          console.log("thresholds");
+          console.log(account_obj.thresholds);
+          thresh_set.value = JSON.stringify(account_obj.thresholds);
+          console.log("home_domain");
+          console.log(account_obj.home_domain);
+          if (typeof(account_obj.home_domain) !== "undefined") {
+            home_domain_now.value = account_obj.home_domain;
+          }
           console.log("display_balance account_obj");
           console.log(account_obj);
-          console.log(account_obj.name);          
+
+          console.log(account_obj.name);
+          if (account_obj.name !== "NotFoundError"){
+            account_obj.balances.forEach(function(entry) {
+              if (entry.asset_code == params.asset_code) {
+                balance = entry.balance;
+              }                          
+            });
+          }
+          window[params.to_id].value = balance;
           if (params.detail == true) {
             display_message(account_obj);
           }
@@ -172,14 +195,10 @@
       }
       
       function update_balances_set(account_obj,params) {
-        display_balance(account_obj,{to_id:params.to_id1,
-          asset_code:params.asset_code1,
-          detail:false}
-        );
-
+        
         display_balance(account_obj,{
-          to_id:params.to_id2,
-          asset_code:params.asset_code2,
+          to_id:params.to_id1,
+          asset_code:params.asset_code1,
           detail:params.detail}
         );
       }
@@ -191,6 +210,7 @@
           return
         }
         // disable horizon balance here to try streaming instead
+        //balance.value = 0;
         get_account_info(account.value,{
           to_id1:"balance",
           asset_code1:null,
@@ -383,6 +403,7 @@
       function setOptionsOperation() {
                  console.log(Number(master_weight.value));
                  console.log(Number(threshold.value));
+                 console.log(home_domain.value);
                  var opts = {};
                  //opts.inflationDest = "GDGU5OAPHNPU5UCLE5RDJHG7PXZFQYWKCFOEXSXNMR6KRQRI5T6XXCD7";
                  //opts.clearFlags = 1;
@@ -396,7 +417,7 @@
                  // address: signer.value,
                  // weight: weight.value
                 // };
-                 //opts.homeDomain = "www.example.com";
+                 opts.homeDomain = home_domain.value;
                  return StellarSdk.Operation.setOptions(opts);
                }
 
@@ -480,7 +501,7 @@
         socket.close();
       });
      
-      change_network.addEventListener("click", function(event) { 
+      change_network.addEventListener("click", function(event) {
         console.log("mode: " + network.value);        
         if(network.value === "testnet" ) {
           close.disabled = true;
@@ -566,7 +587,9 @@
         update_balances();
       });
 
-setOptionsTransaction()
+     
+
+//setOptionsTransaction()
     
   });
 

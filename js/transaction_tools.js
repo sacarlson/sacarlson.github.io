@@ -40,6 +40,8 @@
       var email_flag = false;
       var transaction;
       var server_mode = "horizon";
+      var fed_mode_forward = true;
+      var account_obj_global;
     //var server_mode = "mss_server";
       
       seed.value = restore_seed("seed1", "");
@@ -91,6 +93,21 @@
         }               
         if (typeof params["seed"] != "undefined") {
           seed.value = params["seed"];
+        }
+        if (typeof params["amount"] != "undefined") {
+          amount.value = params["amount"];
+        }
+        if (typeof params["memo"] != "undefined") {
+          memo.value = params["memo"];
+        }
+        if (typeof params["asset"] != "undefined") {
+          asset.value = params["asset"];
+        }
+        if (typeof params["issuer"] != "undefined") {
+          issuer.value = params["issuer"];
+        }
+        if (typeof params["destination"] != "undefined") {
+          issuer.value = params["destination"];
         }
       } 
       if (encrypted_seed != null) {
@@ -166,7 +183,11 @@
                 console.log("xmlhttp response");                
                 console.log(myArr);
                 console.log(myArr.account_id);
-                account.value = myArr.account_id;
+                if (fed_mode_forward) {
+                  account.value = myArr.account_id;
+                } else {
+                  account.value = myArr.stellar_address;
+                }
               }
       };
 
@@ -179,6 +200,7 @@
           }
 
           function federation_lookup(){
+            fed_mode_forward = true;
             console.log("federation_lookup click detected");
             //http://zipperhead.ddns.net:8000/federation?q=sacarlson*zipperhead.ddns.net&type=name'
             //var url = "http://zipperhead.ddns.net:8000/federation?q=" + account.value + "*zipperhead.ddns.net&type=name";
@@ -196,6 +218,20 @@
             xmlhttp.open("GET", url, true);
             //xmlhttp.withCredential = "true";
             xmlhttp.send();            
+          }
+
+          function reverse_federation_lookup(){
+            fed_mode_forward = false;
+            console.log("reverse_federation_lookup click detected");
+            console.log(account_obj_global);
+            if (typeof account_obj_global.home_domain == "undefined") {
+              console.log("no home_domain");
+            } else {
+              var url = "http://" + account_obj_global.home_domain + "/federation?q=" + account.value +"&type=id";
+              console.log("url: " + url);
+              xmlhttp.open("GET", url, true);
+              xmlhttp.send();
+            }            
           }
 
          
@@ -308,7 +344,8 @@
        function update_balances_set(account_obj,params) {
         console.log("params: " + params.asset_code1 + " 2" + params.asset_code2);
         //console.log("account_obj");
-        //console.log(account_obj);     
+        //console.log(account_obj);
+        account_obj_global = account_obj;     
         display_balance(account_obj,{to_id:params.to_id1,
           asset_code:params.asset_code1,
           detail:false}
@@ -366,23 +403,22 @@
           get_balance_updates_mss();
           return
         }
-        // disable horizon balance here to try streaming instead
-        if (true){
-        get_account_info(account.value,{
-          to_id1:"balance",
-          asset_code1:null,
-          to_id2:"CHP_balance",
-          asset_code2:asset_type.value,
-          detail:true},update_balances_set);
-
+       
         get_account_info(destination.value,{
           to_id1:"dest_balance",
           asset_code1:null,
           to_id2:"dest_CHP_balance",
           asset_code2:asset.value,
           detail:false
-        },update_balances_set); 
-        }       
+          },update_balances_set); 
+        
+
+        get_account_info(account.value,{
+          to_id1:"balance",
+          asset_code1:null,
+          to_id2:"CHP_balance",
+          asset_code2:asset_type.value,
+          detail:true},update_balances_set);       
       }
 
       
@@ -963,7 +999,12 @@
       });
 
       fed_lookup.addEventListener("click", function(event) {
-        federation_lookup();
+        console.log("account.value.length: " + account.value.length);
+        if (account.value.length == 56) {
+          reverse_federation_lookup();
+        } else {
+          federation_lookup();
+        }
       });
 
   });
