@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Stellar client wallet </title>
+  <meta charset="UTF-8" />
+  <script src="js/aes.js"></script>
+  <script src="js/stellar-sdk.js"></script>
+  <script src="js/min_wallet.js"></script>  
+</head>
+<body>
+  <h3>Stellar client wallet </h3><br />
+<input id="update_balance" type="button" value="update_balance" /><br />
+seed:<input id="seed" size="60" /><br />
+account:<input id="account" size="60" />
+<input id="fed_lookup" type="button" value="fed_lookup" /><br />
+account native balance: <input id="balance" size="40" /><br />
+Asset type <input id="asset_type" size="5" /> balance: <input id="CHP_balance" size="40" /><br />
+______________________________________________________________<br />
+Send Transaction Info: <br />
+<input id="send_payment" type="button" value="send_payment" /><br />
+<input id="email_funds" type="button" value="email_funds" /> 
+to: <input id="email_address" type="text" size="25" value="sacarlson_2000@yahoo.com" /><br />
+memo: <input id="memo" size="25" /><br />
+
+asset type:<input id="asset" size="13" value = "native" /><br />
+issuer address:<input id="issuer" size="60" value = "" /><br />
+amount to send:<input id="amount" size="10" /><br />
+destination account:<input id="destination" size="60" /><br />
+<div style="width:800px;height:300px;line-height:3em;overflow:scroll;padding:10px;">
+  <span id="message"></span>
+</div>
+</body>
+</html>

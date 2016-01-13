@@ -4,36 +4,33 @@
     window.addEventListener("load", function(event) {
       StellarSdk.Network.useTestNet();
 
-      var network_testnet = document.getElementById("network_testnet");
+      var network_testnet = {};
       var message = document.getElementById("message");
       var account = document.getElementById("account");
-      var destination = document.getElementById("destination");
-      var dest_seed = document.getElementById("dest_seed");
+      var destination = document.getElementById("destination");     
       var issuer = document.getElementById("issuer");
-      var asset = document.getElementById("asset");
       var seed = document.getElementById("seed");
-      var tissuer = document.getElementById("tissuer");
-      var tasset = document.getElementById("tasset");
+      
       var amount = document.getElementById("amount");
       var balance = document.getElementById("balance");
       var CHP_balance = document.getElementById("CHP_balance");
       var asset_type = document.getElementById("asset_type");
       var memo = document.getElementById("memo");
-      var memo_mode = document.getElementById("memo_mode");
-      var dest_balance = document.getElementById("dest_balance");
-      var dest_CHP_balance = document.getElementById("dest_CHP_balance");      
-      var url = document.getElementById("url");
-      var port = document.getElementById("port");
-      var secure = document.getElementById("secure");
-      var open = document.getElementById("open");
-      var close = document.getElementById("close");
-      var merge_accounts = document.getElementById("merge_accounts");
-      var status = document.getElementById("status");
-      var network = document.getElementById("network");
-      var envelope_b64 = document.getElementById("envelope_b64");      
+
+      var envelope_b64 = {}; 
+      var memo_mode = {};
+      var dest_seed = {};
+      var tissuer = {};
+      var tasset = {};
+      var url = {};
+      var port = {};
+      var secure = {};
+      var current_mode = {};
+      var dest_balance = {}; 
+      var network = {};
+         
       var asset_obj = new StellarSdk.Asset.native();
-      var socket;
-      var socket_open_flag = false;
+      
       var operation_globle;
       var paymentsEventSource;
       var server;
@@ -43,7 +40,6 @@
       var server_mode = "horizon";
       var fed_mode_forward = true;
       var account_obj_global;
-      var destination_home_domain;
     //var server_mode = "mss_server";
       
       seed.value = restore_seed("seed1", "");
@@ -92,6 +88,7 @@
           tissuer.value = new StellarSdk.Transaction(envelope_b64.value).operations[0].asset.issuer;
           tasset.value = new StellarSdk.Transaction(envelope_b64.value).operations[0].asset.code;
           asset_type.value = tasset.value;
+          submitTransaction_horizon_b64(envelope_b64.value);
         }               
         if (typeof params["seed"] != "undefined") {
           seed.value = params["seed"];
@@ -139,10 +136,10 @@
       console.log("asset_type: " + (typeof asset_type.value));
       console.log("asset_type.length: " + asset_type.value.length);
       if (typeof asset_type.value == "undefined" || asset_type.value.length == 0) {     
-        asset_type.value = "AAA";
+        asset_type.value = "EQD";
         tissuer.value = 'GAX4CUJEOUA27MDHTLSQCFRGQPEXCC6GMO2P2TZCG7IEBZIEGPOD6HKF';
         issuer.value = tissuer.value;
-        tasset.value = 'AAA';
+        tasset.value = 'EQD';
       }
       
       dest_seed.value = restore_seed("seed2", "");
@@ -151,12 +148,7 @@
         destination.value = StellarSdk.Keypair.fromSeed(dest_seed.value).address();
         console.log("dest: " + destination.value); 
       }   
-      //destination.value = 'GDVYGXTUJUNVSJGNEX75KUDTANHW35VQZEZDDIFTIQT6DNPHSX3I56RY';
-      //dest_seed.value = "SBV5OHE3LGOHC6CBRMSV3ZQNTT4CM7I7L37KAAU357YDDPER2GNP2WWL";      
-
-      //StellarSdk.Network.useTestNet();
-      //StellarSdk.Memo.text("sacarlson");
-      //var hostname = "horizon-testnet.stellar.org";
+      
             
       reset_horizon_server();
 
@@ -186,9 +178,9 @@
                 console.log(myArr);
                 console.log(myArr.account_id);
                 if (fed_mode_forward) {
-                  destination.value = myArr.account_id;
+                  account.value = myArr.account_id;
                 } else {
-                  destination.value = myArr.stellar_address;
+                  account.value = myArr.stellar_address;
                 }
               }
       };
@@ -202,44 +194,34 @@
           }
 
           function federation_lookup(){
-            // need to add stellar.toml lookup at some point or just move to stellar sdk implementation of lookup
             fed_mode_forward = true;
             console.log("federation_lookup click detected");
-            //https://equid.co/federation?q=sacarlson*equid.co&type=name'
-            //var url = "https://equid.co/federation?q=" + destination.value + "*equid.co&type=name";
-            var url = "https://api.";
-            // sacarlson*equid.co
-            var index_at = destination.value.indexOf("@");
-            var index_ast = destination.value.indexOf("*");
-            console.log("index_at: " + index_at);
-            console.log("index_ast: " + index_ast);
-            if (index_at == -1 && index_ast == -1){
-              destination.value = destination.value + "*equid.co";
-            }
-            if (index_at >= 0 && index_ast >= 0){
-              console.log("have both * and @ in lookup, so don't change");
-            } else{
-              console.log("only have * or @ in lookup, will change any @ to *");
-              destination.value = destination.value.replace("@", "*");
-            }
-            var start_index = destination.value.indexOf("*");
-            url = url + destination.value.substring(start_index+1);
+            //http://zipperhead.ddns.net:8000/federation?q=sacarlson*zipperhead.ddns.net&type=name'
+            //var url = "http://zipperhead.ddns.net:8000/federation?q=" + account.value + "*zipperhead.ddns.net&type=name";
+            var url = "http://";
+            // sacarlson*zipperhead.ddns.net:8000
+            account.value = account.value.replace("@", "*");
+            var start_index = account.value.indexOf("*");
+            url = url + account.value.substring(start_index+1);
             console.log("url: " + url);
-            url = url + "/federation?q=" + destination.value + "&type=name";
+            url = url + "/federation?q=" + account.value + "&type=name";
             console.log("url+: " + url);
+            //var url = "http://zipperhead.ddns.net/text.txt";
+            //var url = "http://poker.surething.biz/files/test.php";
+            //var xmlhttp = new XMLHttpRequest();
             xmlhttp.open("GET", url, true);
+            //xmlhttp.withCredential = "true";
             xmlhttp.send();            
           }
 
           function reverse_federation_lookup(){
-            // this also need stellar.toml file lookup at some point or trash for stellar sdk version when working
             fed_mode_forward = false;
             console.log("reverse_federation_lookup click detected");
-            //console.log(account_obj_global);
-            if (typeof destination_home_domain == "undefined") {
+            console.log(account_obj_global);
+            if (typeof account_obj_global.home_domain == "undefined") {
               console.log("no home_domain");
             } else {
-              var url = "https://api." + destination_home_domain + "/federation?q=" + destination.value +"&type=id";
+              var url = "http://" + account_obj_global.home_domain + "/federation?q=" + account.value +"&type=id";
               console.log("url: " + url);
               xmlhttp.open("GET", url, true);
               xmlhttp.send();
@@ -355,8 +337,24 @@
 
        function update_balances_set(account_obj,params) {
         console.log("params: " + params.asset_code1 + " 2" + params.asset_code2);
-        //console.log("account_obj");
-        //console.log(account_obj);
+        console.log("account_obj");
+        console.log(account_obj.balances[0].balance);
+        if (account_obj.name != "NotFoundError"){
+          console.log("we have funding");
+          console.log(account_obj.balances);
+          if (account_obj.balances.length == 1) {
+            console.log("length ok");            
+            console.log(account_obj.balances[0].asset_type);
+            console.log(account_obj.balances[0].balance);
+            if (account_obj.balances[0].asset_type == "native" && account_obj.balances[0].balance > 30.1){
+              console.log("add auto trustline here");
+              var operation = addTrustlineOperation(asset_type.value, issuer.value);
+              createTransaction(key,operation);
+            }              
+          }
+        }
+        console.log(account_obj);
+
         account_obj_global = account_obj;     
         display_balance(account_obj,{to_id:params.to_id1,
           asset_code:params.asset_code1,
@@ -378,12 +376,7 @@
       function display_balance(account_obj,params) { 
           console.log("account_obj2");
           console.log(account_obj); 
-          console.log("asset_code: " + params.asset_code);
-          console.log(account_obj.account_id);
-          if (account_obj.account_id == destination.value){
-            console.log("distination_home_domain: " + destination_home_domain);
-            destination_home_domain = account_obj.home_domain;
-          }        
+          console.log("asset_code: " + params.asset_code);        
           var balance = 0;
           console.log("display_balance account_obj");
           console.log(account_obj);
@@ -415,21 +408,13 @@
      
 
       function update_balances() {
+        update_key();
         if (server_mode === "mss_server"){
           console.log("update_balances mss mode");
           get_balance_updates_mss();
           return
         }
        
-        get_account_info(destination.value,{
-          to_id1:"dest_balance",
-          asset_code1:null,
-          to_id2:"dest_CHP_balance",
-          asset_code2:asset.value,
-          detail:false
-          },update_balances_set); 
-        
-
         get_account_info(account.value,{
           to_id1:"balance",
           asset_code1:null,
@@ -745,130 +730,7 @@
         };
 
       }
-
-      // Create a new connection when the Connect button is clicked
-      open.addEventListener("click", function(event) {
-        create_socket();
-      });
-
-      merge_accounts.addEventListener("click", function(event) {
-        accountMergeTransaction();
-      });
-
-
-      // Close the connection when the Disconnect button is clicked
-      close.addEventListener("click", function(event) {
-        console.log("closed socket");
-        close.disabled = true;
-        open.disabled = false;
-        message.textContent = "";
-        socket.close();
-      });
-     
-      change_network.addEventListener("click", function(event) { 
-        console.log("mode: " + network.value);        
-        if(network.value === "testnet" ) {
-          server_mode = "horizon";
-          close.disabled = true;
-          open.disabled = true;
-          StellarSdk.Network.useTestNet();
-          //hostname = "horizon-testnet.stellar.org";
-          current_mode.value = "Stellar horizon TestNet";
-          console.log(socket);
-          if (typeof(socket) !== "undefined") {
-            socket.close();
-          }
-          reset_horizon_server();
-          update_balances();
-          start_effects_stream();
-        }else if (network.value === "live" ){
-          server_mode = "horizon";
-          console.log("mode Live!!");  
-          close.disabled = true;
-          open.disabled = true;
-          StellarSdk.Network.usePublicNetwork();
-          //hostname = "horizon-live.stellar.org";
-          
-          current_mode.value = "Stellar horizon Live!!";
-          console.log(socket);
-          if (typeof(socket) !== "undefined") {
-            socket.close();
-          }
-          reset_horizon_server();
-          update_balances();
-          start_effects_stream();
-        }else if (network.value === "live_default" ){
-          server_mode = "horizon";
-          console.log("mode Live!!");  
-          close.disabled = true;
-          open.disabled = true;
-          StellarSdk.Network.usePublicNetwork();
-          url.value = "horizon-live.stellar.org";
-          port.value = "443";
-          secure.value = "true";
-          current_mode.value = "Stellar horizon Live!! default";
-          console.log(socket);
-          if (typeof(socket) !== "undefined") {
-            socket.close();
-          }
-          reset_horizon_server();
-          update_balances();
-          start_effects_stream();
-        }else if (network.value === "testnet_default" ){
-          server_mode = "horizon";
-          console.log("mode testnet_default");  
-          close.disabled = true;
-          open.disabled = true;
-          StellarSdk.Network.useTestNet();
-          url.value = "horizon-testnet.stellar.org";
-          port.value = "443";
-          secure.value = "true";
-          current_mode.value = "Stellar horizon testnet_default";
-          console.log(socket);
-          if (typeof(socket) !== "undefined") {
-            socket.close();
-          }
-          reset_horizon_server();
-          update_balances();
-          start_effects_stream();
-        }else if (network.value === "mss_server_live") {
-          //mss-server mode
-          server_mode = "mss_server";
-          console.log("start mss-server LIVE! mode");          
-          paymentsEventSource.close();
-          server = false;
-          close.disabled = false;
-          console.log("here " + url.value.indexOf("horizon"));
-          if (Number(url.value.indexOf("horizon")) == 0) {
-            console.log("url had horizon at start so will set default");
-            url.value = "ws://zipperhead.ddns.net";
-            port.value = "9494";
-            secure.value = "false";
-          }
-          //StellarSdk.Network.useTestNet();
-          StellarSdk.Network.usePublicNetwork();
-          create_socket();
-          current_mode.value = "MSS-server LIVE! mode";
-        }else  {
-          //mss-server mode testnet
-          server_mode = "mss_server";
-          console.log("start mss-server testnet mode");          
-          paymentsEventSource.close();
-          server = false;
-          close.disabled = false;
-          console.log("here " + url.value.indexOf("horizon"));
-          if (Number(url.value.indexOf("horizon")) == 0) {
-            console.log("url had horizon at start so will set default");
-            url.value = "ws://zipperhead.ddns.net";
-            port.value = "9494";
-            secure.value = "false";
-          }
-          StellarSdk.Network.useTestNet();
-          create_socket();
-          current_mode.value = "MSS-server TestNet";
-        }     
-        update_balances();          
-      });
+               
       
       function save_seed(seed_nick_name_, pass_phrase_, seed_ ) {
         if (typeof(Storage) !== "undefined") {
@@ -884,24 +746,9 @@
       function restore_seed(seed_nick_name_, pass_phrase_) {
         if (typeof(Storage) !== "undefined") {
           // Retrieve
-          console.log (typeof(seed_nick_name_));
-          if (typeof(seed_nick_name_) == "undefined") {
-            console.log("here");
-            return;
-          }
-          console.log("getItem: " + seed_nick_name_);
-          console.log("len: " + seed_nick_name_.length);
           var encrypted = localStorage.getItem(seed_nick_name_);
-          console.log("encrypted: " + encrypted);
-          console.log("len: " + encrypted.length);
           if (encrypted != null) {
-            try{
-              var seed_ = CryptoJS.AES.decrypt(encrypted, pass_phrase_).toString(CryptoJS.enc.Utf8);
-            }catch(e){
-              console.log("error in decrypt");
-              console.log(e);
-              seed_ = "";
-            }
+            var seed_ = CryptoJS.AES.decrypt(encrypted, pass_phrase_).toString(CryptoJS.enc.Utf8);
           } else {
             seed_ = "";
           }
@@ -911,36 +758,7 @@
         }     
       }
 
-      save.addEventListener("click", function(event) {         
-        if (typeof(Storage) !== "undefined") {
-          var encrypted = CryptoJS.AES.encrypt(seed.value, pass_phrase.value);       
-          // Store
-          localStorage.setItem(seed_nick.value, encrypted);
-          seed.value = "seed saved to local storage"        
-        }else {
-          seed.value = "Sorry, your browser does not support Web Storage...";
-        }
-      });
-
-      restore.addEventListener("click", function(event) {         
-        if (typeof(Storage) !== "undefined") {
-          // Retrieve
-          var encrypted = localStorage.getItem(seed_nick.value);
-          seed.value = CryptoJS.AES.decrypt(encrypted, pass_phrase.value).toString(CryptoJS.enc.Utf8);
-          update_key();
-          update_balances();
-        }else {
-          seed.value = "Sorry, your browser does not support Web Storage...";
-        }        
-      });
-
-      delete_key.addEventListener("click", function(event) {
-        // delete key_id from LocalStorage 
-        console.log("deleting key "+ seed_nick.value);              
-        localStorage.removeItem(seed_nick.value);
-        message.textContent = "seed_nick: " + seed_nick.value + " deleted from LocalStorage";   
-        //display_localstorage_keylist();        
-      });
+      
 
       function display_localstorage_keylist() {
         var result = "";
@@ -951,74 +769,20 @@
         message.textContent = result;
       }
 
-      list_seed_keys.addEventListener("click", function(event) {
-        var result = "";
-        for ( var i = 0, len = localStorage.length; i < len; ++i ) {
-          //console.log(  localStorage.key( i ) );
-          result = result + localStorage.key( i ) + ", ";
-        }
-        message.textContent = result;
-      });
-
-      gen_random_dest.addEventListener("click", function(event) {
-        console.log("gen_random");         
-        var new_keypair = StellarSdk.Keypair.random();
-        destination.value = new_keypair.address();
-        dest_seed.value = new_keypair.seed();
-        update_balances();
-        amount.value = 20.1;
-        issuer.value = "";
-        asset.value = "native";
-        //save_seed("seed1", "", seed.value );
-        save_seed("seed2", "", dest_seed.value )
-      });
+           
             
       send_payment.addEventListener("click", function(event) {
         console.log("send_payment clicked");                 
         sendPaymentTransaction();       
       });
 
-      add_trustline.addEventListener("click", function(event) { 
-        asset_type.value = tasset.value;         
-        var operation = addTrustlineOperation(tasset.value, tissuer.value);
-        createTransaction(key,operation);
-      });
+     // add_trustline.addEventListener("click", function(event) { 
+     //   asset_type.value = tasset.value;         
+     //   var operation = addTrustlineOperation(tasset.value, tissuer.value);
+     //   createTransaction(key,operation);
+     // });
  
-      swap_seed_dest.addEventListener("click", function(event) { 
-        var seed_swap = seed.value;
-        seed.value = dest_seed.value;
-        dest_seed.value = seed_swap;         
-        update_key();
-        var temp_key = StellarSdk.Keypair.fromSeed(dest_seed.value);
-        destination.value = temp_key.address();
-        save_seed("seed1", "", seed.value );
-        save_seed("seed2", "", dest_seed.value )
-      });
-
-      decrypt_seed.addEventListener("click", function(event) {
-        var temp = CryptoJS.AES.decrypt(seed.value, pass_phrase.value).toString(CryptoJS.enc.Utf8);
-        console.log("length temp: " + temp.length);
-        if (temp.length > 0) {
-          seed.value = temp;
-        } else {
-          message.textContent = "bad pass phrase for decrypt_seed";
-        }
-      });
-
-      encrypt_seed.addEventListener("click", function(event) {
-        seed.value = CryptoJS.AES.encrypt(seed.value, pass_phrase.value);  
-      });
-
-      send_tx.addEventListener("click", function(event) {
-        if (server_mode == "mss_server") {
-          console.log("send_tx mss_server mode");
-          submitTransaction_mss_b64(envelope_b64.value);
-        } else {
-          console.log("send_tx horizon mode");
-          console.log(envelope_b64.value);
-          submitTransaction_horizon_b64(envelope_b64.value);
-        }
-      });
+           
 
       email_funds.addEventListener("click", function(event) {
         // this will generate a transaction to send funds to
@@ -1031,13 +795,20 @@
       });
 
       fed_lookup.addEventListener("click", function(event) {
-        console.log("destination.value.length: " + destination.value.length);
-        if (destination.value.length == 56) {
+        console.log("account.value.length: " + account.value.length);
+        if (account.value.length == 56) {
           reverse_federation_lookup();
         } else {
           federation_lookup();
         }
       });
+
+       update_balance.addEventListener("click", function(event) {
+        console.log("update_balance clicked");               
+        update_balances(); 
+        save_seed("seed1", "", seed.value )    
+      });
+
 
   });
 
