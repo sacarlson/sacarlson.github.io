@@ -53,7 +53,7 @@
       console.log("seed.value.length: " + seed.value.length);
             
       //key = StellarSdk.Keypair.fromSeed(seed.value);
-      if (seed.value.length == 0) {
+      if (seed.value.length != 56) {
         key = StellarSdk.Keypair.random();
         console.log("key ok");
         account.value = key.address();
@@ -893,7 +893,7 @@
           console.log("len: " + seed_nick_name_.length);
           var encrypted = localStorage.getItem(seed_nick_name_);
           console.log("encrypted: " + encrypted);
-          console.log("len: " + encrypted.length);
+          //console.log("len: " + encrypted.length);
           if (encrypted != null) {
             try{
               var seed_ = CryptoJS.AES.decrypt(encrypted, pass_phrase_).toString(CryptoJS.enc.Utf8);
