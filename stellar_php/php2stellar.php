@@ -90,11 +90,14 @@ function create_env_b64_tx_link($wallet_url, $env_b64){
  echo get_seed($keyset) . "<br />";
  //get_balance_native("xxx_account_id_xxx");
  //$wallet_url = "https://equid.co/my-account/index.php";
- $wallet_url = "http://zipperhead.ddns.net/transaction_tools.html";
+ //$wallet_url = "http://zipperhead.ddns.net/transaction_tools.html";
+ $wallet_url = 'http://zipperhead.ddns.net/equid.co.my-account/index.php';
  $to_account_id = "sacarlson";
  $amount = "2.34";
  $invoice_no = "12344321";
- $link = create_payment_native_link($wallet_url, $to_account_id, $amount, $invoice_no);
+ $secret_seed = "SDFQ5LP7XJ7DVBURFMTRTIJ3ID72PUWOSUQL3X5LJKFRDZEIOFRG4T5N";
+ //$link = create_payment_native_link($wallet_url, $to_account_id, $amount, $invoice_no);
+ $link = create_prefunded_wallet_link($wallet_url,$secret_seed);
  $html = '<a href="' . $link . '">' . $link . '</a>';
  echo $html;
 ?>

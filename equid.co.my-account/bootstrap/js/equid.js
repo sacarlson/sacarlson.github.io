@@ -88,7 +88,9 @@
         console.log(params);
         console.log(params["accountID"]);
         console.log(params["env_b64"]);
-        account.value = params["accountID"];
+        if (typeof params["accountID"] != "undefined") {
+          account.value = params["accountID"];
+        }
         if (typeof params["env_b64"] != "undefined") {
           console.log("env_b64 param detected");
           envelope_b64.value = params["env_b64"];
@@ -139,26 +141,25 @@
       //create_socket();
       close.disabled = true;
       open.disabled = true;
-      
-      memo.value = "equid.co";
-      amount.value = "1"; 
+      if (typeof memo.value == "undefined") {
+        memo.value = "equid.co";
+      }
+      if (typeof amount.value == "undefined"){
+        amount.value = "1"; 
+      }
+
       console.log("tyypeof asset_type.value: " + (typeof asset_type.value));
       //console.log("asset_type.length: " + asset_type.value.length);
+      
       if (typeof asset_type.value == "undefined" || asset_type.value.length == 0) {     
         asset_type.value = "EQD";
         tissuer.value = 'GAX4CUJEOUA27MDHTLSQCFRGQPEXCC6GMO2P2TZCG7IEBZIEGPOD6HKF';
         issuer.value = tissuer.value;
         tasset.value = 'EQD';
       }
-      
-      dest_seed.value = restore_seed("seed2", "");
-      console.log("dest_seed.value: " + dest_seed.value);
-      if (dest_seed.value.length != 0) {
-        recipient.value = StellarSdk.Keypair.fromSeed(dest_seed.value).address();
-        console.log("dest: " + recipient.value); 
-      }   
-      
-            
+
+       
+                         
       reset_horizon_server();
 
       current_mode.value = "Stellar horizon TestNet";
