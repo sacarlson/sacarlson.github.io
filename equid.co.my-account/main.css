@@ -1,0 +1,300 @@
+body {
+    font-family: 'Droid Sans', sans-serif;
+    color: #5d6068;
+}
+
+h1 {
+
+}
+
+h2 {
+
+}
+
+a {
+    text-decoration: none;
+}
+
+a:hover {
+    color: #3F7D6F !important;
+}
+
+.navbar {
+    background-color: #ffffff;
+}
+
+.navbar-brand {
+    padding-top: 17px;
+    color: #222222 !important;
+    font-size: 3rem;
+    font-weight: 700;
+}
+
+.navbar-nav li a {
+    line-height: 100px;
+    height: 100px;
+    padding-top: 0;
+    font-weight: 600;
+}
+
+.navbar-brand img {
+    height: 65px;
+    display: inline-block;
+}
+
+.account-title1 {
+    margin-top: 3rem;
+    margin-bottom: 1rem;
+}
+
+.account-title2 {
+    color: #3F7D6F;
+    font-size: 1.75rem;
+    border-bottom: 3px solid #3F7D6F;
+    font-weight: 500;
+    margin-top: 5rem;
+    padding-bottom: 0.75rem;
+}
+
+input {
+    border-bottom: 1px solid #dddddd;
+    border-right: 0px;
+    border-left: 0px;
+    border-top: 0px;
+    border-radius: 2px !important;
+}
+
+.form-currency {
+    position: relative;
+    right: 45px;
+    color: #bbbbbb;
+}
+
+.form-send {
+    margin-top: 6rem;
+}
+
+.balance {
+    font-weight: 500;
+    font-size: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+#balance {
+    font-size: 4rem;
+    font-weight: 500;
+}
+
+.transfers {
+    margin-top: 1.5rem;
+}
+
+.btn {
+    border: 0px;
+    border-radius: 2px;
+    background-color: #3F7D6F;
+    -webkit-transition: all 0.3s ease;
+    -moz-transition: all 0.3s ease;
+    -o-transition: all 0.3s ease;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    background-color: #4F8e7F;
+}
+
+.transaction-row {
+    margin-top: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #dddddd;
+}
+
+.transaction-amount {
+    font-size: 1.75rem;
+}
+
+.transaction-details {
+    font-size: 1.5rem;
+    font-weight: 400;
+}
+
+.transaction-date {
+    font-size: 1.25rem;
+    color: #909090;
+}
+
+.transaction-balance {
+    font-size: 1.25rem;
+    color: #909090;
+}
+
+.social-icon {
+    display: inline-block;
+    border-radius: 25px;
+    width: 50px;
+    height: 50px;
+    text-decoration: none;
+    background-color: #ffffff;
+    border-radius: 30px;
+    color: #3F7D6F;
+    -webkit-transition: all 0.3s ease;
+    -moz-transition: all 0.3s ease;
+    -o-transition: all 0.3s ease;
+    transition: all 0.3s ease;
+    margin-right: 0.5rem;
+    margin-left: 0.5rem;
+}
+
+.social-icon:hover {
+    background-color: #dddddd;
+    color: !important;
+}
+
+.social-icon i {
+    padding-top: 12px;
+}
+
+.social-icons {
+    margin-top: 4rem;
+    margin-bottom: 1rem;
+}
+
+.footer-list {
+    list-style: none;
+    list-style-type: none;
+    padding: 0px;
+}
+
+.footer-list a {
+    text-decoration: none;
+    color: #76B6A8;
+}
+
+.footer-list a:hover {
+    color: #0E3A30 !important;
+}
+
+footer {
+    background-color: #3F7D6F;
+    margin-top: 7rem;
+    border-top: 2px solid #1c5b4c;
+}
+
+.footer {
+    margin: 6rem auto;
+}
+
+.footer-list-title {
+    color: #ffffff;
+    font-weight: 400;
+    font-size: 1.5rem;
+}
+
+.hero-section {
+    background-image: url(img/hero.png);
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: cover;
+    min-height: 450px;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+.hero-title {
+    padding-top: 8em;
+    margin-right: 8rem;
+}
+
+.hero-title h1 {
+    font-size: 7rem;
+    font-weight: 900;
+}
+
+.navbar, .navbar-default, .navbar-static-top {
+    margin-bottom: 0px!important;
+    padding-bottom: 0px!important;
+}
+
+.login-hero {
+    margin-top: 9rem;
+    margin-left: 4rem;
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+    padding-left: 4rem;
+    padding-right: 4rem;
+    background-color: rgba(161, 184, 93, 0.8)
+}
+
+.login-hero input {
+    margin-bottom: 1rem;
+    font-weight: 100;
+}
+
+.login-hero h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+.login-hero h6 {
+    margin-top: 1.5rem;
+    margin-bottom: 0px;
+}
+
+.login-hero a {
+    color: #3F7D6F;
+}
+
+.login-hero a:hover {
+    color: #4F8e7F;
+}
+
+.deal {
+    height: 150px;
+    background-color: #021A14;
+    background-image: url(img/sale.png);
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: contain;
+}
+
+.reason1 {
+    margin-top: 10rem;
+    margin-bottom: 10rem;
+}
+
+.reason1 h1 {
+    font-family: 'Merriweather Sans', sans-serif;
+    font-size: 4rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    margin-top: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.reason1 p {
+    font-size: 2rem;
+    line-height: 30px;
+    font-weight: 100;
+}
+
+.reason1-right i {
+    margin-bottom: 3rem;
+}
+
+.reason1 button {
+    margin-top: 3rem;
+}
+
+.v-align {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.reason1-left {
+    margin-top: 9rem;
+}
+
+.reason1-right {
+    padding-left: 8rem;
+    border-left: 2px solid #8f939b;
+}
