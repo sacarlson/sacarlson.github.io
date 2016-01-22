@@ -1,0 +1,47 @@
+<html>
+	<head>
+		<title>pool.futuretense.io</title>
+		<link rel="stylesheet" href="style.css" />
+	</head>
+
+	<body>
+		<form>
+			<div>
+				<label>Secret key:</label> <input id="seed" type="text">
+				<input type="button" onclick="signup()" value="Sign up">
+			</div>
+		</form>
+
+		<script src="js/stellar-sdk.js"></script>
+		<script>
+			var HORIZON_SERVER =  {
+				secure:	true,
+				hostname: 'horizon.stellar.org',
+				port: 443
+			};
+
+			var server = new StellarSdk.Server(HORIZON_SERVER);
+			//StellarSdk.Network.usePublicNetwork();
+                        StellarSdk.Network.useTestNet();
+
+            var signup = function () {
+				var seed = document.getElementById('seed').value;
+				var keys = StellarSdk.Keypair.fromSeed(seed);
+				var accountId = keys.address();
+
+				server.loadAccount(accountId)
+				.then(function (account) {
+					var tx = new StellarSdk.TransactionBuilder(account)
+					.addOperation(StellarSdk.Operation.setOptions({
+						inflationDest: 'GBL7AE2HGRNQSPWV56ZFLILXNT52QWSMOQGDBBXYOP7XKMQTCKVMX2ZL'
+					})).build();
+
+					tx.sign(keys);
+					return server.submitTransaction(tx);
+				})
+				.then(console.log)
+				.catch(console.log);
+			};
+		</script>
+	</body>
+</html>

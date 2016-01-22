@@ -7,6 +7,7 @@
       var network_testnet = document.getElementById("network_testnet");
       var message = document.getElementById("message");
       var account = document.getElementById("account");
+      var inflation_dest = document.getElementById("inflation_dest");
       var destination = document.getElementById("destination");
       var dest_seed = document.getElementById("dest_seed");
       var issuer = document.getElementById("issuer");
@@ -571,8 +572,11 @@
 
       function createTransaction_horizon(key,operation) {
         update_key();
+        console.log("memo.value typeof");
+        console.log(typeof memo.value);
+        console.log(memo.value.length);
         if (memo_mode.value == "auto") {
-          if (isNaN(memo.value)) {
+          if (isNaN(memo.value)|| memo.value.length == 0) {
             console.log("auto memo.text");
             var memo_tr = StellarSdk.Memo.text(memo.value);
           } else {
@@ -588,6 +592,8 @@
         }
         server.loadAccount(key.address())
           .then(function (account) {
+             console.log("memo_tr typeof");
+             console.log(typeof memo_tr);
              transaction = new StellarSdk.TransactionBuilder(account,{fee:100, memo: memo_tr})            
             .addOperation(operation)          
             .addSigner(key)
@@ -686,6 +692,13 @@
                  return StellarSdk.Operation.setOptions(opts);
                }
 
+      function set_inflationDest() {
+         update_key();
+         var opts = {};
+         opts.inflationDest = inflation_dest.value;
+         var operation = StellarSdk.Operation.setOptions(opts);
+         createTransaction(key,operation);
+      }
     
       function create_socket() {
         console.log("started create_socket");
@@ -989,6 +1002,14 @@
       add_trustline.addEventListener("click", function(event) { 
         asset_type.value = tasset.value;         
         var operation = addTrustlineOperation(tasset.value, tissuer.value);
+        createTransaction(key,operation);
+      });
+
+      set_inflation_dest.addEventListener("click", function(event) { 
+        update_key();
+        var opts = {};
+        opts.inflationDest = inflation_dest.value;
+        var operation = StellarSdk.Operation.setOptions(opts);
         createTransaction(key,operation);
       });
  
