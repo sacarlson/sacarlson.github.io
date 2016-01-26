@@ -1,0 +1,102 @@
+ <!DOCTYPE html>
+<html>
+<head>
+<title>Stellar Pool Status</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+ <script>
+    "use strict";
+    // Initialize everything when the window finishes loading
+    window.addEventListener("load", function(event) {
+     
+      //var send_json = document.getElementById("send_json");
+     
+      var socket;
+
+      var json = '{"action":"get_pool_members", "inf_dest":"GBL7AE2HGRNQSPWV56ZFLILXNT52QWSMOQGDBBXYOP7XKMQTCKVMX2ZL"}';
+      //status.textContent = "Not Connected";
+      var url = "ws://zipperhead.ddns.net:9494";
+      
+      create_socket();      
+     
+      function insRow(acc,bal,gets) {
+        var x = document.getElementById("table").insertRow(1);
+        var accountid = x.insertCell(0);
+        var acc_bal = x.insertCell(1);
+        var will_get = x.insertCell(2);
+        accountid.innerHTML = acc;
+        acc_bal.innerHTML = bal;
+        will_get.innerHTML = gets;     
+      }
+
+      function create_socket() {       
+        socket = new WebSocket(url, "echo-protocol");      
+        socket.addEventListener("open", function(event) {          
+          console.log("socket open");
+          socket.send(json);
+        });
+
+        // Display messages received from the server
+        socket.addEventListener("message", function(event) {
+          var message_obj = JSON.parse(event.data);
+          console.log(message_obj.accounts);
+          //console.log(message_obj.accounts.length);
+          for (var i = 0; i < message_obj.accounts.length; i++) {
+            //console.log(message_obj.accounts[i]);
+            //console.log(message_obj.accounts[i].accountid);
+            //console.log(message_obj.accounts[i].balance);
+            //console.log(message_obj.accounts[i].to_receive);
+            insRow(message_obj.accounts[i].accountid, message_obj.accounts[i].balance, message_obj.accounts[i].to_receive)
+          }
+        });
+
+        // Display any errors that occur
+        socket.addEventListener("error", function(event) {
+          //message.textContent = "Error: " + event;
+          console.log("Error: event");
+          console.log(event);
+        });
+
+        socket.addEventListener("close", function(event) {
+          open.disabled = false;
+          //status.textContent = "Not Connected";
+          console.log("socket Not connected");
+        });
+      }
+
+         
+       // Send json box to the server when the Send button is clicked
+     // send_json.addEventListener("click", function(event) {
+     //   socket.send(json);
+     // });     
+
+    });
+  </script>
+<link rel="stylesheet" href="/lib/w3.css">
+</head>
+<body>
+
+<header class="w3-container w3-teal">
+  <h1>Stellar Inflation Pool Members List</h1>
+</header>
+<table id="table" class="w3-table w3-bordered w3-striped">
+<thead>
+<tr>
+  <th>AccountID</th>
+  <th>Balance</th>
+  <th>Will Receive</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+ 
+</tr>
+<tr>
+ 
+</tr>
+<tr>
+  
+</tr>
+</tbody>
+</table>
+</body>
+</html>
