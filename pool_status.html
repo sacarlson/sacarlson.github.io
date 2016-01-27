@@ -188,6 +188,21 @@
      <div id="msg"></div>
   </form>
                 
-</div>           
+</div>
+<div class="w3-container  w3-padding-32  "> 
+<h1>Questions and answers</h1>
+<h2>What is Stellar inflation and why do we need a pool?</h2>
+<p>
+It's pretty simple... The Stellar network has a built-in inflation mechanism, which expands the currency supply by one per cent annually. Once a week, the Stellar network calculates what the top inflation destinations are, and distributes that weeks inflation to any destination with more than 0.05% of the votes. Currently that threshold equals 50 million XLM, which is out-of-reach for most individuals. To solve that, we created a pool: https://pool.futuretense.io . 
+<h2>How do I become a member?</h2>
+ To participate, you just need to enter you Stellar secret key and click "sign up" that is found on the https://pool.futuretense.io website.  The site doesn't actually send your secret key to any servers.  It only performs some magic in javascript using the secure stellar SDK javascript libs to perform changes in one setting in your stellar keyed account that is then updated in the uncentralized stellar network... So don't worry your Stellar account is totally safe.  However if for any reason you don't trust our methods of making the changes to your account,  there are other ways you can make the needed changes  with other tools that are also available in the stellar.org libs and tools that have been written and hosted by others.  We have also made all our code transparent and is released on github for those that want to analyze or run our code from another more trusted location or locally on your own systems.
+<h2>How do I get my interest payments?</h2>
+It's fully automatic you do absolutely nothing but wait for your funds to be deposited each week in the account that you setup when you joined the pool.  Each week (7 days)  the pool account will receive it's interest payment from the stellar network (when the pool becomes active at 50M Lumens).  A few hours or even minutes after our target account receives the funds we will run a program that will analyses who was pointing at the target account across  the time window needed to be seen as active on this payment.  The program automaticaly creates a multi destination stellar transaction with the calculated amounts to each member.  This transaction is then sent to each of the accounts multi signers to audit and  verify that the transaction is correct (this will also later be automated),  they each sign the transaction and the transaction is then submited to the stellar network were you will all then see the funds in your wallets with your interest payments in Lumens.
+<h2>What's next?</h2>
+At this point we have only just begun, and much work still needs to be done and more funds need to be re-pointed before the pool becomes active.  The lead project developers @dzham,  @sacarlson & @powderfan that are well known by many in the Stellar community, have volunteered there time and have been setup as the trustees of the pools multi signature secured account that will be used to distribute the accumulate interest funds each week.   They are also working together toward making  more features that will make it easily accessible via a web interface, features such as instant feed back to the person adding them self to the list,  how many people already trusts us before they join, list of all the currently active accounts pointing at our chosen target account, the amount they are pointing at it,  the amount of funds that they will earn (estimated) each week and much more...
+<h2>What is needed?</h2>
+We need more people in the stellar community to be informed about the pool to at least get us to the 50M minimum funding mark to get us going.  We also need to gain peoples trust that we aren't trying to steel any of your funds.   We need to find more ways to prove to people that it is a totally safe transaction.  We also need feed back from the community telling us what you feel you need to make you trust us and to provide you any other information that you feel would be useful to you and others. 
+</p>
+</div>     
 </body>
 </html>
