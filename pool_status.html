@@ -3,18 +3,25 @@
 <head>
 <title>Stellar Pool Status</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="js/sdk_v0.4.0/stellar-sdk.js"></script>
  <script>
     "use strict";
     // Initialize everything when the window finishes loading
     window.addEventListener("load", function(event) {
-     
-      //var send_json = document.getElementById("send_json");
-     
+           
       var socket;
 
       var json = '{"action":"get_pool_members", "inf_dest":"GBL7AE2HGRNQSPWV56ZFLILXNT52QWSMOQGDBBXYOP7XKMQTCKVMX2ZL"}';
-      //status.textContent = "Not Connected";
-      var url = "ws://zipperhead.ddns.net:9494";
+      var mss_url = "ws://zipperhead.ddns.net:9494";
+
+      var server = new StellarSdk.Server({
+	secure:	true,
+	hostname: 'horizon.stellar.org',
+        //hostname: 'horizon-testnet.stellar.org',
+	port: 443
+     });
+     StellarSdk.Network.usePublicNetwork();
+     //StellarSdk.Network.useTestNetwork();
       
       create_socket();      
      
@@ -29,61 +36,126 @@
       }
 
       function create_socket() {       
-        socket = new WebSocket(url, "echo-protocol");      
+        socket = new WebSocket(mss_url, "echo-protocol");      
         socket.addEventListener("open", function(event) {          
           console.log("socket open");
           socket.send(json);
         });
+      }
 
-        // Display messages received from the server
+      function fix7dec(string) {
+        var num = Number(string).toFixed(7);
+        string = num.toString();
+        return string;
+      }
+
+        // Display messages received from the mss server
         socket.addEventListener("message", function(event) {
           var message_obj = JSON.parse(event.data);
-          console.log(message_obj.accounts);
+          console.log(message_obj);
           //console.log(message_obj.accounts.length);
           for (var i = 0; i < message_obj.accounts.length; i++) {
             //console.log(message_obj.accounts[i]);
             //console.log(message_obj.accounts[i].accountid);
             //console.log(message_obj.accounts[i].balance);
             //console.log(message_obj.accounts[i].to_receive);
-            insRow(message_obj.accounts[i].accountid, message_obj.accounts[i].balance, message_obj.accounts[i].to_receive)
+            insRow(message_obj.accounts[i].accountid, fix7dec(message_obj.accounts[i].balance), fix7dec(message_obj.accounts[i].to_receive));
           }
+          document.getElementById("total_pool").textContent=fix7dec(message_obj.total_pool);
+          document.getElementById("total_inflation").textContent=fix7dec(message_obj.total_inflation);
         });
 
         // Display any errors that occur
         socket.addEventListener("error", function(event) {
-          //message.textContent = "Error: " + event;
           console.log("Error: event");
           console.log(event);
         });
 
         socket.addEventListener("close", function(event) {
           open.disabled = false;
-          //status.textContent = "Not Connected";
           console.log("socket Not connected");
         });
-      }
 
+     
+
+      function setInflationDest(seed, dest) {
+	var key = StellarSdk.Keypair.fromSeed(seed);
+	return server.loadAccount(key.accountId())
+	.then(function (account) {
+		var tx = new StellarSdk.TransactionBuilder(account)
+        .addOperation(StellarSdk.Operation.setOptions({
+            inflationDest: dest
+        })).build();
+		tx.sign(key);
+
+		return server.submitTransaction(tx);
+	});
+      } 
+
+
+              function clear_table() {
+                var table = document.getElementById("table");
+                for(var i = table.rows.length - 1; i > 0; i--)
+                {
+                  table.deleteRow(i);
+                }
+              }
+
+              function signup_function() {
+                var seed = document.getElementById('seed').value;
+                var span = document.getElementById('msg');
+                var fail_flag = false;
+                if (seed.length != 56){
+                   var txt = document.createTextNode('Signup failed, invalid seed key length.');
+                   console.log("signup failed, invalid seed key length");
+                   span.appendChild(txt);                   
+                   return;
+                }
+                console.log("seed");
+                console.log(seed);
+                setInflationDest(seed, 'GBL7AE2HGRNQSPWV56ZFLILXNT52QWSMOQGDBBXYOP7XKMQTCKVMX2ZL')
+                .catch(function (err) {
+                    var txt = document.createTextNode('Signup failed.');
+                    console.log("signup failed");
+                    span.appendChild(txt);
+                    console.log("here");
+                    fail_flag = true;
+                    return
+                })
+                .then(function (res) {
+                    if (fail_flag == false) {
+                      var txt = document.createTextNode('Successful signup!');
+                      span.appendChild(txt);
+                      // update table list with new members info added
+                      clear_table();
+                      socket.send(json);
+                    }                   
+                });
+              }
+
+         signup.addEventListener("click", function(event) {
+          signup_function();  
+         });
+
+      
+      }); 
          
-       // Send json box to the server when the Send button is clicked
-     // send_json.addEventListener("click", function(event) {
-     //   socket.send(json);
-     // });     
-
-    });
+         
+             
   </script>
 <link rel="stylesheet" href="/lib/w3.css">
 </head>
 <body>
 
 <header class="w3-container w3-teal">
-  <h1>Stellar Inflation Pool Members List</h1>
+  <h1>Stellar Inflation Pool Members List for GBL7AE...</h1>
 </header>
 <table id="table" class="w3-table w3-bordered w3-striped">
 <thead>
 <tr>
   <th>AccountID</th>
   <th>Balance</th>
-  <th>Will Receive</th>
+  <th>Will Receive Each Week</th>
 </tr>
 </thead>
 <tbody>
@@ -98,5 +170,24 @@
 </tr>
 </tbody>
 </table>
+<div class="w3-container w3-center w3-padding-32 w3-sand">
+ 
+  <h1> Total Pool: <span id="total_pool"> 0 </span>          Total Payout over all members: <span id="total_inflation"> 0 </span> </h1>
+  
+</div>
+<div class="w3-container w3-center w3-padding-32 w3-light-green ">
+                  
+  <form >
+     <div >
+      
+           <h1>Join us Today!!</h1>
+      
+        <input id="seed" type="text" size="60" placeholder="Secret key">                            
+        <input id="signup" type="button" value="signup" />
+     </div>
+     <div id="msg"></div>
+  </form>
+                
+</div>           
 </body>
 </html>
