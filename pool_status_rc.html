@@ -1,0 +1,229 @@
+ <!DOCTYPE html>
+<html>
+<head>
+<title>Stellar Pool Status</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="js/sdk_v0.4.0/stellar-sdk.js"></script>
+ <script type="text/javascript">
+    "use strict";
+    // Initialize everything when the window finishes loading
+    window.addEventListener("load", function(event) {
+           
+      var json = '{"action":"get_pool_members", "inf_dest":"GBL7AE2HGRNQSPWV56ZFLILXNT52QWSMOQGDBBXYOP7XKMQTCKVMX2ZL"}';
+      //var mss_url = "ws://zipperhead.ddns.net:9494";
+      var mss_url = "http://zipperhead.ddns.net:9494";
+
+      var server = new StellarSdk.Server({
+	secure:	true,
+	hostname: 'horizon.stellar.org',
+        //hostname: 'horizon-testnet.stellar.org',
+	port: 443
+      });
+      StellarSdk.Network.usePublicNetwork();
+      //StellarSdk.Network.useTestNetwork();
+      
+      var http = new XMLHttpRequest();
+      http.open("POST", mss_url, true);
+      //Send the proper header information along with the request
+      http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+      http.setRequestHeader("Content-length", json.length);
+      http.setRequestHeader("Connection", "close"); 
+      http.send(json);
+    
+      function insRow(acc,bal,gets) {
+        var x = document.getElementById("table").insertRow(1);
+        var accountid = x.insertCell(0);
+        var acc_bal = x.insertCell(1);
+        var will_get = x.insertCell(2);
+        accountid.innerHTML = acc;
+        acc_bal.innerHTML = bal;
+        will_get.innerHTML = gets;     
+      }
+
+      
+
+      function fix7dec(string) {
+        var num = Number(string).toFixed(7);
+        string = num.toString();
+        return string;
+      }
+
+       
+
+      http.onreadystatechange = function() {//Call a function when the state changes.
+        // callback for restclient_post
+        //console.log("readyState: ");
+        //console.log(http.readyState);
+        //console.log(http.status);
+        if(http.readyState == 4 && http.status == 200) {
+          //console.log("response: ");
+          //console.log(http.responseText);
+          //alert(http.responseText);
+          var message_obj = JSON.parse(http.responseText);
+          console.log(message_obj);
+          //console.log(message_obj.accounts.length);
+          for (var i = 0; i < message_obj.accounts.length; i++) {
+            insRow(message_obj.accounts[i].accountid, fix7dec(message_obj.accounts[i].balance), fix7dec(message_obj.accounts[i].to_receive));
+          }
+          document.getElementById("total_pool").textContent=fix7dec(message_obj.total_pool);
+          document.getElementById("total_inflation").textContent=fix7dec(message_obj.total_inflation);
+       }
+     }
+
+     
+
+      function setInflationDest(seed, dest) {
+	var key = StellarSdk.Keypair.fromSeed(seed);
+	return server.loadAccount(key.accountId())
+	.then(function (account) {
+		var tx = new StellarSdk.TransactionBuilder(account)
+        .addOperation(StellarSdk.Operation.setOptions({
+            inflationDest: dest
+        })).build();
+		tx.sign(key);
+
+		return server.submitTransaction(tx);
+	});
+      } 
+
+
+              function clear_table() {
+                var table = document.getElementById("table");
+                for(var i = table.rows.length - 1; i > 0; i--)
+                {
+                  table.deleteRow(i);
+                }
+              }
+
+              function signup_function() {
+                var seed = document.getElementById('seed').value;
+                var span = document.getElementById('msg');
+                var fail_flag = false;
+                if (seed.length != 56){
+                   var txt = document.createTextNode('Signup failed, invalid seed key length.');
+                   console.log("signup failed, invalid seed key length");
+                   span.appendChild(txt);                   
+                   return;
+                }
+                console.log("seed");
+                console.log(seed);
+                setInflationDest(seed, 'GBL7AE2HGRNQSPWV56ZFLILXNT52QWSMOQGDBBXYOP7XKMQTCKVMX2ZL')
+                .catch(function (err) {
+                    var txt = document.createTextNode('Signup failed.');
+                    console.log("signup failed");
+                    span.appendChild(txt);
+                    console.log("here");
+                    fail_flag = true;
+                    return
+                })
+                .then(function (res) {
+                    if (fail_flag == false) {
+                      var txt = document.createTextNode('Successful signup!');
+                      span.appendChild(txt);
+                      // update table list with new members info added
+                      clear_table();
+                      socket.send(json);
+                    }                   
+                });
+              }
+
+         signup.addEventListener("click", function(event) {
+          signup_function();  
+         });
+
+      
+      }); 
+         
+         
+             
+  </script>
+<link rel="stylesheet" href="/lib/w3.css">
+</head>
+<body>
+
+<header class="w3-container w3-teal">
+  <h1>Stellar Inflation Pool Members List for GBL7AE...</h1>
+</header>
+<table id="table" class="w3-table w3-bordered w3-striped">
+<thead>
+<tr>
+  <th>AccountID</th>
+  <th>Balance</th>
+  <th>Will Receive Each Week</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+ 
+</tr>
+<tr>
+ 
+</tr>
+<tr>
+  
+</tr>
+</tbody>
+</table>
+<div class="w3-container w3-center w3-padding-32 w3-sand">
+ 
+  <h1> Total Pool: <span id="total_pool"> 0 </span>          Total Payout over all members: <span id="total_inflation"> 0 </span> </h1>
+  
+</div>
+<div class="w3-container w3-center w3-padding-32 w3-light-green ">
+                  
+  <form >
+     <div >
+      
+           <h1>Join us Today!!</h1>
+      
+        <input id="seed" type="text" size="60" placeholder="Secret key">                            
+        <input id="signup" type="button" value="signup" />
+     </div>
+     <div id="msg"></div>
+  </form>
+                
+</div>
+<div class="w3-container  w3-padding-32  "> 
+<h1>Questions and answers</h1>
+<h2>What is Stellar inflation and why do we need a pool?</h2>
+<p>
+It's pretty simple... The Stellar network has a built-in inflation mechanism, which expands the currency supply by one per cent annually. Once a week, the Stellar network calculates what the top inflation destinations are, and distributes that weeks inflation to any destination with more than 0.05% of the votes. Currently that threshold equals 50 million XLM, which is out-of-reach for most individuals. To solve that, we created a pool:  <a href="https://pool.futuretense.io">https://pool.futuretense.io</a>  . 
+<h2>How do I become a member?</h2>
+ To participate, you just need to enter you Stellar secret key and click "sign up" that is found on the <a href="https://pool.futuretense.io">https://pool.futuretense.io</a> website.  The site doesn't actually send your secret key to any servers.  It only performs some magic in javascript using the secure stellar SDK javascript libs to perform changes in one setting in your stellar keyed account that is then updated in the uncentralized stellar network... So don't worry your Stellar account is totally safe.  However if for any reason you don't trust our methods of making the changes to your account,  there are other ways you can make the needed changes  with other tools that are also available in the stellar.org libs and tools that have been written and hosted by others.  We have also made all our code transparent and is released on github for those that want to analyze or run our code from another more trusted location or locally on your own systems.
+<h2>How do I get my interest payments?</h2>
+It's fully automatic you do absolutely nothing but wait for your funds to be deposited each week in the account that you setup when you joined the pool.  Each week (7 days)  the pool account will receive it's interest payment from the stellar network (when the pool becomes active at 50M Lumens).  A few hours or even minutes after our target account receives the funds we will run a program that will analyses who was pointing at the target account across  the time window needed to be seen as active on this payment.  The program automaticaly creates a multi destination stellar transaction with the calculated amounts to each member.  This transaction is then sent to each of the accounts multi signers to audit and  verify that the transaction is correct (this will also later be automated),  they each sign the transaction and the transaction is then submited to the stellar network were you will all then see the funds in your wallets with your interest payments in Lumens.
+<h2>What's next?</h2>
+At this point we have only just begun, and much work still needs to be done and more funds need to be re-pointed before the pool becomes active.  The lead project developers @dzham,  @sacarlson & @powderfan that are well known by many in the Stellar community, have volunteered there time and have been setup as the trustees of the pools multi signature secured account that will be used to distribute the accumulate interest funds each week.   They are also working together toward making  more features that will make it easily accessible via a web interface, features such as instant feed back to the person adding them self to the list,  how many people already trusts us before they join, list of all the currently active accounts pointing at our chosen target account, the amount they are pointing at it,  the amount of funds that they will earn (estimated) each week and much more...
+<h2>What is needed?</h2>
+We need more people in the stellar community to be informed about the pool to at least get us to the 50M minimum funding mark to get us going.  We also need to gain peoples trust that we aren't trying to steel any of your funds.   We need to find more ways to prove to people that it is a totally safe transaction.  We also need feed back from the community telling us what you feel you need to make you trust us and to provide you any other information that you feel would be useful to you and others. 
+
+<h2>Who is in charge of sending the inflation transaction every week to trigger the inflation mechanism on testnet?</h2>
+On testnet, it seems that no inflation transaction has ever been sent at all until now.  We (@powderfan really ran it) acutually sent the first inflation transaction on testnet just a few days ago were we collected about 18,000,000 in interest in Lumens, due to having a large testnet account of GAVE55DTEXJJN4WYSNTXVO5Z3VVPYPKOQAGHBGANLJPBBOKHYECGBTEZ that holds 97999999999.99 lumens in it, that was  pointing at a test  target address at the time of GBAD6S2LUEOVK33HNX7NZ7J3B4VOUQXDYOGYV6NNWEYQAPLWAR2KYRUB that collected the funds.  we plan to run that test again in a few days, and this time we will be running our automated payment system on the results to give it the full operational test.   At this time I have the software that runs to create the unsigned transaction that is a function of mss-server,   The transaction also has to then be sent to @dzham and @powderfan and myself @sacarlson to sign it before it can be submited to the network that triggers the distribution transaction.  The code for the mss-server is also published in my github account for those to see and run there own and to verify that we do the whole operation correctly
+
+<h2>What code is running when I hit the Join button?</h2>
+For those of you that want to see what is inside the the code that you run when you hit Join (at least at the time I published this), I will provide it here for you all to see.  This is not including the Stellar SDK js V0.4.0 libs that are also attached to the page when it is loaded.  For that part we would direct you to Stellar reference documents and the stellar code at: <a href="https://github.com/stellar/js-stellar-sdk">https://github.com/stellar/js-stellar-sdk</a> that has the real magic inside it that makes this all posible.  Our code for this function is very small so shouldn't be too much trouble for at least a geek to understand.  There is a bit more code in the page for status and membership tables and key validation, but this is all that is really run when you hit the Join button.
+<div class="w3-code jsHigh">
+
+function setInflationDest(seed, dest) {
+	var key = StellarSdk.Keypair.fromSeed(seed);
+	return server.loadAccount(key.accountId())
+	.catch(function (err) {
+		throw (err);
+	})
+	.then(function (account) {
+		var tx = new StellarSdk.TransactionBuilder(account)
+        .addOperation(StellarSdk.Operation.setOptions({
+            inflationDest: dest
+        })).build();
+		tx.sign(key);
+
+		return server.submitTransaction(tx);
+	});
+}
+
+</div>
+Also what a lot of people may not know is that this code can be viewed from within most any  browsers development console even before you do the operation.  We encourage any capable geeks to see for yourself.  And remind you this is not the only method to changing inflation pointing, just one of many.  If demand existed we could also write a command line operation in node.js if anyone was interested.
+</p>
+</div>     
+</body>
+</html>
