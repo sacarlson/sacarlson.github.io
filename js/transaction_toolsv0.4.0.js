@@ -136,6 +136,7 @@
       //create_socket();
       close.disabled = true;
       open.disabled = true;
+      sign_tx.disabled = true;
       
       if (typeof memo.value == "undefined") {
         memo.value = "scotty_is_cool";
@@ -202,8 +203,12 @@
               }
       };
 
-          function email_funds_now () {
-             var mail = "mailto:" + email_address.value +"?subject= Stellar funds transmittal for: " + amount.value + " of asset: "+ asset.value + "&body=Click on the link bellow to collect the funds I have sent you for the amount of " + amount.value + " of asset type: "+ asset.value + " to the accountID " + destination.value + " secret seed if contained: " + dest_seed.value  + "  just click Link: http://sacarlson.github.io/transaction_tools.html?json={%22env_b64%22:%22" + envelope_b64.value + "%22}   " +  ". From within the wallet just hit send_tx button to transact the issued transaction and verify balance received.   Or if you prefer other methods of receiving the transaction the Stellar envelope base64: " + envelope_b64.value;
+          function email_funds_now (mode) {
+            if (mode != "email_tx"){
+             var mail = "mailto:" + email_address.value +"?subject= Stellar funds transmittal for: " + amount.value + " of asset: "+ asset.value + "&body=Click on the link bellow to collect the funds I have sent you for the amount of " + amount.value + " of asset type: "+ asset.value + " to the accountID " + destination.value + " secret seed if contained: " + dest_seed.value  + "  just click Link: https://sacarlson.github.io/transaction_toolsv0.4.0.html?json={%22env_b64%22:%22" + envelope_b64.value + "%22}   " +  ". From within the wallet just hit send_tx button to transact the issued transaction and verify balance received.   Or if you prefer other methods of receiving the transaction the Stellar envelope base64: " + envelope_b64.value;
+        } else {
+          var mail = "mailto:" + email_address.value +"?subject= Stellar TX transaction to be signed &body=Click on the link bellow to go to signing tool just click Link: http://sacarlson.github.io//transaction_toolsv0.4.0.html?json={%22env_b64%22:%22" + envelope_b64.value + "%22}   . From within the wallet just hit sign_tx to sign and send_tx button to transact the issued transaction after fully signed.   Or if you prefer other methods of signing tx the Stellar envelope base64: " + envelope_b64.value;
+        }
         console.log("mail content: ");
         console.log(encodeURI(mail));
         message.textContent = encodeURI(mail);
@@ -503,7 +508,7 @@
        var b64 = transaction.toEnvelope().toXDR().toString("base64");
        envelope_b64.value = b64;
        if (email_flag) {
-         email_funds_now();
+         email_funds_now("email_funds");
          email_flag = false;
          return;
        }
@@ -569,6 +574,11 @@
       }
     }
      
+      function sign_b64_tx(b64_tx,signer_key){
+        var tx = new StellarSdk.Transaction(b64_tx);
+        tx.sign(signer_key);
+        return tx.toEnvelope().toXDR().toString("base64");
+      }
 
       function createTransaction_horizon(key,operation) {
         update_key();
@@ -609,7 +619,7 @@
             envelope_b64.value = transaction.toEnvelope().toXDR().toString("base64");
             if ( email_flag ) {
               console.log("horizon mode email_flag detected");  
-              email_funds_now ();
+              email_funds_now ("email_funds");
               email_flag = false;
             }  
            
@@ -1020,8 +1030,10 @@
         update_key();
         var temp_key = StellarSdk.Keypair.fromSeed(dest_seed.value);
         destination.value = temp_key.accountId();
-        save_seed("seed1", "", seed.value );
-        save_seed("seed2", "", dest_seed.value )
+        update_balances();
+        save_seed("seed1", "", seed.value);
+        save_seed("seed2", "", dest_seed.value);
+        sign_tx.disabled = false;
       });
 
       decrypt_seed.addEventListener("click", function(event) {
@@ -1037,6 +1049,16 @@
       encrypt_seed.addEventListener("click", function(event) {
         seed.value = CryptoJS.AES.encrypt(seed.value, pass_phrase.value);  
       });
+
+      sign_tx.addEventListener("click", function(event) {
+        update_key();
+        var b64 = sign_b64_tx(envelope_b64.value,key);
+        console.log("signer accountId: " + key.accountId());
+        console.log("b64: " + b64);
+        envelope_b64.value = b64;
+        sign_tx.disabled = true;
+      });
+
 
       send_tx.addEventListener("click", function(event) {
         if (server_mode == "mss_server") {
@@ -1056,7 +1078,11 @@
         // we will later make the transaction expire if demand exists
         email_flag = true;
         sendPaymentTransaction();
-        
+        sign_tx.disabled = false;
+      });
+
+      email_tx.addEventListener("click", function(event) {
+        email_funds_now("email_tx");
       });
 
       fed_lookup.addEventListener("click", function(event) {
