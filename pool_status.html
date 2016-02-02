@@ -3,7 +3,7 @@
 <head>
 <title>Stellar Pool Status</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<script src="js/sdk_v0.4.0/stellar-sdk.js"></script>
+<script src="https://sacarlson.github.io/js/sdk_v0.4.0/stellar-sdk.js" integrity="sha384-8HfaUw3Tp9Yffe8HXGyq3+zjOXh/ufqiIicw1slKeBr9DW+ML/oGkNNCcD1Lqs/e" crossorigin="anonymous"></script>
  <script>
     "use strict";
     // Initialize everything when the window finishes loading
@@ -51,6 +51,9 @@
 
         // Display messages received from the mss server
         socket.addEventListener("message", function(event) {
+          console.log("raw socket: ");
+          console.log(event.data);
+          console.log(event.data.length);
           var message_obj = JSON.parse(event.data);
           console.log(message_obj);
           //console.log(message_obj.accounts.length);
