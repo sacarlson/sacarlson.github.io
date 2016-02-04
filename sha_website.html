@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Site Integrity Test</title>
+  <meta charset="UTF-8" />
+
+<script src="js/cryptojs_v3.1.2/rollups/sha384.js"></script>
+<script src="js/jquery/jquery-1.12.0.js"></script>
+
+  <script>
+    "use strict";
+  // Copyright (c) 2016 sacarlson   sacarlson_2000@yahoo.com
+
+    // Initialize everything when the window finishes loading
+    window.addEventListener("load", function(event) {
+      
+      var url = document.getElementById("url");
+      //var start = document.getElementById("start");
+      //var url = 'http://zipperhead.ddns.net/pool_status_rc.html';
+
+
+
+  var array = [];
+  var sha_set;
+  var obj_set = {};
+  obj_set.count = 0; 
+  //console.log(url_absolute_path("js/lib.js","http://sacarlson.github.io/pool_status_rc.html").absolute_path);
+  
+obj_set.watch("count", function (id,oldval,newval) {
+    console.log("obj_set." + id + " changed from " + oldval + " to " + newval)
+    update_table();
+});
+
+function url_absolute_path(url, base_url) {
+  //console.log(url_absolute_path("js/lib.js","http://sacarlson.github.io/pool_status_rc.html").absolute_path);
+  // returns http://sacarlson.github.io/js/lib.js 
+
+  var a = document.createElement("a");
+  a.href = url;
+
+  var result = {};
+  //read the links "features"
+  result.localhost = window.location.host;
+  result.protocol = a.protocol;
+  result.hostname = a.hostname;
+  result.pathname = a.pathname;
+  result.port = a.port;
+  if (base_url.length > 0) {
+    var base = url_absolute_path(base_url, "");
+    result.basehost = base.hostname;
+    result.baseport = base.port;
+    //console.log("local: " + result.localhost);
+    //console.log("base: " + base.hostname);
+    if (result.hostname === result.localhost){
+      //console.log("url localhost equal");
+      if (base.port.length > 0) {
+        base.port = ":" + base.port;
+      }
+      result.absolute_path = base.protocol + "//" + base.hostname+ base.port + result.pathname;
+    }else {
+      //console.log("url localhost NOT equal");
+      if (result.port.length > 0){
+        result.port = ":" + result.port;
+      }
+      result.absolute_path = result.protocol + "//" + result.hostname + result.port + result.pathname;
+    }
+  }
+  return result;
+}
+
+function sha_hash(data) {
+  var hash = CryptoJS.SHA384(data);
+  return "sha384-" + hash; 
+}
+
+     
+function sha_website(url_target) { 
+  
+  $.get(url_target, function(html){          
+          var obj = {};
+          obj.url = url_target;
+          console.log("url: " + url_target);
+          sha_set = sha_hash(html);
+          obj.sha = sha_set
+          console.log(obj.sha);
+          array.push(clone(obj));
+          $(html).filter('script').each( function (){
+             //var js_url = $(this).context.src
+             var abs_url = url_absolute_path($(this).context.src, url_target).absolute_path
+             console.log("abs_url: " + abs_url);
+             if (abs_url.length > 0) {                                         
+               $.ajax({
+                    url: abs_url,
+                    success: function(data){
+                      sha_push_array(data,this.url); 
+                      obj_set.count = Number(obj_set.count) + 1;                       
+                    }
+               });
+             }
+          });               
+      }).then(function () {        
+        obj_set.site_hash = sha_hash(sha_set);
+        obj_set.site_file_hashs = array;
+        console.log(obj_set);
+        update_table();
+          
+      });
+}
+
+function update_table(){
+  clear_table();
+  for (var i = 0; i < array.length; i++) {
+    insRow(array[i].url,array[i].sha);
+  }
+  document.getElementById("site_sha").textContent= obj_set.site_hash;
+}  
+
+function sha_push_array(html, jurl){
+  var obj = {};
+  obj.sha = sha_hash(html);
+  obj.url = jurl;
+  console.log("obj.sha: " + obj.sha);
+  console.log("obj.url: " + obj.url);
+  sha_set = sha_set + obj.sha;
+  array.push(clone(obj));
+}
+
+
+
+function clone(obj) {
+    if (null == obj || "object" != typeof obj) return obj;
+    var copy = obj.constructor();
+    for (var attr in obj) {
+        if (obj.hasOwnProperty(attr)) copy[attr] = clone(obj[attr]);
+    }
+    return copy;
+}
+
+function clear_table() {
+                var table = document.getElementById("table");
+                for(var i = table.rows.length - 1; i > 0; i--)
+                {
+                  table.deleteRow(i);
+                }
+              }
+
+ 
+
+  function insRow(a,b) {
+        var x = document.getElementById("table").insertRow(1);
+        var col0 = x.insertCell(0);
+        var col1 = x.insertCell(1);
+        col0.innerHTML = a;
+        col1.innerHTML = b;   
+      }
+ 
+      start.addEventListener("click", function(event) {
+         array = [];        
+         console.log(url.value);
+         sha_website(url.value);         
+      });
+
+  });
+  </script>
+  <link rel="stylesheet" href="/lib/w3.css">
+</head>
+<body>
+ <header class="w3-container w3-teal">
+  <h1>Site Integrity Test</h1>
+</header>
+
+<div class="w3-container w3-center w3-padding-32">
+ 
+  Enter URL of target website: <input id="url" size="50" /> <input id="start" type="button" value="start" /><br />
+  
+</div>
+ 
+
+<table id="table" class="w3-table w3-bordered w3-striped">
+<thead>
+<tr>
+  <th>Site Script Files</th>
+  <th>SHA-hash</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+ 
+</tr>
+<tr>
+ 
+</tr>
+
+</tbody>
+</table>
+<div class="w3-container w3-center w3-padding-32 w3-sand">
+ 
+  <h3> Site Hash: <span id="site_sha"> 0 </span>  </h3>
+  
+</div>
+</body>
+</html>
