@@ -5,6 +5,7 @@
   <meta charset="UTF-8" />
 
 <script src="js/cryptojs_v3.1.2/rollups/sha384.js"></script>
+<script src="js/cryptojs_v3.1.2/components/enc-base64-min.js" type="text/javascript"></script>
 <script src="js/jquery/jquery-1.12.0.js"></script>
 
   <script>
@@ -70,12 +71,13 @@ function url_absolute_path(url, base_url) {
 
 function sha_hash(data) {
   var hash = CryptoJS.SHA384(data);
-  return "sha384-" + hash; 
+  //64HashString = hash.toString(CryptoJS.enc.Base64);
+  return "sha384-" + hash.toString(CryptoJS.enc.Base64); 
 }
 
      
 function sha_website(url_target) { 
-  
+        
   $.get(url_target, function(html){          
           var obj = {};
           obj.url = url_target;
@@ -84,6 +86,12 @@ function sha_website(url_target) {
           obj.sha = sha_set
           console.log(obj.sha);
           array.push(clone(obj));
+          obj_set.count = Number(obj_set.count) + 1;
+          var ext = url_target.substr(url_target.lastIndexOf('.') + 1);
+          console.log("ext: " + ext);
+          if (ext== "js"){            
+            return;
+          }
           $(html).filter('script').each( function (){
              //var js_url = $(this).context.src
              var abs_url = url_absolute_path($(this).context.src, url_target).absolute_path
