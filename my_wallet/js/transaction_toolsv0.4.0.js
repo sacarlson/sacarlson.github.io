@@ -2,7 +2,7 @@
    
     // Initialize everything when the window finishes loading
     window.addEventListener("load", function(event) {
-      StellarSdk.Network.useTestNetwork();
+      //StellarSdk.Network.useTestNetwork();
 
       var network_testnet = document.getElementById("network_testnet");
       var message = document.getElementById("message");
@@ -37,6 +37,7 @@
       var bal_disp = document.getElementById("bal_disp"); 
       var select_seed = document.getElementById("select_seed");
       var new_account = document.getElementById("new_account");
+      var tx_status = document.getElementById("tx_status");
      
       var asset_obj = new StellarSdk.Asset.native();
       var socket;
@@ -151,6 +152,7 @@
       //merge_accounts.disabled = true;
       network.value ="testnet";
       console.log("just after var");
+      tx_status.textContent = "Idle";
       status.textContent = "Not Connected";
       url.value = "horizon-testnet.stellar.org";
       port.value = "443";
@@ -623,6 +625,7 @@
       }
 
       function createTransaction_horizon(key,operation) {
+        tx_status.textContent = "Processing";
         update_key();
         console.log("memo.value typeof");
         console.log(typeof memo.value);
@@ -652,10 +655,39 @@
             transaction.sign(key);
            if ( email_flag != true ) { 
              console.log("horizon mode sending tx");                               
-             server.submitTransaction(transaction); 
+             server.submitTransaction(transaction).then(function(result) {
+               console.log("tx2_result: ");
+               console.log(result);
+               console.log(result.result_xdr);
+               if (result.result_xdr == 'AAAAAAAAAGQAAAAAAAAAAQAAAAAAAAABAAAAAAAAAAA=') {
+                 console.log("tx was ok");
+               } else {
+                 console.log("tx must be bad");
+               }
+               tx_status.textContent = "Completed OK";
+             }).catch(function(e) {
+               console.log("submitTransaction error");
+               console.log(e);
+               console.log(e.extras.result_xdr);
+               //var buffer = new Buffer(e.extras.result_xdr, "base64");
+               var buffer = new Buffer("AAAAAAAAAGT/////AAAAAQAAAAAAAAAB/////gAAAAA=", "base64").catch(function(e) {
+                 console.log("Buffer error");
+                 console.log(e);
+               });
+               
+               //var transactionResult = StellarSdk.xdr.TransactionResult.fromXDR(buffer);
+               //console.log("decoded error :");
+               //console.log(transactionResult);
+               tx_status.textContent = "Transaction error"; 
+             }); 
            }          
           })
           .then(function (transactionResult) {
+            console.log("tx_result");
+            if (typeof transactionResult == "undefined") {
+              console.log("tx res undefined");              
+              return
+            }
             console.log(transactionResult);
             //console.log(transaction.toEnvelope().toXDR().toString("base64"));
             envelope_b64.value = transaction.toEnvelope().toXDR().toString("base64");
@@ -664,11 +696,12 @@
               email_funds_now ("email_funds");
               email_flag = false;
             }  
-           
+            
           })
           .catch(function (err) {
             console.log(err);
-            email_flag = false; 
+            email_flag = false;
+            tx_status.textContent = "Completed Error: " + err; 
           });
         }
      
