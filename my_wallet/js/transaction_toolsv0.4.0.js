@@ -56,10 +56,14 @@
       reset_horizon_server(); 
       seed.value = restore_seed("seed1", "");
   
-      
+      var qrcode = new QRCode(document.getElementById("qrcode"), {
+	    width : 200,
+	    height : 200
+      });
+
       var qrcode2 = new QRCode(document.getElementById("qrcode2"), {
-	width : 200,
-	height : 200
+	    width : 200,
+	    height : 200
       });
  
       
@@ -79,6 +83,8 @@
         save_seed("seed1", "", seed.value );
       } else {
          account.value = StellarSdk.Keypair.fromSeed(seed.value).accountId();
+         key = StellarSdk.Keypair.fromSeed(seed.value);
+         update_key();
       }
       //seed.value = 'SA3CKS64WFRWU7FX2AV6J6TR4D7IRWT7BLADYFWOSJGQ4E5NX7RLDAEQ'; 
       //account.value = 'GAMCHGO4ECUREZPKVUCQZ3NRBZMK6ESEQVHPRZ36JLUZNEH56TMKQXEB'
@@ -177,25 +183,12 @@
           console.log("dest: " + destination.value); 
         }
       }   
-      //destination.value = 'GDVYGXTUJUNVSJGNEX75KUDTANHW35VQZEZDDIFTIQT6DNPHSX3I56RY';
-      //dest_seed.value = "SBV5OHE3LGOHC6CBRMSV3ZQNTT4CM7I7L37KAAU357YDDPER2GNP2WWL";      
-
-      //StellarSdk.Network.useTestNet();
-      //StellarSdk.Memo.text("sacarlson");
-      //var hostname = "horizon-testnet.stellar.org";
             
       reset_horizon_server();
       update_seed_select();
       current_mode.value = "Stellar horizon TestNet";
       
-      if (account.value.length > 0) {
-        console.log("account value: " + account.value);
-        console.log(typeof account.value);
-      } else {  
-        key = StellarSdk.Keypair.fromSeed(seed.value);
-        update_key();
-      }      
-    
+     
       update_balances();
       start_effects_stream();
       
@@ -230,19 +223,18 @@
 
       function makeCode () {
         console.log("start makeCode");		
-	// qr-code generator
-	if (!account.value) {
-	  alert("no account value detected for qrcode, bad pass phrase?");
-		//account.focus();
-		return;
-	}	
-	//qrcode.makeCode(seed.value);
-        //update_key();
-        //qrcode2.makeCode(export_to_centaurus());
-        console.log("qrcode account: " + account.value);
-        qrcode2.makeCode(account.value);
-        
-      } 
+	    // qr-code generator
+	    if (!account.value) {
+	      alert("no account value detected for qrcode, bad pass phrase?");
+		  //account.focus();
+		 return;
+	   }	
+	   //qrcode.makeCode(seed.value);
+       //update_key();
+       qrcode.makeCode(export_to_centaurus());
+       console.log("qrcode account: " + account.value);
+       qrcode2.makeCode(account.value);        
+     } 
 
           function email_funds_now (mode) {
             if (mode != "email_tx"){
@@ -544,6 +536,15 @@
           createTransaction(key,operation);
         }
 
+      function setOptionsTransaction() {
+          console.log("setOptionsTransaction");        
+          key = StellarSdk.Keypair.fromSeed(seed.value);
+          console.log(key.accountId());
+          var operation = setOptionsOperation();
+          console.log("operation created ok");
+          createTransaction(key,operation);
+        }
+
      function submitTransaction_mss(transaction) {
        console.log("start submitTransaction_mss");
        var b64 = transaction.toEnvelope().toXDR().toString("base64");
@@ -710,11 +711,13 @@
                  });                                     
                }
 
-      function addSignerOperation(secondAccountAddress,weight) {
+     function addSignerOperation() {
+                 console.log(signer.value);
+                 console.log(Number(weight.value));
                  return StellarSdk.Operation.setOptions({
                    signer: {
-                     address: secondAccountAddress,
-                     weight: weight
+                     address: signer.value,
+                     weight: Number(weight.value)
                    }
                  });
                }
@@ -726,20 +729,23 @@
                }
 
       function setOptionsOperation() {
+                 console.log(Number(master_weight.value));
+                 console.log(Number(threshold.value));
+                 console.log(home_domain.value);
                  var opts = {};
-                 opts.inflationDest = "GDGU5OAPHNPU5UCLE5RDJHG7PXZFQYWKCFOEXSXNMR6KRQRI5T6XXCD7";
-                 opts.clearFlags = 1;
-                 opts.setFlags = 1;
-                 opts.masterWeight = 0;
-                 opts.lowThreshold = 1;
-                 opts.medThreshold = 2;
-                 opts.highThreshold = 3;
+                 //opts.inflationDest = "GDGU5OAPHNPU5UCLE5RDJHG7PXZFQYWKCFOEXSXNMR6KRQRI5T6XXCD7";
+                 //opts.clearFlags = 1;
+                 //opts.setFlags = 1;
+                 opts.masterWeight = Number(master_weight.value);
+                 opts.lowThreshold = Number(threshold.value);
+                 opts.medThreshold = Number(threshold.value);
+                 opts.highThreshold = Number(threshold.value);
 
-                 opts.signer = {
-                  address: "GDGU5OAPHNPU5UCLE5RDJHG7PXZFQYWKCFOEXSXNMR6KRQRI5T6XXCD7",
-                  weight: 1
-                 };
-                 opts.homeDomain = "www.example.com";
+                 //opts.signer = {
+                 // address: signer.value,
+                 // weight: weight.value
+                // };
+                 opts.homeDomain = home_domain.value;
                  return StellarSdk.Operation.setOptions(opts);
                }
 
@@ -1360,6 +1366,18 @@ function display_history(page){
   }
 }
 
+    function export_to_centaurus () {
+      var cent_keys = {
+	    address : key.accountId(),
+	    secret : key.seed()
+        };
+	  var plain = JSON.stringify(cent_keys);
+	  var backupString = CryptoJS.AES.encrypt(plain, pass_phrase.value);
+	  var body = 'centaurus:backup003' + backupString;
+      console.log("export centaurus: " + body);
+	  return body;
+    };
+
    //triger the event of readSingleFile when file-input browse button is clicked and a file selected
      //this event reads the data from a local disk file and restores it's contents to the LocalStorage
      // the file selected is assumed to be in seed_save_recover backup format.
@@ -1409,6 +1427,19 @@ function display_history(page){
         var operation = StellarSdk.Operation.setOptions(opts);
         createTransaction(key,operation);
       });
+
+      add_signer.addEventListener("click", function(event) {
+        console.log("click add_signer");
+        addSignerTransaction();
+        update_balances();
+      });
+
+      change_threshold.addEventListener("click", function(event) {
+        console.log("click change_threshold");
+        setOptionsTransaction();
+        update_balances();
+      });
+
  
       swap_seed_dest.addEventListener("click", function(event) { 
         var seed_swap = seed.value;

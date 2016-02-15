@@ -159,8 +159,10 @@
     <input id="encrypt_seed" type="button" value="encrypt_seed" /><br />  
     <h4>AccountId:</h4>
     <input id="account" class="form-control" size="60" /><br />
-    
-  </div>  
+    <h4> Centaurus Import Support QRcode </h4>
+    <div id="qrcode" style="width:200px; height:200px; margin-top:15px;"></div> 
+  </div>
+  
 </div>
 
 <div id="adv" class="tab-pane fade">
@@ -171,8 +173,9 @@
      <li><a data-toggle="tab" href="#addtrust"> <h4>Add Trustlines </h4></a></li>     
      <li><a data-toggle="tab" href="#sign"> <h4> Sign Tx </h4></a></li>
      <li><a data-toggle="tab" href="#merge"><h4>Merge Accounts</h4></a></li>
-     <li><a data-toggle="tab" href="#inflation"><h4>Change Inflation</h4></a></li>
-     <li><a data-toggle="tab" href="#orders"><h4>Setup Offer</h4></a></li>                  
+     <li><a data-toggle="tab" href="#account_opts"><h4>Account Options</h4></a></li> 
+     <li><a data-toggle="tab" href="#orders"><h4>Order Offers</h4></a></li>
+                      
   </ul>
   <div class="tab-content">
 
@@ -221,7 +224,9 @@ port: <input id="port" size="6" />  secure
       <div class="form-group">
        <label for="comment">TX Envelope Base64:</label>
        <textarea class="form-control" rows="6" id="envelope_b64"></textarea>
-      </div>             
+      </div>
+       
+                  
    </div>
 
 
@@ -232,11 +237,20 @@ port: <input id="port" size="6" />  secure
       Merge to AccountId: <input id="merge_dest" size="62" value = "" />            
    </div>
 
-   <div id="inflation" class="tab-pane fade in" >
-      <h2>Change Inflation Destination</h2>
-      <p>Change the Inflation Destination for this AccountId</p> 
+   
+
+   <div id="account_opts" class="tab-pane fade in" >
+      <h2>Account Settings Options</h2>
+      <p>Advanced Account Settings including:Add signers, Account Signing Threshold Weight settings, Inflation destination, Home Domain Settings.  Caution be careful with threshold setting as you can lock yourself out of your own account</p>
+      <input id="add_signer" type="button" value="add_signer" /> 
+      <input id="signer" size="62" />
+      Weight<input id="weight" size="3" value = "1" /><br />
       Inflation Destination: <input id="inflation_dest" size="62" value = "GBL7AE2HGRNQSPWV56ZFLILXNT52QWSMOQGDBBXYOP7XKMQTCKVMX2ZL" />
-      <input id="set_inflation_dest" type="button" value="set_inflation_dest" /><br />             
+      <input id="set_inflation_dest" type="button" value="set_inflation_dest" /><br />
+      <input id="change_threshold" type="button" value="change_options" />
+      Master_weight:  <input id="master_weight" size="3" value = 1 /> 
+      Threshold: <input id="threshold" size="3" value = 0 />
+      Home_domain: <input id="home_domain" size="40" value = "equid.co" /> <br />               
    </div>
 
    <div id="orders" class="tab-pane fade in" >
