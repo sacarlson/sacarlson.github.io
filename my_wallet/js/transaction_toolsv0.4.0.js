@@ -658,27 +658,13 @@
              server.submitTransaction(transaction).then(function(result) {
                console.log("tx2_result: ");
                console.log(result);
-               console.log(result.result_xdr);
-               if (result.result_xdr == 'AAAAAAAAAGQAAAAAAAAAAQAAAAAAAAABAAAAAAAAAAA=') {
-                 console.log("tx was ok");
-               } else {
-                 console.log("tx must be bad");
-               }
+               console.log(result.result_xdr);               
                tx_status.textContent = "Completed OK";
              }).catch(function(e) {
                console.log("submitTransaction error");
                console.log(e);
-               console.log(e.extras.result_xdr);
-               //var buffer = new Buffer(e.extras.result_xdr, "base64");
-               var buffer = new Buffer("AAAAAAAAAGT/////AAAAAQAAAAAAAAAB/////gAAAAA=", "base64").catch(function(e) {
-                 console.log("Buffer error");
-                 console.log(e);
-               });
-               
-               //var transactionResult = StellarSdk.xdr.TransactionResult.fromXDR(buffer);
-               //console.log("decoded error :");
-               //console.log(transactionResult);
-               tx_status.textContent = "Transaction error"; 
+               //console.log(e.extras.result_codes.operations[0]);               
+               tx_status.textContent = "Transaction error: " + e.extras.result_codes.operations[0]; 
              }); 
            }          
           })
@@ -695,8 +681,7 @@
               console.log("horizon mode email_flag detected");  
               email_funds_now ("email_funds");
               email_flag = false;
-            }  
-            
+            }              
           })
           .catch(function (err) {
             console.log(err);
