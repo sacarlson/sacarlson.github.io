@@ -1203,15 +1203,7 @@ function displayContents(contents) {
                 }
               }
 
-      function insRow2(a,b,c) {
-        var x = document.getElementById("table").insertRow(1);
-        var accountid = x.insertCell(0);
-        var acc_bal = x.insertCell(1);
-        var will_get = x.insertCell(2);
-        accountid.innerHTML = a;
-        acc_bal.innerHTML = b;
-        will_get.innerHTML = c;     
-      }
+ 
 
       // array = [1,2,3,4]
       function insRow(array) {
@@ -1230,14 +1222,17 @@ function get_transactions_desc(bal) {
   var es = server.transactions()
     .forAccount(account.value)    
     .order("desc")
+    .limit(40)
     .call()
     .then(function (page) {
-        console.log("page");
-        console.log(page);
-        console.log("start balance");
-        console.log(bal);
+        //console.log("page");
+        //console.log(page);
+        //console.log("start balance");
+        //console.log(bal);
         //var bal = {};
         bal.create_detected = true;
+        var native_bal = find_asset_balance(bal.balances,"native","");
+        //var native_bal = 0;
         //console.log(page.records);
         var arrayLength = page.records.length;
         for (var i = 0; i < arrayLength; i++) {
@@ -1256,38 +1251,39 @@ function get_transactions_desc(bal) {
           page.records[i].timeBounds = tx.tx.timeBounds;
           page.records[i].asset = tx.operations[0].asset;
           page.records[i].asset_code = "XLM";
-          console.log("page_tx i: " + i);
-          console.log(page.records[i]);  
+          //console.log("page_tx i: " + i);
+          //console.log(page.records[i]);  
           if (typeof page.records[i].asset != "undefined") {
-            console.log("asset != undefined");
-            page.records[i].issuer = tx.operations[0].asset.issuer;
+           // console.log("asset != undefined");
+            page.records[i].asset_issuer = tx.operations[0].asset.issuer;
             page.records[i].asset_code = tx.operations[0].asset.code;
           }
-          console.log("asset_code: " + page.records[i].asset_code);
+          //console.log("asset_code: " + page.records[i].asset_code);
+          var amount = parseFloat(page.records[i].amount);
+          if (account.value == page.records[i].from) {
+            amount = amount * -1;
+            page.records[i].amount = amount;
+          } 
           if (page.records[i].type == "payment") {
-            console.log("payment");
-            if (bal.create_detected == true) {
-              if (account.value != page.records[i].to) {
-                amount = amount * -1;
-              }  
-              var amount = parseFloat(page.records[i].amount);
+            //console.log("payment");
+            if (bal.create_detected == true) {                             
               if (page.records[i].asset_code == "XLM") {
-                console.log("asset is XLM");                            
-                bal.native = parseFloat(bal.native) + amount;                
-                //bal.balances[0]["asset_code"] = "XLM";
-                //bal.balances[0]["balance"] = bal.native;                
-                page.records[i].bal = clone(bal);
-                page.records[i].trans_asset_bal = page.records[i].bal.native - 0.0001;
-                console.log("exit if");
+                //console.log("asset is XLM");     
+                //native_bal = native_bal + amount - 0.0001;
+                bal.native = fix7dec(native_bal);                                                                    
+                page.records[i].bal = clone(bal);                
+                page.records[i].trans_asset_bal = native_bal;
+                native_bal = native_bal - amount + 0.0001;                
               } else {
-                console.log("asset not XLM");
+                //console.log("asset not XLM");
                 var asset_not_found = true;
                 var blen = bal.balances.length;
                 for (var a = 0; a < blen; a++) {                  
-                  if (bal.balances[a]["asset_code"] == page.records[i].asset_code && bal.balances[a]["issuer"] == page.records[i].issuer){                                 
-                    bal.balances[a]["balance"] =  bal.balances[a]["balance"] + amount;
+                  if (bal.balances[a]["asset_code"] == page.records[i].asset_code && bal.balances[a]["asset_issuer"] == page.records[i].asset_issuer){                                                                                                                               
                     page.records[i].bal = clone(bal);
-                    page.records[i].trans_asset_bal = bal.balances[a]["balance"] + amount;
+                    bal.balances[a]["balance"] =  parseFloat(bal.balances[a]["balance"]) - amount;
+                    //page.records[i].trans_asset_bal = parseFloat(bal.balances[a]["balance"]) - amount;
+                    native_bal = native_bal + 0.0001;   
                     asset_not_found = false;
                   }
                 }
@@ -1295,47 +1291,40 @@ function get_transactions_desc(bal) {
                   console.log("asset_not_found add new: " + page.records[i].asset_code);                                 
                   bal.balances[blen] = {};
                   bal.balances[blen]["asset_code"] = page.records[i].asset_code;
-                  bal.balances[blen]["asset_issuer"] = page.records[i].issuer;
+                  bal.balances[blen]["asset_issuer"] = page.records[i].asset_issuer;
                   bal.balances[blen]["balance"] = amount;                  
                   page.records[i].bal = clone(bal);
-                  page.records[i].trans_asset_bal = page.records[i].bal.balances["balance"];
+                  //page.records[i].trans_asset_bal = page.records[i].bal.balances["balance"];
+                  //console.log(page.records[i].bal);
                 }
               }
             }            
           }
-          if (page.records[i].type == "createAccount") {
-            console.log("createAccount2");
-            console.log(bal);
-            console.log(page.records[i].to);
-            console.log(account.value);
-            if (page.records[i].to == account.value) {
-              bal.create_detected = true;
-              bal.native = parseFloat(page.records[i].startingBalance);
-              page.records[i].amount = page.records[i].startingBalance;
-              //bal.balances = [];
-              //bal.balances[0] = {};
-              //bal.balances[0]["asset_code"] = "XLM"
-             // bal.balances[0]["balance"] = bal.native;
+          if (page.records[i].type == "createAccount") {            
+            if (page.records[i].from != account.value) {
+              bal.create_detected = true;              
+              bal.native = fix7dec(native_bal);
+              page.records[i].bal = clone(bal); 
+              native_bal = parseFloat(page.records[i].startingBalance);
+              page.records[i].amount = native_bal;          
             } else {
-              console.log("createaccount to diff dest");
-              bal.native = bal.native - parseFloat(page.records[i].startingBalance) - 0.0001;
-              page.records[i].amount = (page.records[i].startingBalance * -1);
-              //bal.balances[0]["balance"] = bal.native;
-            }
-            page.records[i].bal = clone(bal);
-            page.records[i].trans_asset_bal = page.records[i].bal.native ;
-            console.log(bal);           
+              //console.log("createaccount to diff dest");              
+              bal.native = fix7dec(native_bal);
+              page.records[i].bal = clone(bal); 
+              page.records[i].amount = (parseFloat(page.records[i].startingBalance)) * -1;
+              native_bal = native_bal + parseFloat(page.records[i].startingBalance) + 0.0001;
+            }        
           }
           // all transaction still pay .0001 Lumens so account for that here
           if (page.records[i].type != "payment" && page.records[i].type != "createAccount"){
-            console.log("trans not pay or create");
-            console.log(page.records[i].type);
-            bal.native =  bal.native - 0.0001;
-            bal.balances[0]["asset_code"] = "XLM";
-            bal.balances[0]["balance"] =  bal.native - 0.0001;
+            //console.log("trans not pay or create");
+            bal.native = fix7dec(native_bal);
             page.records[i].bal = clone(bal);
+            //console.log(page.records[i].type);
+            page.records[i].amount = -0.0001;
+            native_bal =  native_bal + 0.0001;                        
           }
-          console.log("end of for loop");                               
+          //console.log("end of for loop");                               
         }
         console.log("page.records");  
         console.log(page.records);
@@ -1354,28 +1343,33 @@ function clone(obj) {
 
 function display_history(page){
   console.log("start display_history");
-  console.log(page[0]);
+  //console.log(page);
   clear_table();
   var ar = [];
   var len = page.length;
-  console.log("disp length: " + len);
+  //console.log("disp length: " + len);
   for (var i = len - 1; i >= 0; i--) { 
     //console.log(page[i]);
-    console.log("i: " + i);
-    console.log(page[i].type);
+   // console.log("i: " + i);
+    //console.log(page[i].type);
     //if (page[i].type == "payment") {
-      console.log(page[i].created_at);
-      console.log(page[i].from);
-      console.log(page[i].to);
-      console.log(page[i].amount);
-      console.log(page[i].asset_code);
-      console.log(page[i].memo);
+      //console.log(page[i].created_at);
+      //console.log(page[i].from);
+      //console.log(page[i].to);
+      //console.log(page[i].amount);
+      //console.log(page[i].asset_code);
+      //console.log(page[i].memo);
       ar[0] = page[i].from;
       ar[1] = page[i].to;
       ar[2] = page[i].type;
       ar[3] = page[i].asset_code;
       ar[4] = page[i].amount;
-      ar[5] = page[i].created_at;
+      ar[6] = page[i].created_at;
+      if (page[i].asset_code == "XLM" || page[i].asset_code == "native") {
+        ar[5] = page[i].bal.native;
+      } else {
+        ar[5] = find_asset_balance(page[i].bal.balances,page[i].asset_code,"");
+      }
       insRow(ar);
       //console.log(page[i].trans_asset_bal);
       //page[i].from = page[i].from.substring(0, 6);
@@ -1383,6 +1377,28 @@ function display_history(page){
     //}    
   }
 }
+
+    function find_asset_balance(asset_array,asset_code, issuer) {
+      console.log("find_asset_balance: " + asset_code);
+      console.log(asset_array);
+     // if issuer "" then ignore     
+      var len = asset_array.length;
+      for (var i = 0; i < len; i++) {
+        if ((asset_code == "XLM" || asset_code == "native") && asset_array[i].asset_type == "native"){
+          console.log("asset XLM found bal: " + asset_array[i].balance);
+          return parseFloat(asset_array[i].balance);
+        }
+        if (asset_code == asset_array[i].asset_code) {
+          if (issuer == asset_array[i].issuer || issuer == "") {
+            console.log("asset found match" + asset_code);
+            console.log("bal: " + asset_array[i].balance);
+            return parseFloat(asset_array[i].balance);
+          }
+        }
+      }
+      console.log("no asset match found, return 0");
+      return 0;        
+    }
 
     function export_to_centaurus () {
       var cent_keys = {
