@@ -21,7 +21,8 @@
       var asset_type = document.getElementById("asset_type");
       var memo = document.getElementById("memo");
       var memo_mode = document.getElementById("memo_mode");
-      var dest_balance = document.getElementById("dest_balance");
+      //var dest_balance = document.getElementById("dest_balance");
+      var dest_balance = {};
       var dest_CHP_balance = document.getElementById("dest_CHP_balance");      
       var url = document.getElementById("url");
       var port = document.getElementById("port");
@@ -201,7 +202,7 @@
       makeCode();
 
       //var array = [1,2,3,4,5];
-      //insRow(array);
+      //insRow(array,"table");
 
       xmlhttp.onreadystatechange = function() {
               console.log("onreadystatechange");
@@ -215,6 +216,7 @@
                 if (fed_mode_forward) {
                   destination.value = myArr.account_id;
                   dest_seed.value = "";
+                  update_balances();
                 } else {
                   destination.value = myArr.stellar_address;
                 }
@@ -315,7 +317,7 @@
           };
 
           function start_effects_stream() {
-	    server.effects()
+	        server.effects()
             .forAccount(account.value)
             .limit(30)
             .order('desc')
@@ -349,6 +351,7 @@
             if (effect.type === 'account_debited') {
                if (effect.asset_type === "native") {
                   balance.value = balance.value - effect.amount;
+                  bal_disp.textContent = balance.value - effect.amount;
                }else {
                   CHP_balance.value = CHP_balance.value - effect.amount;
                }
@@ -356,12 +359,14 @@
             if (effect.type === 'account_credited') {
                if (effect.asset_type === "native") {
                   balance.value = balance.value + effect.amount;
+                  bal_disp.textContent = balance.value + effect.amount;
                }else {
                   CHP_balance.value = CHP_balance.value + effect.amount;
                }
             }
             if (effect.type === 'account_created') {
                balance.value = effect.starting_balance;
+               bal_disp.textContent = effect.starting_balance;
             }
           };
 
@@ -379,7 +384,7 @@
         });
       }
        
-      function get_account_info(account,params,callback) {
+      function get_account_info(account,callback) {
         console.log("account: " + account);
         if (server_mode === "mss_server") {
           socket_open_flag = true;
@@ -389,12 +394,12 @@
           .accountId(account)
           .call()
           .then(function (accountResult) {
-            callback(accountResult,params);                    
+            callback(accountResult);                    
           })
           .catch(function (err) {
             console.log("got error in get_account_info");
             console.error(err);
-            callback(err,params);          
+            callback(err);          
           })
         }
       }
@@ -403,63 +408,43 @@
         message.textContent = JSON.stringify(param);
       }
 
-       function update_balances_set(account_obj,params) {
-        get_transactions_desc(account_obj);
-        console.log("params: " + params.asset_code1 + " 2" + params.asset_code2);
-        //console.log("account_obj");
-        //console.log(account_obj);
-        account_obj_global = account_obj;     
-        display_balance(account_obj,{to_id:params.to_id1,
-          asset_code:params.asset_code1,
-          detail:false}
-        );   
-        if (params.asset_code2 == "XLM" || params.asset_code2 == "native"){
-          console.log("was XLM");
-          //account_obj.balances.xlm = balance.value;
-          //params.asset_code2 = "native";
+       
+
+      function update_balances_set(account_obj) {
+        console.log("update_balances_set");        
+        if (account_obj.account_id == account.value){
+          console.log("account_obj");
+          console.log(account_obj);
+          var bal = get_native_balance(account_obj);
+          console.log("bal: " + bal);
+          bal_disp.textContent = bal;
+          if (bal > 0) {  
+            get_transactions_desc(account_obj);
+            display_asset_table(account_obj);
+          }
+          return;
         } else {
-          display_balance(account_obj,{
-            to_id:params.to_id2,
-            asset_code:params.asset_code2,
-            detail:params.detail}
-          );
-        }
+          destination_home_domain = account_obj.home_domain;
+          console.log("distination_home_domain: " + destination_home_domain);
+          dest_balance.value = get_native_balance(account_obj);
+        } 
       }
 
-      function display_balance(account_obj,params) { 
-          console.log("account_obj2");
-          console.log(account_obj); 
-          console.log("asset_code: " + params.asset_code);
-          console.log(account_obj.account_id);
-          if (account_obj.account_id == destination.value){
-            console.log("distination_home_domain: " + destination_home_domain);
-            destination_home_domain = account_obj.home_domain;
-          }        
-          var balance = 0;
-          console.log("display_balance account_obj");
-          console.log(account_obj);
-          console.log(account_obj.name);
-          if (account_obj.name !== "NotFoundError"){
-            account_obj.balances.forEach(function(entry) {
-              if (entry.asset_code == params.asset_code) {
-                balance = entry.balance;
-              }                          
-            });
-          }
-          //window[params.to_id].value = balance;
-          window[params.to_id].textContent = balance;
-          console.log("balance: " + balance);
-          if (params.detail == true) {
-            display_message(account_obj);
-          }
-          return account_obj;          
+      function get_native_balance(account_obj){
+        var bal = 0;
+        if (account_obj.name !== "NotFoundError"){
+          account_obj.balances.forEach(function(entry) {
+            //console.log(entry);
+            if (entry.asset_type == "native") {
+              //console.log("entry.bal: " + entry.balance);
+              bal = entry.balance;
+            }                          
+          });
         }
+        return bal;
+      }
 
-      
-       function get_balance(account,to_id,asset) {         
-         get_account_info(account,{to_id:to_id,asset:asset},display_balance)
-       } 
-     
+                      
       function update_key() {
         if (seed.value.length == 56) {
           key = StellarSdk.Keypair.fromSeed(seed.value);
@@ -478,12 +463,9 @@
           get_balance_updates_mss();
           return
         }           
-        get_account_info(account.value,{
-          to_id1:"bal_disp",
-          asset_code1:null,
-          to_id2:"CHP_balance",
-          asset_code2:asset.value,
-          detail:true},update_balances_set);       
+        get_account_info(account.value,update_balances_set); 
+
+        get_account_info(destination.value,update_balances_set);           
       }
 
       
@@ -501,7 +483,7 @@
           //if (dest_balance.value == 0){
           if (new_account.checked){
             if (amount.value < 20) {
-              message.textContent = "destination account not active must send min 20 native";
+              alert("destination account not active must send min 20 native");
               return;
             }
             createAccount(key);
@@ -510,7 +492,7 @@
           }
         }else {
           if (dest_balance.value == 0){
-            message.textContent = "destination account not active, can only send native";
+            alert("destination account not active, can only send native");
             return;
           }
           console.log("asset: " + asset.value + " issuer: " + issuer.value);
@@ -800,6 +782,7 @@
           if (event_obj.action == "get_account_info") {          
             if (event_obj.accountid == account.value) {
               balance.value = event_obj.balance;
+              bal_disp.textContent = event_obj.balance;
             }
             if (event_obj.accountid == destination.value) {
               dest_balance.value = event_obj.balance;
@@ -1030,13 +1013,14 @@
         console.log("deleting key "+ seed_nick.value);              
         localStorage.removeItem(seed_nick.value);
         update_seed_select()
-        message.textContent = "seed_nick: " + seed_nick.value + " deleted from LocalStorage";   
+        alert("seed_nick: " + seed_nick.value + " deleted from LocalStorage");   
         //display_localstorage_keylist();        
       });
 
       restore.addEventListener("click", function(event) {
         seed.value = restore_seed(seed_nick.value, pass_phrase.value);
         update_seed_select();
+        update_key();
       });
 
       
@@ -1195,8 +1179,8 @@ function displayContents(contents) {
   console.log(contents);
 }
 
-              function clear_table() {
-                var table = document.getElementById("table");
+              function clear_table(id) {
+                var table = document.getElementById(id);
                 for(var i = table.rows.length - 1; i > 0; i--)
                 {
                   table.deleteRow(i);
@@ -1206,9 +1190,9 @@ function displayContents(contents) {
  
 
       // array = [1,2,3,4]
-      function insRow(array) {
+      function insRow(array,id) {
         var cells = [];
-        var x = document.getElementById("table").insertRow(1);
+        var x = document.getElementById(id).insertRow(1);
         for(var i = 0; i < array.length; i++) {
           cells[i] = x.insertCell(i);        
           cells[i].innerHTML = array[i];        
@@ -1344,7 +1328,7 @@ function clone(obj) {
 function display_history(page){
   console.log("start display_history");
   //console.log(page);
-  clear_table();
+  clear_table("table");
   var ar = [];
   var len = page.length;
   //console.log("disp length: " + len);
@@ -1370,13 +1354,33 @@ function display_history(page){
       } else {
         ar[5] = find_asset_balance(page[i].bal.balances,page[i].asset_code,"");
       }
-      insRow(ar);
+      insRow(ar,"table");
       //console.log(page[i].trans_asset_bal);
       //page[i].from = page[i].from.substring(0, 6);
       //display_stream(page[i]);      
     //}    
   }
 }
+
+    function display_asset_table(account_obj){
+       console.log("display_asset_table");
+       console.log(account_obj.balances);
+       clear_table("table_asset");
+       var ar = [];
+       var len = account_obj.balances.length;
+       //console.log("disp length: " + len);
+       for (var i = len - 1; i >= 0; i--) {
+         if (account_obj.balances[i].asset_type == "native") {
+           ar[0] = "XLM";
+           ar[1] = "";
+         } else { 
+           ar[0] = account_obj.balances[i].asset_code;
+           ar[1] = account_obj.balances[i].asset_issuer;
+         }
+         ar[2] = account_obj.balances[i].balance;
+         insRow(ar,"table_asset");
+       }
+    }
 
     function find_asset_balance(asset_array,asset_code, issuer) {
       console.log("find_asset_balance: " + asset_code);
@@ -1488,8 +1492,12 @@ function display_history(page){
           destination.value = temp_key.accountId();
         }
         update_balances();
-        save_seed("seed1", "", seed.value);
-        save_seed("seed2", "", dest_seed.value);
+        if (seed.value.length == 56){
+          save_seed("seed1", "", seed.value);
+        }
+        if (dest_seed.value.length == 56){
+          save_seed("seed2", "", dest_seed.value);
+        }
         sign_tx.disabled = false;
       });
 
@@ -1499,7 +1507,7 @@ function display_history(page){
         if (temp.length > 0) {
           seed.value = temp;
         } else {
-          message.textContent = "bad pass phrase for decrypt_seed";
+          alert("bad pass phrase for decrypt_seed");
         }
       });
 
