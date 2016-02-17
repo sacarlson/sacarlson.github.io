@@ -16,7 +16,8 @@
       var tissuer = document.getElementById("tissuer");
       var tasset = document.getElementById("tasset");
       var amount = document.getElementById("amount");
-      var balance = document.getElementById("balance");
+      //var balance = document.getElementById("balance");
+      var balance = {};
       var CHP_balance = document.getElementById("CHP_balance");
       var asset_type = document.getElementById("asset_type");
       var memo = document.getElementById("memo");
@@ -152,7 +153,6 @@
 
       //merge_accounts.disabled = true;
       network.value ="testnet";
-      console.log("just after var");
       tx_status.textContent = "Idle";
       status.textContent = "Not Connected";
       url.value = "horizon-testnet.stellar.org";
@@ -226,7 +226,7 @@
 
 
       function makeCode () {
-        console.log("start makeCode");		
+        //console.log("start makeCode");		
 	    // qr-code generator
 	    if (!account.value) {
 	      alert("no account value detected for qrcode, bad pass phrase?");
@@ -236,7 +236,7 @@
 	   //qrcode.makeCode(seed.value);
        //update_key();
        qrcode.makeCode(export_to_centaurus());
-       console.log("qrcode account: " + account.value);
+       //console.log("qrcode account: " + account.value);
        qrcode2.makeCode(account.value);        
      } 
 
@@ -326,7 +326,7 @@
                 console.log("then effectResults");
                 var length = effectResults.records ? effectResults.records.length : 0;
                 for (index = length-1; index >= 0; index--) {
-                    console.log("index" + index);
+                    //console.log("index" + index);
                     var currentEffect = effectResults.records[index];
                     effectHandler(currentEffect, false);
                 }
@@ -339,40 +339,41 @@
             })
             .catch(function (err) {
                 //console.log(err);
-                console.log("error detected in attachToPaymentsStream");
+                //console.log("error detected in attachToPaymentsStream");
                 attachToPaymentsStream('now');               
             });
           }
 
           function effectHandler(effect,tf) {
             console.log("got effectHandler event");
-            console.log(tf);
-            console.log(effect);
+            //console.log(tf);
+            //console.log(effect);
+            //console.log("balance.value: " + balance.value);
             if (effect.type === 'account_debited') {
                if (effect.asset_type === "native") {
-                  balance.value = balance.value - effect.amount;
-                  bal_disp.textContent = balance.value - effect.amount;
+                  balance.value = parseFloat(balance.value) - parseFloat(effect.amount);
+                  bal_disp.textContent = fix7dec(balance.value);
                }else {
                   CHP_balance.value = CHP_balance.value - effect.amount;
                }
             }
             if (effect.type === 'account_credited') {
                if (effect.asset_type === "native") {
-                  balance.value = balance.value + effect.amount;
-                  bal_disp.textContent = balance.value + effect.amount;
+                  balance.value = parseFloat(balance.value) + parseFloat(effect.amount);
+                  bal_disp.textContent = fix7dec(balance.value);
                }else {
                   CHP_balance.value = CHP_balance.value + effect.amount;
                }
             }
             if (effect.type === 'account_created') {
-               balance.value = effect.starting_balance;
-               bal_disp.textContent = effect.starting_balance;
+               balance.value = parseFloat(effect.starting_balance);
+               bal_disp.textContent = fix7dec(effect.starting_balance);
             }
           };
 
       function reset_horizon_server() {
         console.log("reset_horizon_server"); 
-        console.log("secure: " + secure.value);
+        //console.log("secure: " + secure.value);
         var tf = true;
         if (secure.value == "false") { 
           tf = false;
@@ -413,11 +414,12 @@
       function update_balances_set(account_obj) {
         console.log("update_balances_set");        
         if (account_obj.account_id == account.value){
-          console.log("account_obj");
-          console.log(account_obj);
+          //console.log("account_obj");
+          //console.log(account_obj);
           var bal = get_native_balance(account_obj);
-          console.log("bal: " + bal);
+          //console.log("bal: " + bal);
           bal_disp.textContent = bal;
+          balance.value = bal;
           if (bal > 0) {  
             get_transactions_desc(account_obj);
             display_asset_table(account_obj);
@@ -425,12 +427,14 @@
           return;
         } else {
           destination_home_domain = account_obj.home_domain;
-          console.log("distination_home_domain: " + destination_home_domain);
+          //console.log("distination_home_domain: " + destination_home_domain);
           dest_balance.value = get_native_balance(account_obj);
         } 
       }
 
       function get_native_balance(account_obj){
+        console.log("get_native_balance");
+        console.log(account_obj);
         var bal = 0;
         if (account_obj.name !== "NotFoundError"){
           account_obj.balances.forEach(function(entry) {
@@ -441,6 +445,7 @@
             }                          
           });
         }
+        console.log(bal);
         return bal;
       }
 
@@ -464,8 +469,9 @@
           return
         }           
         get_account_info(account.value,update_balances_set); 
-
-        get_account_info(destination.value,update_balances_set);           
+        if (destination.value.length == 56){
+          get_account_info(destination.value,update_balances_set); 
+        }          
       }
 
       
@@ -609,9 +615,9 @@
       function createTransaction_horizon(key,operation) {
         tx_status.textContent = "Processing";
         update_key();
-        console.log("memo.value typeof");
-        console.log(typeof memo.value);
-        console.log(memo.value.length);
+        //console.log("memo.value typeof");
+        //console.log(typeof memo.value);
+        //console.log(memo.value.length);
         if (memo_mode.value == "auto") {
           if (isNaN(memo.value)|| memo.value.length == 0) {
             console.log("auto memo.text");
@@ -629,8 +635,8 @@
         }
         server.loadAccount(key.accountId())
           .then(function (account) {
-             console.log("memo_tr typeof");
-             console.log(typeof memo_tr);
+             //console.log("memo_tr typeof");
+             //console.log(typeof memo_tr);
              transaction = new StellarSdk.TransactionBuilder(account,{fee:100, memo: memo_tr})            
             .addOperation(operation)                      
             .build();
@@ -638,13 +644,13 @@
            if ( email_flag != true ) { 
              console.log("horizon mode sending tx");                               
              server.submitTransaction(transaction).then(function(result) {
-               console.log("tx2_result: ");
-               console.log(result);
-               console.log(result.result_xdr);               
+               //console.log("tx2_result: ");
+               //console.log(result);
+               //console.log(result.result_xdr);               
                tx_status.textContent = "Completed OK";
              }).catch(function(e) {
-               console.log("submitTransaction error");
-               console.log(e);
+               //console.log("submitTransaction error");
+               //console.log(e);
                //console.log(e.extras.result_codes.operations[0]);               
                tx_status.textContent = "Transaction error: " + e.extras.result_codes.operations[0]; 
              }); 
@@ -1080,8 +1086,8 @@
         }        
       }
 
-       save_to_file.addEventListener("click", function(event) {
-         console.log("start save_to_file");
+      save_to_file.addEventListener("click", function(event) {
+        console.log("start save_to_file");
        //save all the keys presently seen in LocalStorage on this browser to a local disk file on the system
        // this does not effect the encryption of the keys just moves the data to a file
        var result = "{";
@@ -1272,7 +1278,7 @@ function get_transactions_desc(bal) {
                   }
                 }
                 if (asset_not_found) {
-                  console.log("asset_not_found add new: " + page.records[i].asset_code);                                 
+                  //console.log("asset_not_found add new: " + page.records[i].asset_code);                                 
                   bal.balances[blen] = {};
                   bal.balances[blen]["asset_code"] = page.records[i].asset_code;
                   bal.balances[blen]["asset_issuer"] = page.records[i].asset_issuer;
@@ -1333,32 +1339,38 @@ function display_history(page){
   var len = page.length;
   //console.log("disp length: " + len);
   for (var i = len - 1; i >= 0; i--) { 
+    var amount = parseFloat(page[i].amount);
+    var red = '<font color="red">';
+    var green = '<font color="green">';
+    var font_color;
+    if (amount > 0){
+      font_color = '<font color="green">';
+      ar[0] = font_color + page[i].from + "</font>";
+    } else {
+      font_color = '<font color="red">';
+      ar[0] = font_color + page[i].to + "</font>";
+    }
     //console.log(page[i]);
-   // console.log("i: " + i);
-    //console.log(page[i].type);
-    //if (page[i].type == "payment") {
-      //console.log(page[i].created_at);
-      //console.log(page[i].from);
-      //console.log(page[i].to);
-      //console.log(page[i].amount);
-      //console.log(page[i].asset_code);
-      //console.log(page[i].memo);
-      ar[0] = page[i].from;
-      ar[1] = page[i].to;
-      ar[2] = page[i].type;
-      ar[3] = page[i].asset_code;
-      ar[4] = page[i].amount;
-      ar[6] = page[i].created_at;
-      if (page[i].asset_code == "XLM" || page[i].asset_code == "native") {
-        ar[5] = page[i].bal.native;
-      } else {
-        ar[5] = find_asset_balance(page[i].bal.balances,page[i].asset_code,"");
-      }
-      insRow(ar,"table");
-      //console.log(page[i].trans_asset_bal);
-      //page[i].from = page[i].from.substring(0, 6);
-      //display_stream(page[i]);      
-    //}    
+    //console.log(page[i].created_at);
+    //console.log(page[i].from);
+    //console.log(page[i].to);
+    //console.log(page[i].amount);
+    //console.log(page[i].asset_code);
+    //console.log(page[i].memo);
+    //ar[0] = page[i].from;
+    //ar[1] = page[i].to;
+    
+    ar[1] = font_color + page[i].type + "</font>";
+    ar[2] = font_color + page[i].asset_code + "</font>";
+    ar[3] = font_color + page[i].amount + "</font>";  
+    if (page[i].asset_code == "XLM" || page[i].asset_code == "native") {
+      ar[4] =  font_color + page[i].bal.native + "</font>";
+    } else {
+      ar[4] = font_color + fix7dec(find_asset_balance(page[i].bal.balances,page[i].asset_code,"")) + "</font>";
+    }
+    ar[5] = font_color + page[i].memo + "</font>";
+    ar[6] = font_color + page[i].created_at + "</font>";
+    insRow(ar,"table"); 
   }
 }
 
@@ -1383,24 +1395,24 @@ function display_history(page){
     }
 
     function find_asset_balance(asset_array,asset_code, issuer) {
-      console.log("find_asset_balance: " + asset_code);
-      console.log(asset_array);
+      //console.log("find_asset_balance: " + asset_code);
+      //console.log(asset_array);
      // if issuer "" then ignore     
       var len = asset_array.length;
       for (var i = 0; i < len; i++) {
         if ((asset_code == "XLM" || asset_code == "native") && asset_array[i].asset_type == "native"){
-          console.log("asset XLM found bal: " + asset_array[i].balance);
+          //console.log("asset XLM found bal: " + asset_array[i].balance);
           return parseFloat(asset_array[i].balance);
         }
         if (asset_code == asset_array[i].asset_code) {
           if (issuer == asset_array[i].issuer || issuer == "") {
-            console.log("asset found match" + asset_code);
-            console.log("bal: " + asset_array[i].balance);
+            //console.log("asset found match" + asset_code);
+            //console.log("bal: " + asset_array[i].balance);
             return parseFloat(asset_array[i].balance);
           }
         }
       }
-      console.log("no asset match found, return 0");
+      //console.log("no asset match found, return 0");
       return 0;        
     }
 
