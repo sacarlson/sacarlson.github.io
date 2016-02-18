@@ -204,7 +204,8 @@
       account_disp.textContent = account.value;
       account_disp2.textContent = account.value;
       makeCode();
-
+      
+      get_offers();
       //var array = [1,2,3,4,5];
       //insRow(array,"table");
 
@@ -1542,7 +1543,59 @@ function display_history(page){
 	  var body = 'centaurus:backup003' + backupString;
       console.log("export centaurus: " + body);
 	  return body;
-    };
+    }
+
+   function get_offers(){
+     console.log("get_offers");
+     server.offers("accounts", account.value)
+      .limit(40)
+      .call()
+      .then(function (offerResult) {
+        //console.log("offer results");
+        //console.log(offerResult);
+        display_offer_table(offerResult);
+      })
+      .catch(function (err) {
+        console.log("offer results error");
+        console.error(err);
+      });
+   }
+
+   function display_offer_table(offer_obj){
+       console.log("display_offer_table");
+       //console.log(offer_obj.records);
+       clear_table("table_offers");
+       var ar = [];
+       var len = offer_obj.records.length;
+       //console.log("disp length: " + len);
+       for (var i = len - 1; i >= 0; i--) {
+         if (offer_obj.records[i].selling.asset_type == "native") {
+           ar[0] = "XLM";
+           ar[1] = "";
+         } else {        
+           ar[0] = offer_obj.records[i].selling.asset_code;
+           ar[1] = offer_obj.records[i].selling.asset_issuer;  
+         }                
+         ar[2] = offer_obj.records[i].amount;
+         ar[3] = offer_obj.records[i].price; 
+         if (offer_obj.records[i].buying.asset_type == "native") {
+           ar[4] = "XLM";
+           ar[5] = "";
+         } else {     
+           ar[4] = offer_obj.records[i].buying.asset_code;
+           ar[5] = offer_obj.records[i].buying.asset_issuer;
+         }
+         insRow(ar,"table_offers");
+       }
+    }
+
+  //<th>Selling Asset</th>
+  //<th>Selling Issuer</th>
+  //<th>Amount</th>
+ // <th>Price</th>
+  //<th>Buying Asset</th>
+ // <th>Buying Issuer</th> 
+ 
 
    //triger the event of readSingleFile when file-input browse button is clicked and a file selected
      //this event reads the data from a local disk file and restores it's contents to the LocalStorage
