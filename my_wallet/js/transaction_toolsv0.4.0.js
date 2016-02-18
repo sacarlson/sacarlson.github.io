@@ -3,7 +3,7 @@
     // Initialize everything when the window finishes loading
     window.addEventListener("load", function(event) {
       //StellarSdk.Network.useTestNetwork();
-
+      
       var network_testnet = document.getElementById("network_testnet");
       var message = document.getElementById("message");
       var account = document.getElementById("account");
@@ -40,6 +40,7 @@
       var select_seed = document.getElementById("select_seed");
       var new_account = document.getElementById("new_account");
       var tx_status = document.getElementById("tx_status");
+      var net_passphrase = document.getElementById("net_passphrase");
      
       var asset_obj = new StellarSdk.Asset.native();
       var socket;
@@ -69,8 +70,11 @@
 	    height : 200
       });
  
-      
-         
+      //net_passphrase.value = "Test SDF Network ; September 2015";
+      restore_default_settings();
+      StellarSdk.Network.use(new StellarSdk.Network(net_passphrase.value));
+      active_network.textContent = net_passphrase.value ;
+        
 
       console.log("seed.value: " + seed.value);     
       console.log("seed.value.length: " + seed.value.length);
@@ -152,12 +156,12 @@
       }
 
       //merge_accounts.disabled = true;
-      network.value ="testnet";
+      //network.value ="testnet";
       tx_status.textContent = "Idle";
       status.textContent = "Not Connected";
-      url.value = "horizon-testnet.stellar.org";
-      port.value = "443";
-      secure.value = "true";
+      //url.value = "horizon-testnet.stellar.org";
+      //port.value = "443";
+      //secure.value = "true";
       //create_socket();
       close.disabled = true;
       open.disabled = true;
@@ -189,9 +193,9 @@
             
       reset_horizon_server();
       update_seed_select();
-      current_mode.value = "Stellar horizon TestNet";
+      //current_mode.value = "Stellar horizon TestNet";
       
-     
+      bal_disp.textContent = 0;
       update_balances();
       start_effects_stream();
       
@@ -356,6 +360,7 @@
                }else {
                   CHP_balance.value = CHP_balance.value - effect.amount;
                }
+               insert_history_table(effect,"red")
             }
             if (effect.type === 'account_credited') {
                if (effect.asset_type === "native") {
@@ -364,12 +369,46 @@
                }else {
                   CHP_balance.value = CHP_balance.value + effect.amount;
                }
+               insert_history_table(effect,"green")
             }
             if (effect.type === 'account_created') {
                balance.value = parseFloat(effect.starting_balance);
                bal_disp.textContent = fix7dec(effect.starting_balance);
+               insert_history_table(effect,"red")
             }
           };
+
+      function insert_history_table(effect,red_green){
+        console.log("insert_history_table");
+        console.log(effect);
+        var ar = [];
+        var red = '<font color="red">';
+        var green = '<font color="green">';
+        var font_color;
+        var amount = parseFloat(effect.amount);
+        if (red_green == "red"){
+          font_color = red;
+          amount = amount * -1;
+        } else {
+          font_color = green;
+        }
+        
+        if (effect.asset_type === "native") {
+          ar[4] = font_color + bal_disp.textContent + "</font>";
+          ar[2] = font_color + "XLM" + "</font>";
+        } else {
+          ar[4] = font_color + "not_suported" + "</font>";
+          ar[2] = font_color + effect.asset_code + "</font>";
+        }
+        ar[0] = font_color + destination.value + " ??</font>";
+        ar[5] = font_color + memo.value + "</font>";
+        ar[6] = font_color + (new Date()).toUTCString() + "</font>";
+        ar[1] = font_color + effect.type + "</font>";
+        //ar[2] = font_color + effect.asset_code + "</font>";
+        ar[3] = font_color + amount + "</font>";  
+        insRow(ar,"table"); 
+        
+      }
 
       function reset_horizon_server() {
         console.log("reset_horizon_server"); 
@@ -444,9 +483,12 @@
               bal = entry.balance;
             }                          
           });
+          console.log(bal);
+          return bal;
+        } else {
+          console.log("no account active return -1");
+          return -1;
         }
-        console.log(bal);
-        return bal;
       }
 
                       
@@ -615,9 +657,6 @@
       function createTransaction_horizon(key,operation) {
         tx_status.textContent = "Processing";
         update_key();
-        //console.log("memo.value typeof");
-        //console.log(typeof memo.value);
-        //console.log(memo.value.length);
         if (memo_mode.value == "auto") {
           if (isNaN(memo.value)|| memo.value.length == 0) {
             console.log("auto memo.text");
@@ -659,7 +698,8 @@
           .then(function (transactionResult) {
             console.log("tx_result");
             if (typeof transactionResult == "undefined") {
-              console.log("tx res undefined");              
+              console.log("tx res undefined");
+              tx_status.textContent = "Transaction error?  result undefined";              
               return
             }
             console.log(transactionResult);
@@ -674,7 +714,7 @@
           .catch(function (err) {
             console.log(err);
             email_flag = false;
-            tx_status.textContent = "Completed Error: " + err; 
+            tx_status.textContent = "Transaction Error: " + err; 
           });
         }
      
@@ -849,14 +889,28 @@
         message.textContent = "";
         socket.close();
       });
+
+      change_network.addEventListener("click", function(event) {
+        change_network_func();
+        save_default_settings();
+      }); 
      
-      change_network.addEventListener("click", function(event) { 
-        console.log("mode: " + network.value);        
+      function change_network_func() {
+        clear_table("table");
+        clear_table("table_asset");
+        bal_disp.textContent = 0; 
+        console.log("mode: " + network.value);
+        var pub = "Public Global Stellar Network ; September 2015"
+        var tes = "Test SDF Network ; September 2015"        
         if(network.value === "testnet" ) {
           server_mode = "horizon";
           close.disabled = true;
           open.disabled = true;
-          StellarSdk.Network.useTestNetwork();
+          net_passphrase.value = tes;
+          //PUBLIC: "Public Global Stellar Network ; September 2015"
+          //TESTNET: "Test SDF Network ; September 2015"
+          StellarSdk.Network.use(new StellarSdk.Network(net_passphrase.value));
+          //StellarSdk.Network.useTestNetwork();
           //hostname = "horizon-testnet.stellar.org";
           current_mode.value = "Stellar horizon TestNet";
           console.log(socket);
@@ -864,6 +918,7 @@
             socket.close();
           }
           reset_horizon_server();
+          active_network.textContent = tes;
           update_balances();
           start_effects_stream();
         }else if (network.value === "live" ){
@@ -871,15 +926,17 @@
           console.log("mode Live!!");  
           close.disabled = true;
           open.disabled = true;
-          StellarSdk.Network.usePublicNetwork();
-          //hostname = "horizon-live.stellar.org";
-          
+          net_passphrase.value = pub;
+          StellarSdk.Network.use(new StellarSdk.Network(net_passphrase.value));
+          //StellarSdk.Network.usePublicNetwork();
+          //hostname = "horizon-live.stellar.org";          
           current_mode.value = "Stellar horizon Live!!";
           console.log(socket);
           if (typeof(socket) !== "undefined") {
             socket.close();
           }
           reset_horizon_server();
+          active_network.textContent = pub;
           update_balances();
           start_effects_stream();
         }else if (network.value === "live_default" ){
@@ -887,7 +944,8 @@
           console.log("mode Live!!");  
           close.disabled = true;
           open.disabled = true;
-          StellarSdk.Network.usePublicNetwork();
+          net_passphrase.value = pub;
+          StellarSdk.Network.use(new StellarSdk.Network(net_passphrase.value));
           url.value = "horizon-live.stellar.org";
           port.value = "443";
           secure.value = "true";
@@ -897,6 +955,7 @@
             socket.close();
           }
           reset_horizon_server();
+          active_network.textContent = pub;
           update_balances();
           start_effects_stream();
         }else if (network.value === "testnet_default" ){
@@ -904,7 +963,8 @@
           console.log("mode testnet_default");  
           close.disabled = true;
           open.disabled = true;
-          StellarSdk.Network.useTestNet();
+          net_passphrase.value = tes;
+          StellarSdk.Network.use(new StellarSdk.Network(net_passphrase.value));
           url.value = "horizon-testnet.stellar.org";
           port.value = "443";
           secure.value = "true";
@@ -914,6 +974,7 @@
             socket.close();
           }
           reset_horizon_server();
+          active_network.textContent = tes;
           update_balances();
           start_effects_stream();
         }else if (network.value === "mss_server_live") {
@@ -931,9 +992,23 @@
             secure.value = "false";
           }
           //StellarSdk.Network.useTestNet();
-          StellarSdk.Network.usePublicNetwork();
+          net_passphrase.value = pub;
+          StellarSdk.Network.use(new StellarSdk.Network(net_passphrase.value));
           create_socket();
+          active_network.textContent = pub;
           current_mode.value = "MSS-server LIVE! mode";
+        }else if (network.value === "custom") {
+          server_mode = "horizon";
+          current_mode.value = "Custom Horizon";
+          close.disabled = true;
+          open.disabled = true;
+          StellarSdk.Network.use(new StellarSdk.Network(net_passphrase.value));
+          reset_horizon_server();
+          active_network.textContent = net_passphrase.value;
+          update_balances();
+          start_effects_stream();
+        }else if (network.value === "no_op") {
+          console.log("network.value == no_op, do nothing");
         }else  {
           //mss-server mode testnet
           server_mode = "mss_server";
@@ -948,12 +1023,14 @@
             port.value = "9494";
             secure.value = "false";
           }
-          StellarSdk.Network.useTestNet();
+          net_passphrase.value = tes;
+          StellarSdk.Network.use(new StellarSdk.Network(net_passphrase.value));
           create_socket();
+          active_network.textContent = tes;
           current_mode.value = "MSS-server TestNet";
         }     
         update_balances();          
-      });
+      }
       
       function save_seed(seed_nick_name_, pass_phrase_, seed_ ) {
         if (typeof(Storage) !== "undefined") {
@@ -1027,6 +1104,8 @@
         seed.value = restore_seed(seed_nick.value, pass_phrase.value);
         update_seed_select();
         update_key();
+        start_effects_stream();
+        update_balances();
       });
 
       
@@ -1063,7 +1142,9 @@
         select_seed.options.add(optn);
         var len = localStorage.length;
         for ( var i = 0;  i < len; ++i ){
-          addOption(select_seed, localStorage.key( i ), localStorage.key( i ));
+          if (encodeURI(localStorage.key( i )) != "def_settings"){
+            addOption(select_seed, localStorage.key( i ), localStorage.key( i ));
+          }
         }
       }
 
@@ -1084,6 +1165,41 @@
         }else {
           seed.value = "Sorry, your browser does not support Web Storage...";
         }        
+      }
+
+       function restore_default_settings(){
+        var def_settings_json = localStorage.getItem("def_settings");
+        console.log("restore_default_settings");
+        console.log(def_settings_json);
+        if (def_settings_json == null) {
+          console.log("type null, restore nothing");
+          network.value ="testnet";
+          change_network_func();
+          save_default_settings(); 
+          return;
+        }
+        var obj = JSON.parse(def_settings_json);
+        server_mode = obj.server_mode;
+        net_passphrase.value = obj.net_passphrase;
+        current_mode.value = obj.current_mode;
+        network.value = obj.network;
+        url.value = obj.url;
+        port.value = obj.port;
+        secure.value = obj.secure;
+        console.log(obj);
+      }
+
+      function save_default_settings(){
+        var obj = {};
+        obj.server_mode = server_mode;
+        obj.net_passphrase = net_passphrase.value;
+        obj.current_mode = current_mode.value;
+        obj.network = network.value;
+        obj.url = url.value;
+        obj.port = port.value;
+        obj.secure = secure.value;
+        var string = JSON.stringify(obj);
+        localStorage.setItem("def_settings", string);
       }
 
       save_to_file.addEventListener("click", function(event) {
@@ -1503,6 +1619,7 @@ function display_history(page){
           var temp_key = StellarSdk.Keypair.fromSeed(dest_seed.value);
           destination.value = temp_key.accountId();
         }
+        start_effects_stream();
         update_balances();
         if (seed.value.length == 56){
           save_seed("seed1", "", seed.value);

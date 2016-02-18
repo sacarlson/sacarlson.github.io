@@ -29,6 +29,7 @@
           <h3> Balance: <span id="bal_disp"></span> (XLM)</h3>         
         </div> 
         <div class="col-sm-4">
+          <h3> Active Network: <span id="active_network"></span> </h3>
           <h3>TX Status: <span id="tx_status" ></span> </h3>                  
         </div>  
       </div>    
@@ -222,17 +223,19 @@
    <div id="settings" class="tab-pane fade in active" >
       <h2>Change Default Settings</h2>
       <p>Change default settings including default horizon/mss-server address pointing, mss-server/horizon modes, Live/Testnet modes and other </p> 
-      also refresh bal:<input id="change_network" type="button" value="change_network" />
+      Also refresh bal:<input id="change_network" type="button" value="change_network" />
 <select name="network" id="network" value='testnet_default'>
   <option>testnet_default</option>
-  <option>live_default</option>
+  <option>live_default</option> 
+  <option>mss_server_testnet</option> 
+  <option>mss_server_live</option>  
   <option>testnet</option>
   <option>live</option>
-  <option>mss_server_live</option>
-  <option>mss_server_testnet</option>
+  <option>custom</option>
 </select>
 <input id="current_mode"  value="current_mode?" /><br />
 MSS-server socket Status: <span id="status"></span><br />
+Network Passphrase: <input id="net_passphrase" size="50" />
 Horizon/mss_server URL: <input id="url" size="30" />
 port: <input id="port" size="6" />  secure
 <select name="secure" id="secure" value='true'>
