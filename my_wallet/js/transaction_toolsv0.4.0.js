@@ -1173,7 +1173,7 @@
         console.log(def_settings_json);
         if (def_settings_json == null) {
           console.log("type null, restore nothing");
-          network.value ="testnet";
+          network.value ="testnet_default";
           change_network_func();
           save_default_settings(); 
           return;
