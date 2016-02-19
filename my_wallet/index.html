@@ -214,15 +214,15 @@
      <li><a data-toggle="tab" href="#sign"> <h4> Sign Tx </h4></a></li>
      <li><a data-toggle="tab" href="#merge"><h4>Merge Accounts</h4></a></li>
      <li><a data-toggle="tab" href="#account_opts"><h4>Account Options</h4></a></li> 
-     <li><a data-toggle="tab" href="#orders"><h4>Order Offers</h4></a></li>
-                      
+     <li><a data-toggle="tab" href="#view_offer"><h4>View Offers</h4></a></li>
+     <li><a data-toggle="tab" href="#create_offer"><h4>Create Offers</h4></a></li>                      
   </ul>
   <div class="tab-content">
 
    
    <div id="settings" class="tab-pane fade in active" >
-      <h2>Change Default Settings</h2>
-      <p>Change default settings including default horizon/mss-server address pointing, mss-server/horizon modes, Live/Testnet modes and other </p> 
+      <h2>Change Default Network Settings</h2>
+      <p>Change default network settings including default horizon/mss-server address pointing, mss-server/horizon modes, Live/Testnet network modes and other </p> 
       Also refresh bal:<input id="change_network" type="button" value="change_network" />
 <select name="network" id="network" value='testnet_default'>
   <option>testnet_default</option>
@@ -235,15 +235,16 @@
 </select>
 <input id="current_mode"  value="current_mode?" /><br />
 MSS-server socket Status: <span id="status"></span><br />
-Network Passphrase: <input id="net_passphrase" size="50" />
+Network Passphrase: <input id="net_passphrase" size="50" /><br />
 Horizon/mss_server URL: <input id="url" size="30" />
 port: <input id="port" size="6" />  secure
 <select name="secure" id="secure" value='true'>
   <option>true</option>
   <option>false</option>
 </select><br />
-<input id="open" type="button" value="Connect" />&nbsp;
-  <input id="close" type="button" value="Disconnect" /><br />  
+MSS-server: <input id="open" type="button" value="Connect" />&nbsp;
+  <input id="close" type="button" value="Disconnect" /><br />
+  Legacy Message Display: <br /> 
   <div style="width:800px;height:300px;line-height:3em;overflow:scroll;padding:10px;">
     <span id="message"></span>
   </div>            
@@ -295,31 +296,47 @@ port: <input id="port" size="6" />  secure
       Home_domain: <input id="home_domain" size="40" value = "equid.co" /> <br />               
    </div>
 
-   <div id="orders" class="tab-pane fade in" >
-      <h2>Order Offers</h2>
-      <p>Order Offers presently setup and running on this accountId</p> 
+   <div id="view_offer" class="tab-pane fade in" >
+      <h2>Open Order Offers</h2>
+      <p>Presently open orders setup and running on this accountId</p> 
       <table id="table_offers" class="table table-hover table-striped table-bordered">
-<thead>
-<tr>  
-  <th>Selling Asset</th>
-  <th>Selling Issuer</th>
-  <th>Amount</th>
-  <th>Price</th>
-  <th>Buying Asset</th>
-  <th>Buying Issuer</th>  
-</tr>
-</thead>
-<tbody>
-  <tr> 
-  </tr>
+        <thead>
+          <tr>  
+            <th>Selling Asset</th>
+            <th>Selling Issuer</th>
+            <th>Amount</th>
+            <th>Price</th>
+            <th>Buying Asset</th>
+            <th>Buying Issuer</th>  
+          </tr>
+        </thead>
+        <tbody>
+          <tr> 
+          </tr>
 
-</tbody>
-</table>             
+       </tbody>
+     </table>             
    </div>
+
+   <div id="create_offer" class="tab-pane fade in" >
+      <h2>Create Offer</h2>
+      <p>Create an order offer of an asset issuer set for another asset issuer set presently held and trusted by this accountId.
+ To sell or buy native Lumens use XLM as Asset_code with no Asset_issuer (blank)</p>  
+      <input id="submit_offer" type="button" value="submit_offer" /><br />
+      Selling Asset_code: <input id="selling_asset_code" size="14" value = "" /> <br />
+      Selling Asset_issuer: <input id="selling_asset_issuer" size="62" value = "" /> <br />
+      Selling Amount: <input id="selling_amount" size="14" value = "" /> <br />
+      Selling Price: <input id="selling_price" size="14" value = "" /> <br /> 
+      Buying Asset_code: <input id="buying_asset_code" size="14" value = "" /> <br />
+      Buying Asset_issuer: <input id="buying_asset_issuer" size="62" value = "" /> <br /> 
+      <input id="cancel_offer" type="button" value="cancel_offer" /> 
+      OfferID: <input id="offerid" size="10" value = "" /> <br />           
   </div>
+
+</div>
 </div>
 
 </div>
-
+  
 </body>
 </html>

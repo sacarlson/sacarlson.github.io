@@ -41,6 +41,14 @@
       var new_account = document.getElementById("new_account");
       var tx_status = document.getElementById("tx_status");
       var net_passphrase = document.getElementById("net_passphrase");
+
+      var offerid = document.getElementById("offerid");
+      var buying_asset_code = document.getElementById("buying_asset_code"); 
+      var buying_asset_issuer = document.getElementById("buying_asset_issuer"); 
+      var selling_asset_code = document.getElementById("selling_asset_code");      
+      var selling_asset_issuer = document.getElementById("selling_asset_issuer");
+      var selling_price = document.getElementById("selling_price");
+      var selling_amount = document.getElementById("selling_amount");
      
       var asset_obj = new StellarSdk.Asset.native();
       var socket;
@@ -55,6 +63,7 @@
       var fed_mode_forward = true;
       var account_obj_global;
       var destination_home_domain;
+      var cancel_offer_flag;
     //var server_mode = "mss_server";
       //bal_disp.textContent = "test";
       reset_horizon_server(); 
@@ -578,6 +587,15 @@
           createTransaction(key,operation);
         }
 
+     function manageOfferTransaction() {
+          console.log("manageOfferTransaction");        
+          key = StellarSdk.Keypair.fromSeed(seed.value);
+          console.log(key.accountId());
+          var operation = manageOfferOperation();
+          console.log("operation created ok");
+          createTransaction(key,operation);
+        }
+
      function submitTransaction_mss(transaction) {
        console.log("start submitTransaction_mss");
        var b64 = transaction.toEnvelope().toXDR().toString("base64");
@@ -689,19 +707,25 @@
                //console.log(result.result_xdr);               
                tx_status.textContent = "Completed OK";
              }).catch(function(e) {
-               //console.log("submitTransaction error");
-               //console.log(e);
-               //console.log(e.extras.result_codes.operations[0]);               
-               tx_status.textContent = "Transaction error: " + e.extras.result_codes.operations[0]; 
+               console.log("submitTransaction error");
+               console.log(e);
+               tx_status.textContent = "Transaction failed";
+               if (e.extras.result_codes.transaction == "tx_bad_auth"){
+                  tx_status.textContent = "Transaction error: tx_bad_auth";
+               } else {
+                 //console.log(e.extras.result_codes.operations[0]);               
+                 tx_status.textContent = "Transaction error: " + e.extras.result_codes.operations[0];
+               } 
              }); 
            }          
           })
           .then(function (transactionResult) {
             console.log("tx_result");
+            console.log(transactionResult);
             if (typeof transactionResult == "undefined") {
               console.log("tx res undefined");
-              tx_status.textContent = "Transaction error?  result undefined";              
-              return
+              //tx_status.textContent = "Transaction error?  result undefined";              
+              //return
             }
             console.log(transactionResult);
             //console.log(transaction.toEnvelope().toXDR().toString("base64"));
@@ -795,6 +819,33 @@
                  opts.homeDomain = home_domain.value;
                  return StellarSdk.Operation.setOptions(opts);
                }
+
+      function manageOfferOperation() {
+           console.log("manageOfferOperation");
+            var opts = {};
+            if (selling_asset_code.value == "XLM") {
+              opts.selling = new StellarSdk.Asset.native();
+            } else {
+              opts.selling = new StellarSdk.Asset(selling_asset_code.value, selling_asset_issuer.value);             
+            }
+            if (buying_asset_code.value == "XLM") {
+              opts.buying = new StellarSdk.Asset.native();
+            } else {
+              opts.buying = new StellarSdk.Asset(buying_asset_code.value, buying_asset_issuer.value);
+            }
+            opts.amount = selling_amount.value;
+            opts.price = selling_price.value;
+            if (cancel_offer_flag) {
+              console.log("cancel_offer_flag true");
+              opts.offerId = offerid.value;
+              opts.amount = '0.0';
+              selling_amount.value = '0.0';
+            } else {
+              //opts.offerId = 0;
+              opts.amount = selling_amount.value;
+            }
+            return StellarSdk.Operation.manageOffer(opts);             
+          }
 
       function set_inflationDest() {
          update_key();
@@ -1629,34 +1680,55 @@ function display_history(page){
       });
             
       send_payment.addEventListener("click", function(event) {
-        console.log("send_payment clicked");                      
-        sendPaymentTransaction();       
+        console.log("send_payment clicked");
+        try {                      
+          sendPaymentTransaction();
+        } catch(err) {
+          alert("send_payment error: " + err);
+        }       
       });
 
-      add_trustline.addEventListener("click", function(event) { 
-        asset_type.value = tasset.value;         
-        var operation = addTrustlineOperation(tasset.value, tissuer.value);
-        createTransaction(key,operation);
+      add_trustline.addEventListener("click", function(event) {
+        try { 
+          asset_type.value = tasset.value;         
+          var operation = addTrustlineOperation(tasset.value, tissuer.value);
+          createTransaction(key,operation);
+        } catch(err) {
+          alert("add_trusline error: " + err);
+        }
       });
 
-      set_inflation_dest.addEventListener("click", function(event) { 
-        update_key();
-        var opts = {};
-        opts.inflationDest = inflation_dest.value;
-        var operation = StellarSdk.Operation.setOptions(opts);
-        createTransaction(key,operation);
+      set_inflation_dest.addEventListener("click", function(event) {
+        try { 
+          update_key();
+          var opts = {};
+          opts.inflationDest = inflation_dest.value;
+          var operation = StellarSdk.Operation.setOptions(opts);
+          createTransaction(key,operation);
+        } catch(err){
+          alert("set_inflation_dest error: " + err);
+        }
       });
 
       add_signer.addEventListener("click", function(event) {
         console.log("click add_signer");
-        addSignerTransaction();
-        update_balances();
+        try {
+          addSignerTransaction();
+          update_balances();
+        } catch(err){
+          alert("add_signer error: " + err);
+        }
       });
 
       change_threshold.addEventListener("click", function(event) {
         console.log("click change_threshold");
-        setOptionsTransaction();
-        update_balances();
+        try {
+          setOptionsTransaction();
+          update_balances();
+        } catch(err){
+          alert("change_threshold error: " + err);
+        }
+      
       });
 
  
@@ -1698,23 +1770,31 @@ function display_history(page){
       });
 
       sign_tx.addEventListener("click", function(event) {
-        update_key();
-        var b64 = sign_b64_tx(envelope_b64.value,key);
-        console.log("signer accountId: " + key.accountId());
-        console.log("b64: " + b64);
-        envelope_b64.value = b64;
-        sign_tx.disabled = true;
+        try {
+          update_key();
+          var b64 = sign_b64_tx(envelope_b64.value,key);
+          console.log("signer accountId: " + key.accountId());
+          console.log("b64: " + b64);
+          envelope_b64.value = b64;
+          sign_tx.disabled = true;
+        } catch(err) {
+          alert("sign_tx error: " + err);
+        }
       });
 
 
       send_tx.addEventListener("click", function(event) {
-        if (server_mode == "mss_server") {
-          console.log("send_tx mss_server mode");
-          submitTransaction_mss_b64(envelope_b64.value);
-        } else {
-          console.log("send_tx horizon mode");
-          console.log(envelope_b64.value);
-          submitTransaction_horizon_b64(envelope_b64.value);
+        try {
+          if (server_mode == "mss_server") {
+            console.log("send_tx mss_server mode");
+            submitTransaction_mss_b64(envelope_b64.value);
+          } else {
+            console.log("send_tx horizon mode");
+            console.log(envelope_b64.value);
+            submitTransaction_horizon_b64(envelope_b64.value);
+          }
+        } catch(err) {
+          alert("send_tx error: "+ err);
         }
       });
 
@@ -1723,23 +1803,59 @@ function display_history(page){
         // the destination accountID and seed will be included in the email of the body
         // it will then generate a transaction and add it as a link to the wallet in the body of the email
         // we will later make the transaction expire if demand exists
-        email_flag = true;
-        sendPaymentTransaction();
-        sign_tx.disabled = false;
+        try {
+          email_flag = true;
+          sendPaymentTransaction();
+          sign_tx.disabled = false;
+        } catch(err) {
+          alert("email_funds error: " + err);
+        }
       });
 
       email_tx.addEventListener("click", function(event) {
-        email_funds_now("email_tx");
+        try {
+          email_funds_now("email_tx");
+        } catch(err) {
+          alert("email_tx error: " + err);
+        }
       });
 
       fed_lookup.addEventListener("click", function(event) {
-        console.log("destination.value.length: " + destination.value.length);
-        if (destination.value.length == 56) {
-          reverse_federation_lookup();
-        } else {
-          federation_lookup();
+        try {
+          console.log("destination.value.length: " + destination.value.length);
+          if (destination.value.length == 56) {
+            reverse_federation_lookup();
+          } else {
+            federation_lookup();
+          }
+        } catch(err) {
+          alert("fed_lookup error: " + err);
         }
       });
+
+     submit_offer.addEventListener("click", function(event) {
+        console.log("submit_offer clicked");
+        cancel_offer_flag = false;
+        try {
+          manageOfferTransaction();
+        } catch(err) {
+          console.log("manageOfferTransaction error catch: " + err);
+          alert("manageOfferTransaction error: "+ err);
+        }       
+      });
+
+     cancel_offer.addEventListener("click", function(event) {
+        console.log("submit cancel offer clicked");
+        cancel_offer_flag = true;
+        //get_offerid();
+        try {
+          manageOfferTransaction();
+        } catch(err) {
+          console.log("manageOfferTransaction error catch: " + err);
+          alert("manageOfferTransaction error: "+ err);
+        }    
+      });
+
 
   });
 
