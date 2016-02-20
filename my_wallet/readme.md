@@ -17,10 +17,12 @@
 * Balance of accountId in Lumens (XLM) at top of screen updated in realtime by stream link.
 * Generate, Send and recieve links to and from email or other sources to send transactions or prefunded accounts or links to submit request for funds from another account holder.
 * Advanced (section)
-  * Change Network settings 
+  * Change Network and page settings 
      * Change URL address and port pointing to private/custom Horizon servers.
      * Change Network Passphrase for private/custom networks. 
      * Change from Horizon to Mss-server supported API format.
+     * Change pages default top right image url to any custom user image that is saved in browsers local storage
+     * Change page top Title instead of "Scotty's Wallet" to any user default setting
   * Add Trustlines to AccountId
   * Sign base64 tx envelope transaction and mail to next signer or submit to Net.
   * Merge accountId with another targeted accountId.
