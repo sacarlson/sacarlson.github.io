@@ -41,6 +41,10 @@
       var new_account = document.getElementById("new_account");
       var tx_status = document.getElementById("tx_status");
       var net_passphrase = document.getElementById("net_passphrase");
+      var top_image_span = document.getElementById("top_image_span");
+      var top_image_url = document.getElementById("top_image_url");
+      var top_page_title = document.getElementById("top_page_title");
+      var top_page_title_span = document.getElementById("top_page_title_span");
 
       var offerid = document.getElementById("offerid");
       var buying_asset_code = document.getElementById("buying_asset_code"); 
@@ -80,10 +84,13 @@
       });
  
       //net_passphrase.value = "Test SDF Network ; September 2015";
+      //top_image_span.innerHTML = '<img src="scotty.png" class="img-circle" alt="Cinque Terre" width="100" height="100">';
+      //top_image_url.value = "scotty.png";
       restore_default_settings();
       StellarSdk.Network.use(new StellarSdk.Network(net_passphrase.value));
       active_network.textContent = net_passphrase.value ;
-        
+      //top_image_span.innerHTML = '<img src="scotty.png" class="img-circle" alt="Cinque Terre" width="100" height="100">';
+      
 
       console.log("seed.value: " + seed.value);     
       console.log("seed.value.length: " + seed.value.length);
@@ -950,6 +957,12 @@
       function change_network_func() {
         clear_table("table");
         clear_table("table_asset");
+        if (top_image_url.value.length > 4) {
+          top_image_span.innerHTML = '<img src="' + top_image_url.value + '" class="img-circle" alt="Cinque Terre" width="100" height="100">';
+        } else {
+          top_image_span.innerHTML = '<img src="' + "scotty.png" + '" class="img-circle" alt="Cinque Terre" width="100" height="100">';
+        }
+        top_page_title_span.innerHTML = '<h1>' + top_page_title.value + '</h1>';
         bal_disp.textContent = 0; 
         console.log("mode: " + network.value);
         var pub = "Public Global Stellar Network ; September 2015"
@@ -1224,8 +1237,11 @@
         console.log("restore_default_settings");
         console.log(def_settings_json);
         if (def_settings_json == null) {
+          // default setting for a users first time run on this browser
           console.log("type null, restore nothing");
           network.value ="testnet_default";
+          top_image_url.value = "scotty.png";
+          top_page_title.value = "Scotty's Wallet";
           change_network_func();
           save_default_settings(); 
           return;
@@ -1238,6 +1254,22 @@
         url.value = obj.url;
         port.value = obj.port;
         secure.value = obj.secure;
+        if (typeof obj.top_image_url != "undefined" && obj.top_image_url.length > 3) {
+          top_image_span.innerHTML = '<img src="' + top_image_url.value + '" class="img-circle" alt="Cinque Terre" width="100" height="100">';
+          top_image_url.value = obj.top_image_url;
+        } else {
+          top_image_span.innerHTML = '<img src="' + "scotty.png" + '" class="img-circle" alt="Cinque Terre" width="100" height="100">';
+          top_image_url.value = "scotty.png";
+        }
+        if (typeof obj.top_page_title != "undefined"){
+          console.log("top_page != undefined");
+          console.log(obj.top_page_title);
+          top_page_title.value = obj.top_page_title;
+          top_page_title_span.innerHTML = '<h1>' + obj.top_page_title + '</h1>';
+        } else {
+          top_page_title.value = "Scotty's Wallet";
+          top_page_title_span.innerHTML = '<h1>' + top_page_title.value + '</h1>';
+        }        
         console.log(obj);
       }
 
@@ -1250,6 +1282,8 @@
         obj.url = url.value;
         obj.port = port.value;
         obj.secure = secure.value;
+        obj.top_image_url = top_image_url.value;
+        obj.top_page_title = top_page_title.value;
         var string = JSON.stringify(obj);
         localStorage.setItem("def_settings", string);
       }
