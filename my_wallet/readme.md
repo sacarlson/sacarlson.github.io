@@ -38,40 +38,40 @@
 # Screen Shots
 
 ### Send Funds
-[[https://sacarlson.github.io/my_wallet/screenshots/Screenshot.png]]
+![Send Funds](https://sacarlson.github.io/my_wallet/screenshots/Screenshot.png)
 
-### Recieve Funds
-[[https://sacarlson.github.io/my_wallet/screenshots/Screenshot1.png]]
 
-### Transaction History
-[[https://sacarlson.github.io/my_wallet/screenshots/Screenshot2.png]]
+![Recieve Funds(https://sacarlson.github.io/my_wallet/screenshots/Screenshot1.png)
 
-### List Assets
-[[https://sacarlson.github.io/my_wallet/screenshots/Screenshot3.png]]
 
-### Export/Import Secret keysets
-[[https://sacarlson.github.io/my_wallet/screenshots/Screenshot5.png]]
+![Transaction History](https://sacarlson.github.io/my_wallet/screenshots/Screenshot2.png)
 
-### Change Network Settings
-[[https://sacarlson.github.io/my_wallet/screenshots/Screenshot6.png]]
 
-### Add Trustlines
-[[https://sacarlson.github.io/my_wallet/screenshots/Screenshot7.png]]
+![List Assets](https://sacarlson.github.io/my_wallet/screenshots/Screenshot3.png)
 
-### Sign TX transactions for multisig
-[[https://sacarlson.github.io/my_wallet/screenshots/Screenshot8.png]]
 
-### Merge AccountId with target AccountId
-[[https://sacarlson.github.io/my_wallet/screenshots/Screenshot9.png]]
+![Export/Import Secret key sets](https://sacarlson.github.io/my_wallet/screenshots/Screenshot5.png)
 
-### Advanced Account settings for multisig
-[[https://sacarlson.github.io/my_wallet/screenshots/Screenshot10.png]]
 
-### View table of accountid present active asset trade offers
-[[https://sacarlson.github.io/my_wallet/screenshots/Screenshot11.png]]
+![Change Network Settings](https://sacarlson.github.io/my_wallet/screenshots/Screenshot6.png)
+
+
+![Add Trustlines](https://sacarlson.github.io/my_wallet/screenshots/Screenshot7.png)
+
+
+![Sign TX transactions for multisig](https://sacarlson.github.io/my_wallet/screenshots/Screenshot8.png)
+
+
+![Merge AccountId's ](https://sacarlson.github.io/my_wallet/screenshots/Screenshot9.png)
+
+
+![Advanced Account Settings for multisig](https://sacarlson.github.io/my_wallet/screenshots/Screenshot10.png)
+
+
+![View Table of accountid present active asset trade offers](https://sacarlson.github.io/my_wallet/screenshots/Screenshot11.png)
 
 ### Create asset trade offer
-[[https://sacarlson.github.io/my_wallet/screenshots/Screenshot12.png]]
+![Create asset trade offer](https://sacarlson.github.io/my_wallet/screenshots/Screenshot12.png)
 
 ### Email links of transactions or funded accounts
-[[https://sacarlson.github.io/my_wallet/screenshots/Screenshot13.png]]
+![Email links of transactions or funded accounts](https://sacarlson.github.io/my_wallet/screenshots/Screenshot13.png)
