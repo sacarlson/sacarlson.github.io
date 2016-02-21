@@ -1435,7 +1435,7 @@ function get_transactions_desc(bal) {
           page.records[i].memo_type = tx.memo._arm;
           page.records[i].memo_value = tx.memo._value;
           //page.records[i].from = tx.operations[0].source;
-          page.records[i].from = page.records[i].source_account;
+          page.records[i].from = page.records[i].source_account;          
           page.records[i].amount = tx.operations[0].amount;
           page.records[i].startingBalance = tx.operations[0].startingBalance;
           page.records[i].type = tx.operations[0].type;
@@ -1456,22 +1456,42 @@ function get_transactions_desc(bal) {
             amount = amount * -1;
             page.records[i].amount = amount;
           } 
-          if (page.records[i].type == "payment") {
-            //console.log("payment");
+          //if (page.records[i].type == "payment") {
+          if (page.records[i].type == "pathPayment" || page.records[i].type == "payment") {
+            console.log("payment");
+            if (page.records[i].type == "pathPayment") {
+              console.log("pathPayment");
+              amount = page.records[i].tx.operations[0].destAmount;
+              page.records[i].asset_code = page.records[i].tx.operations[0].destAsset.code;
+              page.records[i].asset_issuer = page.records[i].tx.operations[0].destAsset.issuer;
+              amount = parseFloat(amount);
+              if (account.value == page.records[i].from) {
+                amount = amount * -1;
+                page.records[i].amount = amount;
+              }
+              page.records[i].amount = amount;  
+              console.log(page.records[i].amount);
+              console.log(page.records[i].asset_code);
+              console.log(page.records[i].asset_issuer);
+            }
             if (bal.create_detected == true) {                             
               if (page.records[i].asset_code == "XLM") {
-                //console.log("asset is XLM");     
+                console.log("asset is XLM");     
                 //native_bal = native_bal + amount - 0.0001;
                 bal.native = fix7dec(native_bal);                                                                    
                 page.records[i].bal = clone(bal);                
                 page.records[i].trans_asset_bal = native_bal;
-                native_bal = native_bal - amount + 0.0001;                
+                native_bal = native_bal - amount + 0.0001;
+                console.log("native_bal");
+                console.log(native_bal);                
               } else {
                 //console.log("asset not XLM");
                 var asset_not_found = true;
                 var blen = bal.balances.length;
+                console.log("bal.balances");
+                console.log(bal.balances);
                 for (var a = 0; a < blen; a++) {                  
-                  if (bal.balances[a]["asset_code"] == page.records[i].asset_code && bal.balances[a]["asset_issuer"] == page.records[i].asset_issuer){                                                                                                                               
+                  if (bal.balances[a]["asset_code"] == page.records[i].asset_code && bal.balances[a]["asset_issuer"] == page.records[i].asset_issuer){                                                                                                     
                     page.records[i].bal = clone(bal);
                     bal.balances[a]["balance"] =  parseFloat(bal.balances[a]["balance"]) - amount;
                     //page.records[i].trans_asset_bal = parseFloat(bal.balances[a]["balance"]) - amount;
@@ -1508,7 +1528,7 @@ function get_transactions_desc(bal) {
             }        
           }
           // all transaction still pay .0001 Lumens so account for that here
-          if (page.records[i].type != "payment" && page.records[i].type != "createAccount"){
+          if (page.records[i].type != "payment" && page.records[i].type != "createAccount" && page.records[i].type != "pathPayment"){
             //console.log("trans not pay or create");
             bal.native = fix7dec(native_bal);
             page.records[i].bal = clone(bal);
