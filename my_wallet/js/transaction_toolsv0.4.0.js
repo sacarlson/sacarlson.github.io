@@ -1414,7 +1414,7 @@ function get_transactions_desc(bal) {
   var es = server.transactions()
     .forAccount(account.value)    
     .order("desc")
-    .limit(40)
+    .limit(50)
     .call()
     .then(function (page) {
         //console.log("page");
@@ -1507,10 +1507,12 @@ function get_transactions_desc(bal) {
                 }
                 if (asset_not_found) {
                   //console.log("asset_not_found add new: " + page.records[i].asset_code);                                 
-                  bal.balances[blen] = {};
-                  bal.balances[blen]["asset_code"] = page.records[i].asset_code;
-                  bal.balances[blen]["asset_issuer"] = page.records[i].asset_issuer;
-                  bal.balances[blen]["balance"] = amount;                  
+                  //bal.balances[blen] = {};
+                  //bal.balances[blen]["asset_code"] = page.records[i].asset_code;
+                  //bal.balances[blen]["asset_issuer"] = page.records[i].asset_issuer;
+                  //bal.balances[blen]["balance"] = amount; 
+                  page.records[i].asset_code = "XLM";
+                  page.records[i].type = "trade";                 
                   page.records[i].bal = clone(bal);
                   //page.records[i].trans_asset_bal = page.records[i].bal.balances["balance"];
                   //console.log(page.records[i].bal);
@@ -1604,7 +1606,9 @@ function display_history(page){
     }
     ar[5] = font_color + page[i].memo + "</font>";
     ar[6] = font_color + page[i].created_at + "</font>";
-    insRow(ar,"table"); 
+    if (page[i].type != "trade"){ 
+      insRow(ar,"table"); 
+    }
   }
 }
 
