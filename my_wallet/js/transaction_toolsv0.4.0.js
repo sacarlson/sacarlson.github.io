@@ -1453,7 +1453,10 @@ function get_transactions_desc(bal) {
           //console.log("asset_code: " + page.records[i].asset_code);
           var amount = parseFloat(page.records[i].amount);
           if (account.value == page.records[i].from) {
-            amount = amount * -1;
+            amount = (amount * -1) ;
+            if (page.records[i].asset_code == "XLM"){
+              amount = parseFloat(fix7dec(amount - 0.0001));
+            }
             page.records[i].amount = amount;
           } 
           //if (page.records[i].type == "payment") {
@@ -1466,7 +1469,10 @@ function get_transactions_desc(bal) {
               page.records[i].asset_issuer = page.records[i].tx.operations[0].destAsset.issuer;
               amount = parseFloat(amount);
               if (account.value == page.records[i].from) {
-                amount = amount * -1;
+                amount = (amount * -1) ;
+                if (page.records[i].asset_code == "XLM"){
+                  amount = parseFloat(fix7dec(amount - 0.0001));
+                }
                 page.records[i].amount = amount;
               }
               page.records[i].amount = amount;  
@@ -1481,7 +1487,7 @@ function get_transactions_desc(bal) {
                 bal.native = fix7dec(native_bal);                                                                    
                 page.records[i].bal = clone(bal);                
                 page.records[i].trans_asset_bal = native_bal;
-                native_bal = native_bal - amount + 0.0001;
+                native_bal = native_bal - amount ;
                 console.log("native_bal");
                 console.log(native_bal);                
               } else {
@@ -1495,7 +1501,7 @@ function get_transactions_desc(bal) {
                     page.records[i].bal = clone(bal);
                     bal.balances[a]["balance"] =  parseFloat(bal.balances[a]["balance"]) - amount;
                     //page.records[i].trans_asset_bal = parseFloat(bal.balances[a]["balance"]) - amount;
-                    native_bal = native_bal + 0.0001;   
+                    //native_bal = native_bal + 0.0001;   
                     asset_not_found = false;
                   }
                 }
@@ -1509,7 +1515,10 @@ function get_transactions_desc(bal) {
                   //page.records[i].trans_asset_bal = page.records[i].bal.balances["balance"];
                   //console.log(page.records[i].bal);
                 }
-              }
+                if (account.value == page.records[i].from) {
+                  native_bal = native_bal + 0.0001; 
+                } 
+              }              
             }            
           }
           if (page.records[i].type == "createAccount") {            
@@ -1520,21 +1529,24 @@ function get_transactions_desc(bal) {
               native_bal = parseFloat(page.records[i].startingBalance);
               page.records[i].amount = native_bal;          
             } else {
-              //console.log("createaccount to diff dest");              
+              //console.log("createaccount to diff dest");
+              //native_bal = native_bal + parseFloat(page.records[i].startingBalance) + 0.0001;              
               bal.native = fix7dec(native_bal);
               page.records[i].bal = clone(bal); 
-              page.records[i].amount = (parseFloat(page.records[i].startingBalance)) * -1;
+              page.records[i].amount = (parseFloat(page.records[i].startingBalance)) * -1 - 0.0001;
               native_bal = native_bal + parseFloat(page.records[i].startingBalance) + 0.0001;
             }        
           }
-          // all transaction still pay .0001 Lumens so account for that here
+          // all transaction sent by you still pay .0001 Lumens so account for that here
           if (page.records[i].type != "payment" && page.records[i].type != "createAccount" && page.records[i].type != "pathPayment"){
             //console.log("trans not pay or create");
             bal.native = fix7dec(native_bal);
             page.records[i].bal = clone(bal);
             //console.log(page.records[i].type);
-            page.records[i].amount = -0.0001;
-            native_bal =  native_bal + 0.0001;                        
+            if (account.value == page.records[i].from){
+              page.records[i].amount = -0.0001;
+              native_bal =  native_bal + 0.0001; 
+            }                       
           }
           //console.log("end of for loop");                               
         }
