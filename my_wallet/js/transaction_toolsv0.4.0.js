@@ -45,7 +45,9 @@
       var top_image_url = document.getElementById("top_image_url");
       var top_page_title = document.getElementById("top_page_title");
       var top_page_title_span = document.getElementById("top_page_title_span");
-
+      var background_img = document.getElementById("background_img");
+      var background_color = document.getElementById("background_color");
+      var text_color = document.getElementById("text_color");
       var offerid = document.getElementById("offerid");
       var buying_asset_code = document.getElementById("buying_asset_code"); 
       var buying_asset_issuer = document.getElementById("buying_asset_issuer"); 
@@ -53,7 +55,7 @@
       var selling_asset_issuer = document.getElementById("selling_asset_issuer");
       var selling_price = document.getElementById("selling_price");
       var selling_amount = document.getElementById("selling_amount");
-     
+      
       var asset_obj = new StellarSdk.Asset.native();
       var socket;
       var socket_open_flag = false;
@@ -68,6 +70,20 @@
       var account_obj_global;
       var destination_home_domain;
       var cancel_offer_flag;
+      var account_tx;
+
+      var resetAccount = function () {
+	    account_tx = {
+	        address: 'loading',
+	        balance: 0,
+	        reserve: 0,
+	        sequence: "0",
+	        transactions: [],
+	        otherCurrencies: []
+	    };
+	  };
+
+	resetAccount();
     //var server_mode = "mss_server";
       //bal_disp.textContent = "test";
       reset_horizon_server(); 
@@ -100,12 +116,14 @@
         key = StellarSdk.Keypair.random();
         console.log("key ok");
         account.value = key.accountId();
+        account_tx.address = account.value;
         console.log("account ok");
         seed.value = key.seed();
         console.log("seed ok");
         save_seed("seed1", "", seed.value );
       } else {
          account.value = StellarSdk.Keypair.fromSeed(seed.value).accountId();
+         account_tx.address = account.value;
          key = StellarSdk.Keypair.fromSeed(seed.value);
          update_key();
       }
@@ -131,11 +149,13 @@
         console.log(params["env_b64"]);
         if (typeof params["accountID"] != "undefined") {
           account.value = params["accountID"];
+          account_tx.address = account.value;
         }
         if (typeof params["env_b64"] != "undefined") {
           console.log("env_b64 param detected");
           envelope_b64.value = params["env_b64"];
           account.value = new StellarSdk.Transaction(envelope_b64.value).operations[0].destination;
+          account_tx.address = account.value;
           console.log(new StellarSdk.Transaction(envelope_b64.value).operations[0].asset);
           tissuer.value = new StellarSdk.Transaction(envelope_b64.value).operations[0].asset.issuer;
           tasset.value = new StellarSdk.Transaction(envelope_b64.value).operations[0].asset.code;
@@ -169,6 +189,7 @@
         console.log("here?");
         console.log(accountID[1]);
         account.value = accountID[1];
+        account_tx.address = account.value;
       }
 
       //merge_accounts.disabled = true;
@@ -212,9 +233,15 @@
       //current_mode.value = "Stellar horizon TestNet";
       
       bal_disp.textContent = 0;
-      update_balances();
-      start_effects_stream();
-      
+      update_balances();  
+
+      var table_sort_offers = new Tablesort(document.getElementById('table_offers'));
+      var table_sort_trans = new Tablesort(document.getElementById('table'), {
+        descending: true
+      });
+      var table_sort_asset = new Tablesort(document.getElementById('table_asset'));
+      var table_sort_trades = new Tablesort(document.getElementById('table_trade_history'));
+
       var xmlhttp = new XMLHttpRequest();
 
       account_disp.textContent = account.value;
@@ -322,6 +349,7 @@
           
           function attachToPaymentsStream(opt_startFrom) {
             console.log("start attacheToPaymentsStream");
+            account_tx.address = account.value;
             var futurePayments = server.effects().forAccount(account.value);
             if (opt_startFrom) {
                 console.log("opt_startFrom detected");
@@ -337,47 +365,99 @@
             });
           };
 
-          function start_effects_stream() {
+          function start_effects_stream(account_obj) {
+            console.log("start_effects_stream");
+            account_obj_global = account_obj;
+            //console.log(account_obj);
+            account_tx.address = account.value;
 	        server.effects()
             .forAccount(account.value)
-            .limit(30)
+            .limit(45)
             .order('desc')
             .call()
             .then(function (effectResults) {
                 console.log("then effectResults");
+                console.log(effectResults);
+                console.log("account_obj_global");
+                console.log(account_obj_global);
+                // will add balance_splice here that adds balances over time in all effectResults.records[x]
+                 effectResults = balance_splice(effectResults,account_obj_global);
+                //console.log(effectResults.records.length);
+                console.log("post balance_splice: effectResults");
+                console.log(effectResults);
                 var length = effectResults.records ? effectResults.records.length : 0;
-                for (index = length-1; index >= 0; index--) {
-                    //console.log("index" + index);
-                    var currentEffect = effectResults.records[index];
+                //var length = effectResults.records.length;
+                console.log("length: " + length);
+                for (var i = length-1; i >= 0; i--) {
+                    //console.log("index: " + i);
+                    var currentEffect = effectResults.records[i];
+                    //console.log("currentEffect");
+                    //console.log(currentEffect);
                     effectHandler(currentEffect, false);
                 }
                 var startListeningFrom;
                 if (length > 0) {
-                    latestPayment = effectResults.records[0];
-                    startListeningFrom = latestPayment.paging_token;
+                    var latestPayment = effectResults.records[0];
+                    var startListeningFrom = latestPayment.paging_token;
                 }
                 attachToPaymentsStream(startListeningFrom);
             })
-            .catch(function (err) {
-                //console.log(err);
-                //console.log("error detected in attachToPaymentsStream");
+            .catch(function (err) {                
+                console.log("error start_effects_stream");
+                console.log(err);
                 attachToPaymentsStream('now');               
             });
           }
 
-          function effectHandler(effect,tf) {
-            console.log("got effectHandler event");
-            //console.log(tf);
+         
+
+    // scotty moded effecthandler  must replace original in transaction_toolsv0.4.0.js
+        //var effectHandler = function (effect, fromStream) {
+         function effectHandler(effect,fromStream) {
+            //console.log("effectHandler fromStream: " + fromStream);
+            //console.log("effect");
             //console.log(effect);
-            //console.log("balance.value: " + balance.value);
-            if (effect.type === 'account_debited') {
+            //console.log(effect.type);
+            var isRelevant =
+                   effect.type === 'account_created'
+                || effect.type === 'account_debited'
+                || effect.type === 'account_credited'
+            ;
+
+            //if(isRelevant) {
+            if(true) {
+                insertEffect(effect, fromStream)
+                .then(function (displayEffect) {
+                    if (fromStream) {
+                        applyToBalance(effect);
+                        //$rootScope.$broadcast('accountInfoLoaded');
+                    }
+                    else {
+                        if (displayEffect.ef_type == "trade"){
+                          insert_trade_table(displayEffect);
+                        }else {
+                          insert_history_table(displayEffect)
+                        }
+                    }
+                }, function (err) {
+                    console.error(err)
+                });
+
+            }
+        };
+
+
+   // new (temp?) replacement for Centarus applayToBalance,  this never existed so can plugin to transaction_tools..
+   function applyToBalance(effect) {
+    console.log("applyToBalance");
+    if (effect.type === 'account_debited') {
                if (effect.asset_type === "native") {
                   balance.value = parseFloat(balance.value) - parseFloat(effect.amount);
                   bal_disp.textContent = fix7dec(balance.value);
                }else {
                   CHP_balance.value = CHP_balance.value - effect.amount;
                }
-               insert_history_table(effect,"red")
+               //insert_history_table(effect,"red")
             }
             if (effect.type === 'account_credited') {
                if (effect.asset_type === "native") {
@@ -386,16 +466,209 @@
                }else {
                   CHP_balance.value = CHP_balance.value + effect.amount;
                }
-               insert_history_table(effect,"green")
+               //insert_history_table(effect,"green")
             }
             if (effect.type === 'account_created') {
                balance.value = parseFloat(effect.starting_balance);
                bal_disp.textContent = fix7dec(effect.starting_balance);
-               insert_history_table(effect,"red")
+               //insert_history_table(effect,"red")
             }
-          };
+   }
 
-      function insert_history_table(effect,red_green){
+
+          var insertEffect = function (effect, fromStream) {
+            //console.log("insertEffect");
+            var promise = new Promise(function(resolve, reject) {
+                try {
+                    effect.operation()
+                    .then(function (op) {
+                        op.transaction()
+                        .then(function (trx) {
+                            try {
+                                var displayEffect = insertTransaction(trx, op, effect, fromStream);
+                                resolve(displayEffect);
+                            }
+                            catch (err) {
+                                console.log("insertEffect error: " + err);
+                                reject(err);
+                            }
+                        });
+                    })
+                }
+                catch(err) {
+                    reject(err);
+                }
+            });
+            return promise;
+        };
+
+   // as far as I can tell so far insertTransaction will work unmoded from Centaurus
+  var insertTransaction = function (trx, op, effect, fromStream) {
+            console.log("insertTransaction");
+            var asset = effect.asset_code;
+            if (asset === null || !asset)
+                asset = 'XLM'
+            else
+                asset = effect.asset_code;
+
+            var date = new Date(trx.created_at)
+            //console.log("trx: ");
+            //console.log(trx);
+            //console.log("op");
+            //console.log(op);
+            //console.log("effect");
+            //console.log(effect);
+           
+            var displayEffect = {
+                effectId : effect.paging_token,
+                creationDate: date,
+                creationTimestamp : date.getTime(),
+                asset_code: asset,
+                amount: effect.amount,
+                debit: effect.type === 'account_debited',
+                sender: op.from,
+                receiver: op.to,
+                memo: trx.memo,
+                memoType: trx.memo_type,
+                tx_id: trx.id,
+                envelope_xdr: trx.envelope_xdr,
+                type: op.type,
+                asset_type: op.asset_type,
+                details: effect,
+                ef_type: effect.type                              
+            }
+            if (typeof effect.bal != "undefined"){
+              displayEffect.balances = effect.bal.balances;
+              displayEffect.trans_balance = effect.trans_balance;
+            }
+                       
+
+            if (op.type === 'create_account') {
+                displayEffect.amount = op.starting_balance;
+                displayEffect.sender = op.funder;
+                displayEffect.receiver = op.account;
+            }
+
+            if (fromStream && account_tx.address === trx.source_account)
+                account_tx.sequence = trx.source_account_sequence;
+
+            // insert at correct position
+            var i;
+            for (i = 0; i < account_tx.transactions.length; i++) {
+                var compareEffect = account_tx.transactions[i];
+                if (displayEffect.effectId === compareEffect.effectId)
+                    throw 'transaction already seen: ' + displayEffect.effectId;
+                if (displayEffect.creationTimestamp > compareEffect.creationTimestamp) {
+                    break;
+                }
+            }
+            account_tx.transactions.splice(i, 0, displayEffect);
+
+            return displayEffect;
+        };
+
+
+     
+
+       function balance_splice(page,account_obj) {
+         console.log("balance_splice");
+        // will add balance_splice here that adds balances over time in all effectResults.records[x]
+         //effectResults = balance_splice(effectRestults,account_obj_global);
+        var bal = {};
+        bal.balances = clone(account_obj.balances);
+        var native_bal = get_native_balance(account_obj)
+        var arrayLength = page.records.length;
+        for (var i = 0; i < arrayLength; i++) {
+          //console.log("page_tx i: " + i);
+          //console.log(page.records[i]); 
+
+          // record[x] {account, amount, asset_type, asset_code, asset_issuer, id, type}
+          // asset_type can be native, credit_alphanum4, credit_alphanum12
+          // asset_code can be undefined if native or "EQD", "USD" ...
+          // type can be: account_credited, account_debited, account_created, path_payment, signer_created ...
+       
+          //console.log("asset_code: " + page.records[i].asset_code);
+          var amount = parseFloat(page.records[i].amount);
+          switch (page.records[i].type) {
+            case "account_debited":          
+              amount = (amount * -1) ;
+              if (page.records[i].asset_code == "XLM"){
+                amount = parseFloat(fix7dec(amount - 0.0001));
+              }
+              page.records[i].amount = amount;
+            case "account_credited": 
+            case "pathPayment": 
+              //console.log("case payment");                                    
+              if (page.records[i].asset_type == "native") {
+                //console.log("asset is XLM");  
+                page.records[i].asset_code = "XLM";                                                                    
+                page.records[i].bal = clone(bal);                
+                page.records[i].trans_balance = fix7dec(native_bal);
+                native_bal = native_bal - amount ;
+                //console.log("native_bal");
+                //console.log(native_bal);                
+              } else {
+                //console.log("asset not XLM");
+                var asset_not_found = true;
+                var blen = bal.balances.length;
+                //console.log("bal");
+                //console.log(bal);
+                for (var a = 0; a < blen; a++) { 
+                  var same_asset = (bal.balances[a]["asset_code"] == page.records[i].asset_code && bal.balances[a]["asset_issuer"] == page.records[i].asset_issuer);                 
+                  if (same_asset){                                                                                                     
+                    page.records[i].bal = clone(bal);
+                    bal.balances[a]["balance"] = parseFloat(bal.balances[a]["balance"]) - amount;
+                    page.records[i].trans_balance = fix7dec(parseFloat(bal.balances[a]["balance"]) + amount);
+                    asset_not_found = false;
+                  }
+                }
+                if (asset_not_found) {
+                  page.records[i].asset_code = "XLM";
+                  page.records[i].type = "trade";                 
+                  page.records[i].bal = clone(bal);
+                  page.records[i].trans_balance = fix7dec(native_bal);
+                }
+                if (page.records[i].type == "account_debited") {
+                  native_bal = native_bal + 0.0001; 
+                }                             
+              }
+              break;
+            case "account_created" :                                  
+              if (false) {
+                bal.create_detected = true;              
+                bal.native = fix7dec(native_bal);
+                page.records[i].bal = clone(bal); 
+                native_bal = parseFloat(page.records[i].startingBalance);
+                page.records[i].amount = native_bal;          
+              } else {
+                //console.log("createaccount to diff dest");
+                //native_bal = native_bal + parseFloat(page.records[i].startingBalance) + 0.0001;              
+                bal.native = fix7dec(native_bal);
+                page.records[i].bal = clone(bal); 
+                page.records[i].amount = (parseFloat(page.records[i].startingBalance)) * -1 - 0.0001;
+                native_bal = native_bal + parseFloat(page.records[i].startingBalance) + 0.0001;
+              }
+              break;
+
+            default:
+              //console.log("no case match");
+              //console.log("page.records[i]");
+              //console.log(page.records[i]);
+              page.records[i].trans_balance = fix7dec(native_bal);
+              page.records[i].amount = -0.0001;
+              native_bal = native_bal + 0.0001;               
+              page.records[i].asset_code = "XLM";               
+              page.records[i].bal = clone(bal);         
+          }          
+          //console.log("end of for loop");                               
+        }
+        console.log("page.records");  
+        console.log(page.records);
+        //display_history(page.records);
+        return page;
+      }
+
+       function insert_history_table(effect){        
         console.log("insert_history_table");
         console.log(effect);
         var ar = [];
@@ -403,29 +676,67 @@
         var green = '<font color="green">';
         var font_color;
         var amount = parseFloat(effect.amount);
-        if (red_green == "red"){
+        if (effect.debit){
           font_color = red;
           amount = amount * -1;
+          ar[0] = font_color + effect.receiver + " </font>";
         } else {
           font_color = green;
+          ar[0] = font_color + effect.sender + " </font>";
         }
-        
+         //ar[0] = effect.creationTimestamp; 
+         ar[1] = font_color + effect.type + "</font>";
         if (effect.asset_type === "native") {
-          ar[4] = font_color + bal_disp.textContent + "</font>";
+          ar[4] = font_color + effect.trans_balance + "</font>";
           ar[2] = font_color + "XLM" + "</font>";
         } else {
-          ar[4] = font_color + "not_suported" + "</font>";
+          ar[4] = font_color + effect.trans_balance + "</font>";
           ar[2] = font_color + effect.asset_code + "</font>";
         }
-        ar[0] = font_color + destination.value + " ??</font>";
-        ar[5] = font_color + memo.value + "</font>";
-        ar[6] = font_color + (new Date()).toUTCString() + "</font>";
-        ar[1] = font_color + effect.type + "</font>";
-        //ar[2] = font_color + effect.asset_code + "</font>";
         ar[3] = font_color + amount + "</font>";  
+        ar[5] = font_color + effect.memo + "</font>";
+        //ar[6] = font_color + effect.creationDate + "</font>";  
+        ar[6] = font_color + effect.creationDate.toISOString() + "</font>";             
         insRow(ar,"table"); 
-        
+        //table_sort_trans.refresh();       
       }
+
+      function insert_trade_table(effect){        
+        console.log("insert_trade_table");
+        console.log(effect);
+        var ar = [];
+        var red = '<font color="red">';
+        var green = '<font color="green">';
+        var white = '<font color="white">';
+        var black = '<font color="black">';
+        var font_color = black;
+        ar[0] =  font_color + effect.details.offer_id + " </font>";
+        if (effect.sender == account.value){
+          ar[1] = font_color + effect.receiver + " </font>";
+        } else {
+          ar[1] = font_color + effect.sender + " </font>";
+        }
+        if (effect.details.bought_asset_type == "native"){
+          effect.details.bought_asset_code = "XLM";
+          effect.details.bought_asset_issuer = "";
+        }
+        if (effect.details.sold_asset_type == "native"){
+          effect.details.sold_asset_code = "XLM";
+          effect.details.sold_asset_issuer = "";
+        }
+        ar[2] = font_color + effect.details.sold_asset_code + "</font>";
+        ar[3] = font_color + effect.details.sold_asset_issuer + "</font>";
+        ar[4] = font_color + effect.details.sold_amount + "</font>";
+        ar[5] = font_color + effect.details.bought_asset_code + "</font>"; 
+        ar[6] = font_color + effect.details.bought_asset_issuer + "</font>";
+        ar[7] = font_color + effect.details.bought_amount + "</font>"; 
+        ar[8] = font_color + effect.creationDate.toISOString() + "</font>";             
+        insRow(ar,"table_trade_history"); 
+        //table_sort_offers.refresh();        
+      }
+
+
+      
 
       function reset_horizon_server() {
         console.log("reset_horizon_server"); 
@@ -443,6 +754,7 @@
        
       function get_account_info(account,callback) {
         console.log("account: " + account);
+        resetAccount();
         if (server_mode === "mss_server") {
           socket_open_flag = true;
         }else {
@@ -468,17 +780,18 @@
        
 
       function update_balances_set(account_obj) {
-        console.log("update_balances_set");        
+        console.log("update_balances_set"); 
         if (account_obj.account_id == account.value){
-          //console.log("account_obj");
-          //console.log(account_obj);
+          console.log("account_obj");
+          console.log(account_obj);
           var bal = get_native_balance(account_obj);
           //console.log("bal: " + bal);
           bal_disp.textContent = bal;
           balance.value = bal;
           if (bal > 0) {  
-            get_transactions_desc(account_obj);
+            //get_transactions_desc(account_obj);
             display_asset_table(account_obj);
+            start_effects_stream(account_obj);
           }
           return;
         } else {
@@ -516,6 +829,7 @@
         }
         account_disp.textContent = account.value;
         account_disp2.textContent = account.value;
+        account_tx.address = account.value;
         makeCode();
       }
       
@@ -930,37 +1244,15 @@
 
       }
 
-      // Create a new connection when the Connect button is clicked
-      open.addEventListener("click", function(event) {
-        create_socket();
-      });
-
-      merge_accounts.addEventListener("click", function(event) {
-        accountMergeTransaction();
-      });
-
-
-      // Close the connection when the Disconnect button is clicked
-      close.addEventListener("click", function(event) {
-        console.log("closed socket");
-        close.disabled = true;
-        open.disabled = false;
-        message.textContent = "";
-        socket.close();
-      });
-
-      change_network.addEventListener("click", function(event) {
-        change_network_func();
-        save_default_settings();
-      }); 
+     
      
       function change_network_func() {
         clear_table("table");
         clear_table("table_asset");
         if (top_image_url.value.length > 4) {
-          top_image_span.innerHTML = '<img src="' + top_image_url.value + '" class="img-circle" alt="Cinque Terre" width="100" height="100">';
+          top_image_span.innerHTML = '<img src="' + top_image_url.value + '" class="img-circle" alt="Add Optional Image here" width="100" height="100">';
         } else {
-          top_image_span.innerHTML = '<img src="' + "scotty.png" + '" class="img-circle" alt="Cinque Terre" width="100" height="100">';
+          top_image_span.innerHTML = '<img src="' + "scotty.png" + '" class="img-circle" alt="Add Optional Image here" width="100" height="100">';
         }
         top_page_title_span.innerHTML = '<h1>' + top_page_title.value + '</h1>';
         bal_disp.textContent = 0; 
@@ -985,7 +1277,7 @@
           reset_horizon_server();
           active_network.textContent = tes;
           update_balances();
-          start_effects_stream();
+
         }else if (network.value === "live" ){
           server_mode = "horizon";
           console.log("mode Live!!");  
@@ -1003,7 +1295,7 @@
           reset_horizon_server();
           active_network.textContent = pub;
           update_balances();
-          start_effects_stream();
+
         }else if (network.value === "live_default" ){
           server_mode = "horizon";
           console.log("mode Live!!");  
@@ -1022,7 +1314,7 @@
           reset_horizon_server();
           active_network.textContent = pub;
           update_balances();
-          start_effects_stream();
+
         }else if (network.value === "testnet_default" ){
           server_mode = "horizon";
           console.log("mode testnet_default");  
@@ -1041,7 +1333,7 @@
           reset_horizon_server();
           active_network.textContent = tes;
           update_balances();
-          start_effects_stream();
+
         }else if (network.value === "mss_server_live") {
           //mss-server mode
           server_mode = "mss_server";
@@ -1071,7 +1363,7 @@
           reset_horizon_server();
           active_network.textContent = net_passphrase.value;
           update_balances();
-          start_effects_stream();
+
         }else if (network.value === "no_op") {
           console.log("network.value == no_op, do nothing");
         }else  {
@@ -1136,44 +1428,9 @@
           console.log("seed: " + seed_);
           return seed_
         }else {
-          message.textContent = "Sorry, your browser does not support Web Storage...";
+          alert("Sorry, your browser does not support Web Storage...");
         }     
-      }
-
-      save.addEventListener("click", function(event) {         
-        if (typeof(Storage) !== "undefined") {
-          var encrypted = CryptoJS.AES.encrypt(seed.value, pass_phrase.value);       
-          // Store
-          localStorage.setItem(seed_nick.value, encrypted);
-          //seed.value = "seed saved to local storage"
-          save.disabled = true;
-          update_seed_select(); 
-          update_key();
-          update_balances();       
-        }else {
-          seed.value = "Sorry, your browser does not support Web Storage...";
-        }
-      });
-
-                 
-      delete_key.addEventListener("click", function(event) {
-        // delete key_id from LocalStorage 
-        console.log("deleting key "+ seed_nick.value);              
-        localStorage.removeItem(seed_nick.value);
-        update_seed_select()
-        alert("seed_nick: " + seed_nick.value + " deleted from LocalStorage");   
-        //display_localstorage_keylist();        
-      });
-
-      restore.addEventListener("click", function(event) {
-        seed.value = restore_seed(seed_nick.value, pass_phrase.value);
-        update_seed_select();
-        update_key();
-        start_effects_stream();
-        update_balances();
-      });
-
-      
+      }      
 
       function display_localstorage_keylist() {
         save.disabled = false;
@@ -1182,7 +1439,7 @@
           //console.log(  localStorage.key( i ) );
           result = result + localStorage.key( i ) + ", ";
         }
-        message.textContent = result;
+        alert(result);
       }
 
       function addOption(selectbox,text,value ) {
@@ -1228,7 +1485,7 @@
           update_key();
           update_balances();
         }else {
-          seed.value = "Sorry, your browser does not support Web Storage...";
+          alert("Sorry, your browser does not support Web Storage...");
         }        
       }
 
@@ -1242,7 +1499,11 @@
           network.value ="testnet_default";
           top_image_url.value = "scotty.png";
           top_page_title.value = "Scotty's Wallet";
+          background_img.value = "";
+          background_color.value = "#888";
+          text_color.value = "#000";
           change_network_func();
+          set_default_colors();
           save_default_settings(); 
           return;
         }
@@ -1253,12 +1514,12 @@
         network.value = obj.network;
         url.value = obj.url;
         port.value = obj.port;
-        secure.value = obj.secure;
+        secure.value = obj.secure;        
         if (typeof obj.top_image_url != "undefined" && obj.top_image_url.length > 3) {
-          top_image_span.innerHTML = '<img src="' + top_image_url.value + '" class="img-circle" alt="Cinque Terre" width="100" height="100">';
+          top_image_span.innerHTML = '<img src="' + obj.top_image_url + '" class="img-circle" alt="Add Optional Image here" width="100" height="100">';
           top_image_url.value = obj.top_image_url;
         } else {
-          top_image_span.innerHTML = '<img src="' + "scotty.png" + '" class="img-circle" alt="Cinque Terre" width="100" height="100">';
+          top_image_span.innerHTML = '<img src="' + "scotty.png" + '" class="img-circle" alt="Add optional Image here2" width="100" height="100">';
           top_image_url.value = "scotty.png";
         }
         if (typeof obj.top_page_title != "undefined"){
@@ -1270,6 +1531,26 @@
           top_page_title.value = "Scotty's Wallet";
           top_page_title_span.innerHTML = '<h1>' + top_page_title.value + '</h1>';
         }        
+        if (typeof obj.background_color != "undefined"){
+          background_color.value = obj.background_color;
+        } else {
+          background_color.value = "#888";
+        }
+        if (typeof obj.text_color != "undefined") {
+          text_color.value = obj.text_color;
+        } else {
+          text_color.value = "#000";
+        }
+        change_color(text_color.value,background_color.value)
+        //if (typeof obj.background_img != "undefined"  && obj.background_img.length > 6 ){ 
+        if (typeof obj.background_img != "undefined" ){         
+          background_img.value = obj.background_img;
+          //document.body.style.backgroundImage = 'url(' + background_img.value + ')';
+        } else {
+          //background_img.value = "images/pilar.gif";
+          //document.body.style.backgroundImage = 'url(' + background_img.value + ')';
+        }
+        set_default_colors();
         console.log(obj);
       }
 
@@ -1284,6 +1565,9 @@
         obj.secure = secure.value;
         obj.top_image_url = top_image_url.value;
         obj.top_page_title = top_page_title.value;
+        obj.background_color = background_color.value;
+        obj.text_color = text_color.value;
+        obj.background_img = background_img.value;
         var string = JSON.stringify(obj);
         localStorage.setItem("def_settings", string);
       }
@@ -1387,15 +1671,30 @@ function displayContents(contents) {
   console.log(contents);
 }
 
-              function clear_table(id) {
-                var table = document.getElementById(id);
-                for(var i = table.rows.length - 1; i > 0; i--)
-                {
-                  table.deleteRow(i);
-                }
-              }
+    function clear_table2(id) {
+      //original version that works but not with table sort now being used
+      var table = document.getElementById(id);
+      for(var i = table.rows.length - 1; i > 0; i--) {
+        table.deleteRow(i);
+      }
+    }
+  
+   function clear_table(id) {
+    // stupid clear fix to allow table sort to work
+    // for reasons uknown can't delete the first data line, can only clear it's contents to keep sort working
+    console.log("clear_table");
+    var col_count = document.getElementById(id).rows[0].cells.length;        
+    var myTable = document.getElementById(id);
+    var rowCount = myTable.rows.length;
+    for (var x=rowCount-2; x>0; x--) {
+      myTable.deleteRow(x);
+    }
+    var first_row = document.getElementById(id).rows[1].cells;
+    for (var x=col_count-1; x>=0; x--) {
+      first_row[x].innerHTML = "";
+    }   
+ }
 
- 
 
       // array = [1,2,3,4]
       function insRow(array,id) {
@@ -1408,13 +1707,14 @@ function displayContents(contents) {
       }
 
 //.order({"asc" or "desc"})
+// I don't think we will need this anymore as we now use effects
 function get_transactions_desc(bal) {
   console.log("start get_transactions_desc");
   console.log(bal);
   var es = server.transactions()
     .forAccount(account.value)    
     .order("desc")
-    .limit(50)
+    .limit(30)
     .call()
     .then(function (page) {
         //console.log("page");
@@ -1512,7 +1812,7 @@ function get_transactions_desc(bal) {
                   //bal.balances[blen]["asset_issuer"] = page.records[i].asset_issuer;
                   //bal.balances[blen]["balance"] = amount; 
                   page.records[i].asset_code = "XLM";
-                  page.records[i].type = "trade";                 
+                  page.records[i].type = "trade";               
                   page.records[i].bal = clone(bal);
                   //page.records[i].trans_asset_bal = page.records[i].bal.balances["balance"];
                   //console.log(page.records[i].bal);
@@ -1567,6 +1867,8 @@ function clone(obj) {
     return copy;
 }
 
+// not used anymore see insert_history
+// this was originaly write to support get_transactions_desc(bal)
 function display_history(page){
   console.log("start display_history");
   //console.log(page);
@@ -1684,38 +1986,75 @@ function display_history(page){
 
    function display_offer_table(offer_obj){
        console.log("display_offer_table");
+       console.log(offer_obj);
        //console.log(offer_obj.records);
        clear_table("table_offers");
        var ar = [];
        var len = offer_obj.records.length;
        //console.log("disp length: " + len);
        for (var i = len - 1; i >= 0; i--) {
+         ar[0] = offer_obj.records[i].id
          if (offer_obj.records[i].selling.asset_type == "native") {
-           ar[0] = "XLM";
-           ar[1] = "";
+           ar[1] = "XLM";
+           ar[2] = "";
          } else {        
-           ar[0] = offer_obj.records[i].selling.asset_code;
-           ar[1] = offer_obj.records[i].selling.asset_issuer;  
+           ar[1] = offer_obj.records[i].selling.asset_code;
+           ar[2] = offer_obj.records[i].selling.asset_issuer;  
          }                
-         ar[2] = offer_obj.records[i].amount;
-         ar[3] = offer_obj.records[i].price; 
+         ar[3] = offer_obj.records[i].amount;
+         ar[4] = offer_obj.records[i].price; 
          if (offer_obj.records[i].buying.asset_type == "native") {
-           ar[4] = "XLM";
-           ar[5] = "";
+           ar[5] = "XLM";
+           ar[6] = "";
          } else {     
-           ar[4] = offer_obj.records[i].buying.asset_code;
-           ar[5] = offer_obj.records[i].buying.asset_issuer;
+           ar[5] = offer_obj.records[i].buying.asset_code;
+           ar[6] = offer_obj.records[i].buying.asset_issuer;
          }
          insRow(ar,"table_offers");
+         //table_sort_offers.refresh();
        }
     }
 
-  //<th>Selling Asset</th>
-  //<th>Selling Issuer</th>
-  //<th>Amount</th>
- // <th>Price</th>
-  //<th>Buying Asset</th>
- // <th>Buying Issuer</th> 
+
+      function change_color(text_color,background_color) {
+        console.log("change_color_text text, background");
+        console.log(text_color + " " + background_color);
+        document.body.style.backgroundColor = background_color;
+        document.body.style.color = text_color;
+        var el = [
+	document.getElementsByTagName('p'),
+	document.getElementsByTagName('h1'),
+	document.getElementsByTagName('h2'),
+	document.getElementsByTagName('h3'),
+	document.getElementsByTagName('h4'),
+        document.getElementsByTagName('h5'),
+        document.getElementsByTagName('th'),
+	];
+        var i;
+        var j;
+	for ( i in el) {
+	  for (j in el[i]) {
+	    if (el[i][j].style){
+	     el[i][j].style.color = text_color;
+            }
+	  }
+	}
+      } 
+
+    function set_default_colors() {
+      if (background_color.value.length > 2 && text_color.length > 2){
+        change_color(text_color.value,background_color.value);
+      } else {
+        //background_color.value = "#777";
+      }      
+      change_color(text_color.value,background_color.value)
+      if ( background_img.value.length > 6 ){          
+        document.body.style.backgroundImage = 'url(' + background_img.value + ')';
+      } else {
+         background_img.value = "";
+         document.body.style.backgroundImage = 'url(' + background_img.value + ')';
+      }
+    }
  
 
    //triger the event of readSingleFile when file-input browse button is clicked and a file selected
@@ -1746,7 +2085,7 @@ function display_history(page){
         console.log(new_account.checked);
         new_account.checked=true;
         //save_seed("seed1", "", seed.value );
-        save_seed("seed2", "", dest_seed.value )
+        save_seed("seed2", "", dest_seed.value );
       });
             
       send_payment.addEventListener("click", function(event) {
@@ -1808,13 +2147,14 @@ function display_history(page){
         seed.value = dest_seed.value;
         dest_seed.value = seed_swap;
         account.value = destination.value;
+        account_tx.address = account.value;
         destination.value = accountId_swap;         
         update_key();
+        
         if (dest_seed.value.length == 56) {
           var temp_key = StellarSdk.Keypair.fromSeed(dest_seed.value);
           destination.value = temp_key.accountId();
         }
-        start_effects_stream();
         update_balances();
         if (seed.value.length == 56){
           save_seed("seed1", "", seed.value);
@@ -1823,6 +2163,7 @@ function display_history(page){
           save_seed("seed2", "", dest_seed.value);
         }
         sign_tx.disabled = false;
+        update_seed_select();
       });
 
       decrypt_seed.addEventListener("click", function(event) {
@@ -1925,6 +2266,66 @@ function display_history(page){
           alert("manageOfferTransaction error: "+ err);
         }    
       });
+
+       save.addEventListener("click", function(event) {         
+        if (typeof(Storage) !== "undefined") {
+          var encrypted = CryptoJS.AES.encrypt(seed.value, pass_phrase.value);       
+          // Store
+          localStorage.setItem(seed_nick.value, encrypted);
+          //seed.value = "seed saved to local storage"
+          save.disabled = true;
+          update_seed_select(); 
+          update_key();
+          update_balances();       
+        }else {
+          alert("Sorry, your browser does not support Web Storage...");
+        }
+      });
+
+                 
+      delete_key.addEventListener("click", function(event) {
+        // delete key_id from LocalStorage    
+        console.log("deleting key "+ seed_nick.value);              
+        localStorage.removeItem(seed_nick.value);        
+        alert("seed_nick: " + seed_nick.value + " deleted from LocalStorage");
+        update_seed_select();
+        //display_localstorage_keylist();        
+      });
+
+      restore.addEventListener("click", function(event) {
+        seed.value = restore_seed(seed_nick.value, pass_phrase.value);
+        update_seed_select();
+        update_key();
+        update_balances();
+        
+      });
+
+       // Create a new connection when the Connect button is clicked
+      open.addEventListener("click", function(event) {
+        create_socket();
+      });
+
+      merge_accounts.addEventListener("click", function(event) {
+        accountMergeTransaction();
+      });
+
+
+      // Close the connection when the Disconnect button is clicked
+      close.addEventListener("click", function(event) {
+        console.log("closed socket");
+        //close.disabled = true;
+        close.disabled = false;
+        open.disabled = false;
+        message.textContent = "";
+        //socket.close();
+        
+      });
+
+      change_network.addEventListener("click", function(event) {
+        change_network_func();
+        set_default_colors();
+        save_default_settings();               
+      }); 
 
 
   });

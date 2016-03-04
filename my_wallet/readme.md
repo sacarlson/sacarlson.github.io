@@ -7,37 +7,41 @@
 * Federation support to use names instead of long accountID numbers for sending funds.
 * Auto generation of AccountId on new users that is saved in local browser storage.
 * Memo support for both number and text for send fund transactions
-* Table display page of Transaction History.
-* Table display page of list of presetly held assets.
-* Save encrypted secret key list in local browser storage.
-* Select and change from one key account to another from local browser storage keysets.
+* Table display page of list of presetly held assets (sortable).
+* Table display page of Transaction History (sortable) with realtime update.
+* Save encrypted secret key list in local browser storage .
+* Select and change from one key account to another from local browser storage keysets (multi account support).
 * Import/Export encrypted secret keysets to and from local file system.
 * Export secret keyset using QRcode to the Centaurus wallet android app.
-* TX Status of transaction and error condition displayed at top of screen. 
+* TX Status of transaction and detailed error conditions if any, displayed at top of screen. 
 * Balance of accountId in Lumens (XLM) at top of screen updated in realtime by stream link.
-* Generate, Send and recieve links to and from email or other sources to send transactions or prefunded accounts or links to submit request for funds from another account holder.
+* Generate, Send and recieve links to and from email or other sources to send transactions or prefunded accounts or links to submit request for funds from another account holders.
 * Advanced (section)
   * Change Network and page settings 
      * Change URL address and port pointing to private/custom Horizon servers.
      * Change Network Passphrase for private/custom networks. 
      * Change from Horizon to Mss-server supported API format.
-     * Change pages default top right image url to any custom user image that is saved in browsers local storage
-     * Change page top Title instead of "Scotty's Wallet" to any user default setting
+     * Change pages default top right image url to any custom user image (100 by 100 pixal image) that is saved in browsers local storage
+     * Change pages top Title instead of "Scotty's Wallet" to any user defined title.
+     * Change pages background color or replace with background image (animated background supported).
+     * Change pages font text color to best match user defined replacement background.
   * Add Trustlines to AccountId
   * Sign base64 tx envelope transaction and mail to next signer or submit to Net.
   * Merge accountId with another targeted accountId.
   * Change AccountId advanced settings
-     * Add or remove signers from accountId and set/change signer weights.
-     * Change signing weight thresholds and master weight signer weights.
+     * Add or remove signers from accountId
+     * Change/set signer and master signer weights.
+     * Change signing weight thresholds.
      * Change Inflation Destination pointing of accountId.
-  * View table of open order offers of trading assets on this accountID.
+  * View Table of open order offers of trading assets on this accountID (sortable).
+  * View Table display page of Asset Trade History (sortable) with realtime update.
   * Create offers to submit buy and sell orders to trade from one asset issuer for another.
 * Software Security Features
-  * All CDN libs have SHA-384 Subresource Integrity setup to verify authenticity and safety per https://www.w3.org/TR/SRI/ (not supported on all browser versions).
-  * All code for my_wallet is transparant and open sourced to be openly audited by all here on github.
+  * All CDN libs have SHA-384 Subresource Integrity setup to verify authenticity security per https://www.w3.org/TR/SRI/ (not supported on all browser versions).
+  * All code for my_wallet is transparant and open sourced to be openly audited with history on sacarlson.github.io .
 
 
-# Screen Shots
+# Screen Shots (some not updated)
 
 ### Send Funds
 ![Send Funds](https://sacarlson.github.io/my_wallet/screenshots/Screenshot.png)

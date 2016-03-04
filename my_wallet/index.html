@@ -4,16 +4,19 @@
   <title> My Wallet </title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
-  
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js" integrity="sha384-XxcvoeNF5V0ZfksTnV+bejnCsJjOOIzN6UVwF85WBsAnU3zeYh5bloN+L4WLgeNE" crossorigin="anonymous"></script>
-  
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"> 
+  <link rel="stylesheet" href="table.css"> 
+  <link rel="stylesheet" href="tab.css"> 
+  <script src="https://code.jquery.com/jquery-2.2.1.min.js" integrity="sha384-8C+3bW/ArbXinsJduAjm9O7WNnuOcO+Bok/VScRYikawtvz4ZPrpXtGfKIewM9dK" crossorigin="anonymous"></script>
   <script src="https://sacarlson.github.io/js/qrcode.js" integrity="sha384-hYj7cf8JCFyDuU90YJY9/TgSVpAtbrqW6oQliv63kjRTr4oyOTeITwmTfSI+UC0a" crossorigin="anonymous"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
   <script src="https://sacarlson.github.io/js/aes.js" integrity="sha384-YkYpnhy3j3+zc3fQvzlbh4WGwDgt+06gsGsaApwM1O3IKIsKJk61C0Lr6YvbovUV" crossorigin="anonymous"></script>
  <script src="https://cdn.rawgit.com/stellar/bower-js-stellar-sdk/cd1ecc03cce645b6f7b12abc211b239d24b39388/stellar-sdk.min.js" integrity="sha384-bJ4QHMD70wZKJdwVRTtrMIxjtS1jSbv+VpWK+9iECEhzwDxzeRWYBKM3MjpBxxxu" crossorigin="anonymous"></script>
  
-  <script src="js/transaction_toolsv0.4.0.js"></script>  
+  <script src="js/transaction_toolsv0.4.0.js"></script>
+  <script src="js/tablesort.min.js"></script>
+
+   
 </head>
 <body>
   <div class="panel panel-primary">
@@ -22,7 +25,7 @@
       <div class="row">
         <div class="col-sm-4">          
           <span id="top_image_span"></span>
-          <h4> Active AccountId: <span id="account_disp"></span></h4>
+          <h5> Active AccountId: <span id="account_disp"></span></h5>
         </div> 
         <div class="col-sm-4">
           <span id="top_page_title_span"></span>
@@ -36,7 +39,7 @@
     </div>
   </div>
 
-      <ul class="nav nav-tabs">
+      <ul class="tabrow">
         <li class="active"><a data-toggle="tab"  href="#send"> <h4>Send</h4></a></li>     
         <li><a data-toggle="tab" href="#rec"> <h4> Receive </h4></a></li>
         <li><a data-toggle="tab" href="#trans"><h4>Transaction Hist</h4></a></li>
@@ -53,7 +56,7 @@
   <h2>Send Tx</h2>
   <p>Send funds from you to another accountId</p> 
   <button type="button" class="btn btn-success btn-lg" id="send_payment" >Send_Payment</button>
-  <label class="checkbox-inline"><input type="checkbox" value="" id="new_account" >Create New Account</label>
+  <label class="checkbox-inline"><input type="checkbox" value="" id="new_account" ><p>Create New Account</p></label>
 
  <br /> <br /> 
  
@@ -78,16 +81,16 @@
     </div>
   </div>
 </div>  
-  <input id="email_funds" type="button" value="email_funds" />
-  to: <input id="email_address" type="text" size="25" value="sacarlson_2000@yahoo.com" /><br />
-  <input id="gen_random_dest" type="button" value="gen_random_dest" /><br />
- 
-  memo: <input id="memo" size="30" />
+   Memo: <input id="memo" size="30" />
   <select name="memo_mode" id="memo_mode" value='auto'>
     <option>auto</option>
     <option>memo.id</option>
     <option>memo.text</option>
-  </select><br />    
+  </select><br /> 
+  <input id="email_funds" type="button" value="email_funds" />
+  To:  <input id="email_address" type="text" size="25" value="sacarlson_2000@yahoo.com" /><br />
+  <input id="gen_random_dest" type="button" value="gen_random_dest" /><br />
+ 
 </div>
 
 <div id="rec" class="tab-pane fade">
@@ -95,14 +98,15 @@
   <p>Info to provide sender of funds </p>
   <h3>AccountId: <span id="account_disp2"></span></h3>
   <div id="qrcode2" style="width:200px; height:200px; margin-top:15px;"></div> 
-  Public address QR-code: <br />
+  <p>Public addressId QR-code Compatible with Centaurus: </p><br />
 </div>
 
 <div id="trans" class="tab-pane fade">
   <h2>Transaction History</h2>
-  <p>Recent transaction history on this accountId</p>
+  <p>Recent Transaction History on this accountId (sortable)</p>
   <div class="table-responsive">
-<table id="table" class="table table-hover table-striped table-bordered">
+<! <table id="table" class="table table-hover table-striped table-bordered">
+<table id="table" >
 <thead>
 <tr>
   <th>TX AccountID</th>
@@ -111,25 +115,20 @@
   <th>Amount</th>
   <th>Balance</th>
   <th>Memo</th>
-  <th>Date/Time</th>
+  <th class='sort-default'>Date/Time</th>
 </tr>
 </thead>
 <tbody>
 <tr>
- 
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
 </tr>
-<tr>
- 
-</tr>
-<tr>
-  
-</tr>
-<tr>
-  
-</tr>
-<tr>
-  
-</tr>
+
 </tbody>
 </table>
 </div>
@@ -137,9 +136,10 @@
 
 <div id="assets" class="tab-pane fade">
   <h2>List Asset Holdings</h2>
-  <p>List all Asset Issuer holdings held by this AccountId</p>
+  <p>List all Asset Issuer holdings held by this AccountId (sortable)</p>
   <div class="table-responsive">
-<table id="table_asset" class="table table-hover table-striped table-bordered">
+<! <table id="table_asset" class="table table-hover table-striped table-bordered">
+<table id="table_asset" >
 <thead>
 <tr>
   <th>Asset Code</th>
@@ -148,21 +148,11 @@
 </tr>
 </thead>
 <tbody>
-<tr>
- 
-</tr>
-<tr>
- 
-</tr>
-<tr>
-  
-</tr>
-<tr>
-  
-</tr>
-<tr>
-  
-</tr>
+ <tr>
+  <td></td>
+  <td></td>
+  <td></td>
+ </tr>
 </tbody>
 </table>
 </div>
@@ -172,12 +162,12 @@
 <div id="import" class="tab-pane fade">
   <h2>Import/Export Keyset</h2>
   <p>Import or Export a stellar keyset from browser local or systsem file to be used in transactions</p>
-  <h4> Save LocalStorage key sets to system file: <h4>  
+  <h5> Save LocalStorage key sets to system file: <h5>  
   <input id="save_to_file" type="button" value="Export_to_file" /><br />
-  <h4>Import backup from local system file to browser Local Storage key sets:</h4> <input type="file" id="file-input" /><br /> 
+  <h5>Import backup from local system file to browser Local Storage key sets:</h5> <input type="file" id="file-input" /><br /> 
   <div class="col-sm-2">
     <div class="form-group">
-      <br /><h4> Select a key set Nick Name that is now in browser Local Storage: <h4>
+      <br /><h5> Select a key set Nick Name that is now in browser Local Storage: <h5>
       <label for="select_seed">Select Seed</label>
       <SELECT  class="form-control"  id="select_seed">
         <Option class="placeholder" selected disabled value="">Select Seed</option>
@@ -189,31 +179,32 @@
     <input id="restore" type="button" value="restore_seed" /> 
     <input id="delete_key" type="button" value="delete_seed_key" />  
     <input id="swap_seed_dest" type="button" value="swap_seed_dest" /><br />
-    <h4>Seed Nick Name or public ID:</h4>
+    <h5>Seed Nick Name or public ID:</h5>
     <input id="seed_nick" class="form-control" size="60" value = "seed1" /><br /> 
-    <h4>Encrypt/Decrypt Seed pass phrase:</h4>
+    <h5>Encrypt/Decrypt Seed pass phrase:</h5>
     <input id="pass_phrase" class="form-control" size="60" /><br />
-    <h4>Secret Seed:</h4>  
+    <h5>Secret Seed:</h5>  
     <input id="seed" class="form-control"  />  
     <input id="decrypt_seed" type="button" value="decrypt_seed" />
     <input id="encrypt_seed" type="button" value="encrypt_seed" /><br />  
-    <h4>AccountId:</h4>
+    <h5>AccountId:</h5>
     <input id="account" class="form-control" size="60" /><br />
-    <h4> Centaurus Import Support QRcode </h4>
+    <h5> Centaurus Import Support QRcode </h5>
     <div id="qrcode" style="width:200px; height:200px; margin-top:15px;"></div> 
   </div>
   
 </div>
 
 <div id="adv" class="tab-pane fade">
-  <h2>Advanced Transaction Functions</h2>
-  <p>Advanced transactions include adding trustlines, TX signing of multi sig transactions and other advanced functions</p>
-   <ul class="nav nav-tabs">
+  <h2> Advanced Transaction Functions</h2>
+  <p> Advanced transactions include adding trustlines, TX signing of multi sig transactions and other advanced functions</p>
+   <ul class="tabrow">
      <li class="active"> <a data-toggle="tab" href="#settings"><h4>Change Settings</h4></a></li> 
      <li><a data-toggle="tab" href="#addtrust"> <h4>Add Trustlines </h4></a></li>     
      <li><a data-toggle="tab" href="#sign"> <h4> Sign Tx </h4></a></li>
      <li><a data-toggle="tab" href="#merge"><h4>Merge Accounts</h4></a></li>
      <li><a data-toggle="tab" href="#account_opts"><h4>Account Options</h4></a></li> 
+     <li><a data-toggle="tab" href="#trade_history"><h4>Trade History</h4></a></li>
      <li><a data-toggle="tab" href="#view_offer"><h4>View Offers</h4></a></li>
      <li><a data-toggle="tab" href="#create_offer"><h4>Create Offers</h4></a></li>                      
   </ul>
@@ -221,9 +212,9 @@
 
    
    <div id="settings" class="tab-pane fade in active" >
-      <h2>Change Default Network and Page Settings</h2>
-      <p>Change default network settings including default horizon/mss-server address pointing, mss-server/horizon modes, Live/Testnet/custom network pass phrase and page settings for top page URL of image and top page title. </p> 
-      Also refresh bal:<input id="change_network" type="button" value="change_network" />
+      <h2> Change Default Network and Page Settings</h2>
+      <p> Change default network settings including default horizon/mss-server address pointing, mss-server/horizon modes, Live/Testnet/custom network pass phrase and page settings for top page URL of image and top page title. </p> 
+      <p>Also refresh balance:</p> <input id="change_network" type="button" value="Submit Changes" /><br /><br />
 <select name="network" id="network" value='testnet_default'>
   <option>testnet_default</option>
   <option>live_default</option> 
@@ -234,30 +225,33 @@
   <option>custom</option>
 </select>
 <input id="current_mode"  value="current_mode?" /><br />
-MSS-server socket Status: <span id="status"></span><br />
-Network Passphrase: <input id="net_passphrase" size="50" /><br />
-Horizon/mss_server URL: <input id="url" size="30" />
-port: <input id="port" size="6" />  secure
+ MSS-server socket Status: <span id="status"></span><br />
+ Network Passphrase: <input id="net_passphrase" size="50" /><br />
+ Horizon/mss_server URL: <input id="url" size="30" />
+ Port: <input id="port" size="6" />  secure
 <select name="secure" id="secure" value='true'>
   <option>true</option>
   <option>false</option>
 </select><br />
-Top Image url: <input id="top_image_url" size="50" /><br />
-Top page title: <input id="top_page_title" size="20" /><br />
-MSS-server: <input id="open" type="button" value="Connect" />&nbsp;
+ Top Image URL: <input id="top_image_url" size="50" /><br />
+ Top Page Title: <input id="top_page_title" size="20" /><br />
+ Page Background Color: <input id="background_color" size="12" value="#666" /><br />
+ Page Background URL Image: <input id="background_img" size="30" value="images/pilar.gif" /><br />
+ Page Text Color: <input id="text_color" size="12" value="#fff" /><br />
+ MSS-server: <input id="open" type="button" value="Connect" />&nbsp;
   <input id="close" type="button" value="Disconnect" /><br />
-  Legacy Message Display: <br /> 
+  <p> Legacy Message Display: </p><br /> 
   <div style="width:800px;height:300px;line-height:3em;overflow:scroll;padding:10px;">
     <span id="message"></span>
   </div>            
 </div>
 
    <div id="addtrust" class="tab-pane fade in " >
-      <h2>Add Trustline</h2>
-      <p>Add a trustline to this accountId</p> 
+      <h2> Add Trustline</h2>
+      <p> Add a trustline to this accountId</p> 
       <input id="add_trustline" type="button" value="add_trustline" />
-      Asset type:<input id="tasset" size="12" value = "CHP" />
-      Trust issuer: <input id="tissuer" size="61" value = "" /><br />             
+       Asset Type: <input id="tasset" size="12" value = "CHP" />
+       Trust Issuer: <input id="tissuer" size="61" value = "" /><br />             
    </div>
  
    <div id="sign" class="tab-pane fade in" >
@@ -279,7 +273,7 @@ MSS-server: <input id="open" type="button" value="Connect" />&nbsp;
       <h2>Merge Accounts</h2>
       <p>Merge all this accounts Lumen assets into a target accountId</p>  
       <input id="merge_accounts" type="button" value="merge_accounts" /><br />
-      Merge to AccountId: <input id="merge_dest" size="62" value = "" />            
+       Merge to AccountId: <input id="merge_dest" size="62" value = "" />            
    </div>
 
    
@@ -289,21 +283,60 @@ MSS-server: <input id="open" type="button" value="Connect" />&nbsp;
       <p>Advanced Account Settings including:Add signers, Account Signing Threshold Weight settings, Inflation destination, Home Domain Settings.  Caution be careful with threshold setting as you can lock yourself out of your own account</p>
       <input id="add_signer" type="button" value="add_signer" /> 
       <input id="signer" size="62" />
-      Weight<input id="weight" size="3" value = "1" /><br />
-      Inflation Destination: <input id="inflation_dest" size="62" value = "GBL7AE2HGRNQSPWV56ZFLILXNT52QWSMOQGDBBXYOP7XKMQTCKVMX2ZL" />
+       Weight: <input id="weight" size="3" value = "1" /><br />
+       Inflation Destination: <input id="inflation_dest" size="62" value = "GBL7AE2HGRNQSPWV56ZFLILXNT52QWSMOQGDBBXYOP7XKMQTCKVMX2ZL" />
       <input id="set_inflation_dest" type="button" value="set_inflation_dest" /><br />
+      <br />
       <input id="change_threshold" type="button" value="change_options" />
-      Master_weight:  <input id="master_weight" size="3" value = 1 /> 
-      Threshold: <input id="threshold" size="3" value = 0 />
-      Home_domain: <input id="home_domain" size="40" value = "equid.co" /> <br />               
+       Master_weight: <input id="master_weight" size="3" value = 1 /> 
+       Threshold: <input id="threshold" size="3" value = 0 />
+       Home_domain: <input id="home_domain" size="40" value = "equid.co" /> <br />               
+   </div>
+
+   <div id="trade_history" class="tab-pane fade in" >
+      <h2>Asset Trade History</h2>
+      <p>History of Asset Trade transactions on this AccountId (sortable)</p>
+      <div style="overflow-x:auto;"> 
+      <! <table id="table_trade_history" class="table table-hover table-striped table-bordered">
+      <table id="table_trade_history" >
+        <thead>
+          <tr> 
+            <th>Offer ID</th>
+            <th>TX AccountId</th> 
+            <th>Sold Asset</th>
+            <th>Sold Issuer</th>
+            <th>Sold Amount</th>
+            <th>Bought Asset</th>
+            <th>Bought Issuer</th> 
+            <th>Bought Amount</th>
+            <th>Date/Time</th> 
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td></td> 
+            <td></td>
+	    <td></td>
+	    <td></td>
+	    <td></td>
+	    <td></td>
+	    <td></td>
+	    <td></td>
+	    <td></td>
+          </tr>
+       </tbody>
+     </table> 
+     </div>            
    </div>
 
    <div id="view_offer" class="tab-pane fade in" >
       <h2>Open Order Offers</h2>
-      <p>Presently open orders setup and running on this accountId</p> 
+      <p>Presently open orders setup and running on this accountId (sortable)</p> 
+      <! <table id="table_offers" class="table table-hover table-striped table-bordered">
       <table id="table_offers" class="table table-hover table-striped table-bordered">
         <thead>
-          <tr>  
+          <tr>
+            <th class='sort-default' >Offer ID</th>  
             <th>Selling Asset</th>
             <th>Selling Issuer</th>
             <th>Amount</th>
@@ -313,9 +346,15 @@ MSS-server: <input id="open" type="button" value="Connect" />&nbsp;
           </tr>
         </thead>
         <tbody>
-          <tr> 
+          <tr>
+             <td></td> 
+             <td></td>
+             <td></td>
+             <td></td>
+             <td></td>
+             <td></td>
+             <td></td>
           </tr>
-
        </tbody>
      </table>             
    </div>
@@ -326,7 +365,7 @@ MSS-server: <input id="open" type="button" value="Connect" />&nbsp;
  To sell or buy native Lumens use XLM as Asset_code with no Asset_issuer (blank)</p>  
       <input id="submit_offer" type="button" value="submit_offer" /><br />
       Selling Asset_code: <input id="selling_asset_code" size="14" value = "" /> <br />
-      Selling Asset_issuer: <input id="selling_asset_issuer" size="62" value = "" /> <br />
+       Selling Asset_issuer: <input id="selling_asset_issuer" size="62" value = "" /> <br />
       Selling Amount: <input id="selling_amount" size="14" value = "" /> <br />
       Selling Price: <input id="selling_price" size="14" value = "" /> <br /> 
       Buying Asset_code: <input id="buying_asset_code" size="14" value = "" /> <br />
@@ -339,6 +378,6 @@ MSS-server: <input id="open" type="button" value="Connect" />&nbsp;
 </div>
 
 </div>
-  
+
 </body>
 </html>
