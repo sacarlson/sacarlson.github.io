@@ -290,15 +290,23 @@
      } 
 
           function email_funds_now (mode) {
+            var mail = "";
             if (mode != "email_tx"){
-             var mail = "mailto:" + email_address.value +"?subject= Stellar funds transmittal for: " + amount.value + " of asset: "+ asset.value + "&body=Click on the link bellow to collect the funds I have sent you for the amount of " + amount.value + " of asset type: "+ asset.value + " to the accountID " + destination.value + " secret seed if contained: " + dest_seed.value  + "  just click Link: https://sacarlson.github.io/transaction_toolsv0.4.0.html?json={%22env_b64%22:%22" + envelope_b64.value + "%22}   " +  ". From within the wallet just hit send_tx button to transact the issued transaction and verify balance received.   Or if you prefer other methods of receiving the transaction the Stellar envelope base64: " + envelope_b64.value;
-        } else {
-          var mail = "mailto:" + email_address.value +"?subject= Stellar TX transaction to be signed &body=Click on the link bellow to go to signing tool just click Link: http://sacarlson.github.io//transaction_toolsv0.4.0.html?json={%22env_b64%22:%22" + envelope_b64.value + "%22}   . From within the wallet just hit sign_tx to sign and send_tx button to transact the issued transaction after fully signed.   Or if you prefer other methods of signing tx the Stellar envelope base64: " + envelope_b64.value;
-        }
-        console.log("mail content: ");
-        console.log(encodeURI(mail));
-        message.textContent = encodeURI(mail);
-        window.open(encodeURI(mail));
+        
+              if (dest_seed.value.length > 55){
+                mail = "mailto:" + email_address.value +"?subject= Stellar funds transmittal for all asset in AccountId: " + destination.value +   "&body=Click on the link bellow to collect all present funds in AccountId : " + destination.value + "   just click Link: http://sacarlson.github.io/my_wallet/index.html?json={%22seed%22:%22" + dest_seed.value + "%22}   " +  ". From within the wallet you should see the balance of your new account";
+              } else {
+                mail = "mailto:" + email_address.value +"?subject= Stellar funds transmittal for: " + amount.value + " of asset: "+ asset.value + "&body=Click on the link bellow to collect the funds I have sent you for the amount of " + amount.value + " of asset type: "+ asset.value + " to the accountID " + destination.value + " secret seed if contained: " + dest_seed.value  + "  just click Link: http://sacarlson.github.io/my_wallet/index.html?json={%22env_b64%22:%22" + envelope_b64.value + "%22}   " +  ". From within the wallet just hit send_tx button to transact the issued transaction and verify balance received.   Or if you prefer other methods of receiving the transaction the Stellar envelope base64: " + envelope_b64.value;
+              }
+
+            } else {
+           mail = "mailto:" + email_address.value +"?subject= Stellar TX transaction to be signed &body=Click on the link bellow to go to signing tool just click Link: http://sacarlson.github.io/my_wallet/index.html?json={%22env_b64%22:%22" + envelope_b64.value + "%22}   . From within the wallet just hit sign_tx to sign and send_tx button to transact the issued transaction after fully signed.   Or if you prefer other methods of signing tx the Stellar envelope base64: " + envelope_b64.value;
+            }
+       
+            console.log("mail content: ");
+            console.log(encodeURI(mail));
+            //message.textContent = encodeURI(mail);
+            window.open(encodeURI(mail));
           }
 
           function federation_lookup(){
