@@ -19,7 +19,8 @@
       //var balance = document.getElementById("balance");
       var balance = {};
       var CHP_balance = document.getElementById("CHP_balance");
-      var asset_type = document.getElementById("asset_type");
+      //var asset_type = document.getElementById("asset_type");
+      var asset_type = {};
       var memo = document.getElementById("memo");
       var memo_mode = document.getElementById("memo_mode");
       //var dest_balance = document.getElementById("dest_balance");
@@ -1116,6 +1117,9 @@
 
       function addTrustlineOperation(asset_type, address) {
                  //asset_type examples "USD", "CHP"
+                 console.log("addTrustlineOperation");
+                 console.log(asset_type);
+                 console.log(address);
                  asset = new StellarSdk.Asset(asset_type, address);
                  return StellarSdk.Operation.changeTrust({asset: asset}); 
                }
@@ -2098,12 +2102,20 @@ function display_history(page){
       });
 
       add_trustline.addEventListener("click", function(event) {
+        console.log("add_trustline click");
+        console.log(tasset.value);
+        console.log(tissuer.value);
+        update_key();
         try { 
           asset_type.value = tasset.value;         
           var operation = addTrustlineOperation(tasset.value, tissuer.value);
+        } catch(err) {
+           alert("addTrustlineOperation failed" + err);
+        }
+        try {
           createTransaction(key,operation);
         } catch(err) {
-          alert("add_trusline error: " + err);
+          alert("createTransaction failed: " + err);
         }
       });
 
