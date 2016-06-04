@@ -164,6 +164,10 @@
         }               
         if (typeof params["seed"] != "undefined") {
           seed.value = params["seed"];
+          account.value = StellarSdk.Keypair.fromSeed(seed.value).accountId();
+          account_tx.address = account.value;
+          key = StellarSdk.Keypair.fromSeed(seed.value);
+          update_key();
         }
         if (typeof params["amount"] != "undefined") {
           amount.value = params["amount"];
