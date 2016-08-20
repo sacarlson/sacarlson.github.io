@@ -72,6 +72,7 @@
       var destination_home_domain;
       var cancel_offer_flag;
       var account_tx;
+      var send_fed_to;
 
       var resetAccount = function () {
 	    account_tx = {
@@ -210,7 +211,7 @@
       sign_tx.disabled = true;
       
       if (typeof memo.value == "undefined") {
-        memo.value = "scotty_is_cool";
+        memo.value = "funtracker.site";
       }
       if (typeof amount.value == "undefined"){
         amount.value = "1"; 
@@ -219,9 +220,9 @@
       //console.log("asset_type.length: " + asset_type.value.length);
       if (typeof tasset.value == "undefined" || tissuer.value.length == 0) {     
         //asset_type.value = "AAA";
-        tissuer.value = 'GAX4CUJEOUA27MDHTLSQCFRGQPEXCC6GMO2P2TZCG7IEBZIEGPOD6HKF';
+        tissuer.value = 'GBUYUAI75XXWDZEKLY66CFYKQPET5JR4EENXZBUZ3YXZ7DS56Z4OKOFU';
         issuer.value = tissuer.value;
-        tasset.value = 'AAA';
+        tasset.value = 'FUNT';
       }
       
       if (typeof destination.value == "undefined"){
@@ -313,52 +314,46 @@
             window.open(encodeURI(mail));
           }
 
-          function federation_lookup(){
-            // need to add stellar.toml lookup at some point or just move to stellar sdk implementation of lookup
-            fed_mode_forward = true;
-            console.log("federation_lookup click detected");
-            //https://equid.co/federation?q=sacarlson*equid.co&type=name'
-            //var url = "https://equid.co/federation?q=" + destination.value + "*equid.co&type=name";
-            var url = "https://api.";
-            // sacarlson*equid.co
-            var index_at = destination.value.indexOf("@");
-            var index_ast = destination.value.indexOf("*");
-            console.log("index_at: " + index_at);
-            console.log("index_ast: " + index_ast);
-            if (index_at == -1 && index_ast == -1){
-              destination.value = destination.value + "*equid.co";
-            }
-            if (index_at >= 0 && index_ast >= 0){
-              console.log("have both * and @ in lookup, so don't change");
-            } else{
-              console.log("only have * or @ in lookup, will change any @ to *");
-              destination.value = destination.value.replace("@", "*");
-            }
-            var start_index = destination.value.indexOf("*");
-            url = url + destination.value.substring(start_index+1);
-            console.log("url: " + url);
-            url = url + "/federation?q=" + destination.value + "&type=name";
-            console.log("url+: " + url);
-            xmlhttp.open("GET", url, true);
-            xmlhttp.send();            
+          
+          function federation_lookup(stellar_address) {
+             console.log("start sendto: " + send_fed_to);
+             StellarSdk.FederationServer.resolve(stellar_address)
+                 .then(function(federationRecord) {
+                     //destination.value = federationRecord.account_id;
+                     console.log("federation_lookup results" + federationRecord.account_id);
+                     console.log("send_fed_to: " + send_fed_to);
+                     if (send_fed_to == "dest") {
+                       console.log("set dest");
+                       destination.value = federationRecord.account_id;
+                     } else {
+                       console.log("set issuer");
+                       issuer.value = federationRecord.account_id;
+                     }
+                 })
+                .catch(function(err) {
+                    console.log("federation_lookup error: " + err);
+                });
           }
 
-          function reverse_federation_lookup(){
-            // this also need stellar.toml file lookup at some point or trash for stellar sdk version when working
-            fed_mode_forward = false;
-            console.log("reverse_federation_lookup click detected");
-            //console.log(account_obj_global);
-            if (typeof destination_home_domain == "undefined") {
-              console.log("no home_domain");
-            } else {
-              var url = "https://api." + destination_home_domain + "/federation?q=" + destination.value +"&type=id";
-              console.log("url: " + url);
-              xmlhttp.open("GET", url, true);
-              xmlhttp.send();
-            }            
+          function reverse_federation_lookup3() {
+             // this should work but I think my sdk is too old to support it, maybe on upgrade this will work
+             StellarSdk.FederationServer.resolveAccountId(destination.value)
+                 .then(function(federationRecord) {
+                     console.log("federationRecord: ");
+                     console.log(federationRecord);
+                     //destination.value = federationRecord.account_id;
+                     //console.log("federation_lookup results" + destination.value);
+                 })
+                .catch(function(err) {
+                    console.log("reverse_federation_lookup error: " + err);
+                });
           }
 
-         
+          function reverse_federation_lookup(address) {
+            console.log("reverse_federation_lookup disabled: " + address);
+          }
+
+                  
           
           function attachToPaymentsStream(opt_startFrom) {
             console.log("start attacheToPaymentsStream");
@@ -1512,9 +1507,9 @@
         if (def_settings_json == null) {
           // default setting for a users first time run on this browser
           console.log("type null, restore nothing");
-          network.value ="testnet_default";
-          top_image_url.value = "scotty.png";
-          top_page_title.value = "Scotty's Wallet";
+          network.value ="live_default";
+          top_image_url.value = "logo.png";
+          top_page_title.value = "Funtracker.site Wallet";
           background_img.value = "";
           background_color.value = "#888";
           text_color.value = "#000";
@@ -1532,11 +1527,11 @@
         port.value = obj.port;
         secure.value = obj.secure;        
         if (typeof obj.top_image_url != "undefined" && obj.top_image_url.length > 3) {
-          top_image_span.innerHTML = '<img src="' + obj.top_image_url + '" class="img-circle" alt="Add Optional Image here" width="100" height="100">';
+          top_image_span.innerHTML = '<img src="' + obj.top_image_url + '" class="img-rounded" alt="Add Optional Image here" width="100" height="100">';
           top_image_url.value = obj.top_image_url;
         } else {
-          top_image_span.innerHTML = '<img src="' + "scotty.png" + '" class="img-circle" alt="Add optional Image here2" width="100" height="100">';
-          top_image_url.value = "scotty.png";
+          top_image_span.innerHTML = '<img src="' + "logo.png" + '" class="img-rounded" alt="Add optional Image here2" width="100" height="100">';
+          top_image_url.value = "logo.png";
         }
         if (typeof obj.top_page_title != "undefined"){
           console.log("top_page != undefined");
@@ -1544,7 +1539,7 @@
           top_page_title.value = obj.top_page_title;
           top_page_title_span.innerHTML = '<h1>' + obj.top_page_title + '</h1>';
         } else {
-          top_page_title.value = "Scotty's Wallet";
+          top_page_title.value = "Funtracker.site Wallet";
           top_page_title_span.innerHTML = '<h1>' + top_page_title.value + '</h1>';
         }        
         if (typeof obj.background_color != "undefined"){
@@ -2256,12 +2251,27 @@ function display_history(page){
       });
 
       fed_lookup.addEventListener("click", function(event) {
+        send_fed_to = "dest";
         try {
           console.log("destination.value.length: " + destination.value.length);
           if (destination.value.length == 56) {
-            reverse_federation_lookup();
+            reverse_federation_lookup(destination.value);
           } else {
-            federation_lookup();
+            federation_lookup(destination.value);
+          }
+        } catch(err) {
+          alert("fed_lookup error: " + err);
+        }
+      });
+
+     fed_lookup_issuer.addEventListener("click", function(event) {
+        send_fed_to = "issuer";
+        try {
+          console.log("issuer.value.length: " + issuer.value.length);
+          if (issuer.value.length == 56) {
+            reverse_federation_lookup(issuer.value);
+          } else {
+            federation_lookup(issuer.value);
           }
         } catch(err) {
           alert("fed_lookup error: " + err);
