@@ -2165,6 +2165,9 @@ function display_history(page){
         var accountId_swap = account.value
         seed.value = dest_seed.value;
         dest_seed.value = seed_swap;
+        bal_disp.textContent = 0;
+        clear_table("table");
+        clear_table("table_asset");
         account.value = destination.value;
         account_tx.address = account.value;
         destination.value = accountId_swap;         
