@@ -2078,7 +2078,10 @@ function display_history(page){
         if (chosenoption.value!="nothing"){
           console.log("selected value: " + chosenoption.value);
           restore_seed_option(chosenoption.value);
+          clear_table("table_trade_history");
+          clear_table("table");
           update_balances();
+          get_offers();
         }
       }
           
@@ -2166,6 +2169,7 @@ function display_history(page){
         seed.value = dest_seed.value;
         dest_seed.value = seed_swap;
         bal_disp.textContent = 0;
+        clear_table("table_trade_history");
         clear_table("table");
         clear_table("table_asset");
         account.value = destination.value;
@@ -2177,7 +2181,9 @@ function display_history(page){
           var temp_key = StellarSdk.Keypair.fromSeed(dest_seed.value);
           destination.value = temp_key.accountId();
         }
+        clear_table("table");
         update_balances();
+        get_offers();
         if (seed.value.length == 56){
           save_seed("seed1", "", seed.value);
         }
