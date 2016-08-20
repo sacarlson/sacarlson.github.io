@@ -2078,6 +2078,8 @@ function display_history(page){
         if (chosenoption.value!="nothing"){
           console.log("selected value: " + chosenoption.value);
           restore_seed_option(chosenoption.value);
+          bal_disp.textContent = 0;
+          clear_table("table_asset");
           clear_table("table_trade_history");
           clear_table("table");
           update_balances();
