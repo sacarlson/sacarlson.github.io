@@ -194,7 +194,7 @@
     <input id="encrypt_seed" type="button" value="encrypt_seed" /><br />  
     <h5>AccountId:</h5>
     <input id="account" class="form-control" size="60" /><br />
-    <h5> Centaurus Import Support QRcode </h5>
+    <h5> Raw secret seed QRcode </h5>
     <div id="qrcode" style="width:200px; height:200px; margin-top:15px;"></div> 
   </div>
   
@@ -255,8 +255,9 @@
       <h2> Add Trustline</h2>
       <p> Add a trustline to this accountId</p> 
       <input id="add_trustline" type="button" value="add_trustline" />
-       Asset Type: <input id="tasset" size="12" value = "CHP" />
-       Trust Issuer: <input id="tissuer" size="61" value = "" /><br />             
+       Asset Type: <input id="tasset" size="12" value = "" />
+       Trust Issuer: <input id="tissuer" size="64" value = "" /><br />
+       Credit Limit: <input id="tlimit" size="12" value = "" /> Set to 0 to delete TrustLine <br />             
    </div>
  
    <div id="sign" class="tab-pane fade in" >

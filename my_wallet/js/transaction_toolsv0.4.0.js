@@ -15,6 +15,7 @@
       var seed = document.getElementById("seed");
       var tissuer = document.getElementById("tissuer");
       var tasset = document.getElementById("tasset");
+      var tlimit = document.getElementById("tlimit");
       var amount = document.getElementById("amount");
       //var balance = document.getElementById("balance");
       var balance = {};
@@ -92,13 +93,13 @@
       seed.value = restore_seed("seed1", "");
   
       var qrcode = new QRCode(document.getElementById("qrcode"), {
-	    width : 200,
-	    height : 200
+	    width : 300,
+	    height : 300
       });
 
       var qrcode2 = new QRCode(document.getElementById("qrcode2"), {
-	    width : 200,
-	    height : 200
+	    width : 300,
+	    height : 300
       });
  
       //net_passphrase.value = "Test SDF Network ; September 2015";
@@ -132,7 +133,9 @@
       //seed.value = 'SA3CKS64WFRWU7FX2AV6J6TR4D7IRWT7BLADYFWOSJGQ4E5NX7RLDAEQ'; 
       //account.value = 'GAMCHGO4ECUREZPKVUCQZ3NRBZMK6ESEQVHPRZ36JLUZNEH56TMKQXEB'
    
-      asset.value = "native";
+      //asset.value = "native";
+      asset.value = "FUNT";
+      tlimit.value = "";
 
       var env_b64 = window.location.href.match(/\?env_b64=(.*)/);
       var encrypted_seed = window.location.href.match(/\?seed=(.*)/);
@@ -238,7 +241,7 @@
       update_seed_select();
       //current_mode.value = "Stellar horizon TestNet";
       
-      bal_disp.textContent = 0;
+      //bal_disp.textContent = 0;
       update_balances();  
 
       var table_sort_offers = new Tablesort(document.getElementById('table_offers'));
@@ -254,7 +257,7 @@
       account_disp2.textContent = account.value;
       makeCode();
       
-      get_offers();
+      //get_offers();
       //var array = [1,2,3,4,5];
       //insRow(array,"table");
 
@@ -289,7 +292,8 @@
 	   }	
 	   //qrcode.makeCode(seed.value);
        //update_key();
-       qrcode.makeCode(export_to_centaurus());
+       //qrcode.makeCode(export_to_centaurus());
+       qrcode.makeCode(seed.value);
        //console.log("qrcode account: " + account.value);
        qrcode2.makeCode(account.value);        
      } 
@@ -299,13 +303,13 @@
             if (mode != "email_tx"){
         
               if (dest_seed.value.length > 55){
-                mail = "mailto:" + email_address.value +"?subject= Stellar funds transmittal for all asset in AccountId: " + destination.value +   "&body=Click on the link bellow to collect all present funds in AccountId : " + destination.value + "   just click Link: http://sacarlson.github.io/my_wallet/index.html?json={%22seed%22:%22" + dest_seed.value + "%22}   " +  ". From within the wallet you should see the balance of your new account";
+                mail = "mailto:" + email_address.value +"?subject= Stellar funds transmittal for all asset in AccountId: " + destination.value +   "&body=Click on the link bellow to collect all present funds in AccountId : " + destination.value + "   just click Link: https://wallet.funtracker.site/?json=%7B%22seed%22:%22" + dest_seed.value + "%22%7D   " +  ". From within the wallet you should see the balance of your new account";
               } else {
-                mail = "mailto:" + email_address.value +"?subject= Stellar funds transmittal for: " + amount.value + " of asset: "+ asset.value + "&body=Click on the link bellow to collect the funds I have sent you for the amount of " + amount.value + " of asset type: "+ asset.value + " to the accountID " + destination.value + " secret seed if contained: " + dest_seed.value  + "  just click Link: http://sacarlson.github.io/my_wallet/index.html?json={%22env_b64%22:%22" + envelope_b64.value + "%22}   " +  ". From within the wallet just hit send_tx button to transact the issued transaction and verify balance received.   Or if you prefer other methods of receiving the transaction the Stellar envelope base64: " + envelope_b64.value;
+                mail = "mailto:" + email_address.value +"?subject= Stellar funds transmittal for: " + amount.value + " of asset: "+ asset.value + "&body=Click on the link bellow to collect the funds I have sent you for the amount of " + amount.value + " of asset type: "+ asset.value + " to the accountID " + destination.value + " secret seed if contained: " + dest_seed.value  + "  just click Link: https://wallet.funtracker.site/?json=%7B%22env_b64%22:%22" + envelope_b64.value + "%22%7D   " +  ". From within the wallet just hit send_tx button to transact the issued transaction and verify balance received.   Or if you prefer other methods of receiving the transaction the Stellar envelope base64: " + envelope_b64.value;
               }
 
             } else {
-           mail = "mailto:" + email_address.value +"?subject= Stellar TX transaction to be signed &body=Click on the link bellow to go to signing tool just click Link: http://sacarlson.github.io/my_wallet/index.html?json={%22env_b64%22:%22" + envelope_b64.value + "%22}   . From within the wallet just hit sign_tx to sign and send_tx button to transact the issued transaction after fully signed.   Or if you prefer other methods of signing tx the Stellar envelope base64: " + envelope_b64.value;
+           mail = "mailto:" + email_address.value +"?subject= Stellar TX transaction to be signed &body=Click on the link bellow to go to signing tool just click Link: https://wallet.funtracker.site/?json=%7B%22env_b64%22:%22" + envelope_b64.value + "%22%7D   . From within the wallet just hit sign_tx to sign and send_tx button to transact the issued transaction after fully signed.   Or if you prefer other methods of signing tx the Stellar envelope base64: " + envelope_b64.value;
             }
        
             console.log("mail content: ");
@@ -317,6 +321,26 @@
           
           function federation_lookup(stellar_address) {
              console.log("start sendto: " + send_fed_to);
+             var index_at = stellar_address.indexOf("@");
+             var index_ast = stellar_address.indexOf("*");
+             console.log("index_at: " + index_at);
+             console.log("index_ast: " + index_ast);
+             if (index_at == -1 && index_ast == -1){
+               stellar_address = stellar_address + "*funtracker.site";
+             }
+             if (index_at >= 0 && index_ast >= 0){
+               console.log("have both * and @ in lookup, so don't change");
+             } else{
+               console.log("only have * or @ in lookup, will change any @ to *");
+               stellar_address = stellar_address.replace("@", "*");
+             }
+             if (send_fed_to == "dest") {
+                console.log("pre set dest: " + stellar_address);
+                destination.value = stellar_address;
+             } else {
+                console.log("pre set issuer: " + stellar_address);
+                issuer.value = stellar_address;
+             }
              StellarSdk.FederationServer.resolve(stellar_address)
                  .then(function(federationRecord) {
                      //destination.value = federationRecord.account_id;
@@ -333,6 +357,36 @@
                 .catch(function(err) {
                     console.log("federation_lookup error: " + err);
                 });
+          }
+
+     function federation_lookup2(){
+            // need to add stellar.toml lookup at some point or just move to stellar sdk implementation of lookup
+            fed_mode_forward = true;
+            console.log("federation_lookup click detected");
+            //https://equid.co/federation?q=sacarlson*equid.co&type=name'
+            //var url = "https://equid.co/federation?q=" + destination.value + "*equid.co&type=name";
+            var url = "https://api.";
+            // sacarlson*equid.co
+            var index_at = destination.value.indexOf("@");
+            var index_ast = destination.value.indexOf("*");
+            console.log("index_at: " + index_at);
+            console.log("index_ast: " + index_ast);
+            if (index_at == -1 && index_ast == -1){
+              destination.value = destination.value + "*equid.co";
+            }
+            if (index_at >= 0 && index_ast >= 0){
+              console.log("have both * and @ in lookup, so don't change");
+            } else{
+              console.log("only have * or @ in lookup, will change any @ to *");
+              destination.value = destination.value.replace("@", "*");
+            }
+            var start_index = destination.value.indexOf("*");
+            url = url + destination.value.substring(start_index+1);
+            console.log("url: " + url);
+            url = url + "/federation?q=" + destination.value + "&type=name";
+            console.log("url+: " + url);
+            xmlhttp.open("GET", url, true);
+            xmlhttp.send();            
           }
 
           function reverse_federation_lookup3() {
@@ -759,6 +813,13 @@
           secure: tf
         });
       }
+
+      function clear_all_tables() {
+        clear_table("table");  // transaction history
+        clear_table("table_trade_history"); //asset trade history
+        clear_table("table_asset"); // list asset holdings
+        clear_table("table_offers"); // open order offers
+      }
        
       function get_account_info(account,callback) {
         console.log("account: " + account);
@@ -848,11 +909,14 @@
           console.log("update_balances mss mode");
           get_balance_updates_mss();
           return
-        }           
+        } 
+        bal_disp.textContent = 0;
+        clear_all_tables();
+        get_offers();           
         get_account_info(account.value,update_balances_set); 
-        if (destination.value.length == 56){
-          get_account_info(destination.value,update_balances_set); 
-        }          
+        //if (destination.value.length == 56){
+         // get_account_info(destination.value,update_balances_set); 
+        //}          
       }
 
       
@@ -878,10 +942,10 @@
             createPaymentTransaction(key,asset_obj);
           }
         }else {
-          if (dest_balance.value == 0){
-            alert("destination account not active, can only send native");
-            return;
-          }
+          //if (dest_balance.value == 0){
+           // alert("destination account not active, can only send native");
+           // return;
+          //}
           console.log("asset: " + asset.value + " issuer: " + issuer.value);
           var asset_obj = new StellarSdk.Asset(asset.value, issuer.value);
           message.textContent = "started payment: ";
@@ -991,8 +1055,8 @@
         socket.send(action + destination.value + tail);
         var action = '{"action":"get_lines_balance","account":"';
         var tail = '"}';
-        socket.send(action + account.value + '", "issuer":"' + tissuer.value + '", "asset":"' + asset_type.value + tail);
-        socket.send(action + destination.value + '", "issuer":"' + issuer.value + '", "asset":"' +asset.value + tail);
+        socket.send(action + account.value + '", "issuer":"' + tissuer.value + '", "asset":"' + asset.value + tail);
+        socket.send(action + destination.value + '", "issuer":"' + issuer.value + '", "asset":"' + asset.value + tail);
       }
     }
      
@@ -1035,6 +1099,7 @@
                //console.log(result);
                //console.log(result.result_xdr);               
                tx_status.textContent = "Completed OK";
+               update_balances();
              }).catch(function(e) {
                console.log("submitTransaction error");
                console.log(e);
@@ -1051,19 +1116,21 @@
           .then(function (transactionResult) {
             console.log("tx_result");
             console.log(transactionResult);
+            //update_balances();  
             if (typeof transactionResult == "undefined") {
               console.log("tx res undefined");
               //tx_status.textContent = "Transaction error?  result undefined";              
               //return
             }
-            console.log(transactionResult);
+            //console.log(transactionResult);
             //console.log(transaction.toEnvelope().toXDR().toString("base64"));
             envelope_b64.value = transaction.toEnvelope().toXDR().toString("base64");
             if ( email_flag ) {
               console.log("horizon mode email_flag detected");  
               email_funds_now ("email_funds");
               email_flag = false;
-            }              
+            }
+                       
           })
           .catch(function (err) {
             console.log(err);
@@ -1122,13 +1189,18 @@
                  });
                }
 
-      function addTrustlineOperation(asset_type, address) {
+      function addTrustlineOperation(asset_type2, address, limit) {
                  //asset_type examples "USD", "CHP"
                  console.log("addTrustlineOperation");
-                 console.log(asset_type);
+                 console.log(asset_type2);
                  console.log(address);
-                 asset = new StellarSdk.Asset(asset_type, address);
-                 return StellarSdk.Operation.changeTrust({asset: asset}); 
+                 console.log(limit);
+                 asset = new StellarSdk.Asset(asset_type2, address);
+                 if (limit.length == 0){
+                   return StellarSdk.Operation.changeTrust({asset: asset});
+                 } else {
+                   return StellarSdk.Operation.changeTrust({asset: asset,limit: limit}); 
+                 }
                }
 
       function setOptionsOperation() {
@@ -1258,8 +1330,6 @@
      
      
       function change_network_func() {
-        clear_table("table");
-        clear_table("table_asset");
         if (top_image_url.value.length > 4) {
           top_image_span.innerHTML = '<img src="' + top_image_url.value + '" class="img-circle" alt="Add Optional Image here" width="100" height="100">';
         } else {
@@ -2078,12 +2148,7 @@ function display_history(page){
         if (chosenoption.value!="nothing"){
           console.log("selected value: " + chosenoption.value);
           restore_seed_option(chosenoption.value);
-          bal_disp.textContent = 0;
-          clear_table("table_asset");
-          clear_table("table_trade_history");
-          clear_table("table");
           update_balances();
-          get_offers();
         }
       }
           
@@ -2093,7 +2158,7 @@ function display_history(page){
         var new_keypair = StellarSdk.Keypair.random();
         destination.value = new_keypair.accountId();
         dest_seed.value = new_keypair.seed();
-        update_balances();
+        //update_balances();
         amount.value = 20.1;
         issuer.value = "";
         asset.value = "native";
@@ -2116,11 +2181,16 @@ function display_history(page){
       add_trustline.addEventListener("click", function(event) {
         console.log("add_trustline click");
         console.log(tasset.value);
+        console.log(asset.value);
         console.log(tissuer.value);
         update_key();
         try { 
-          asset_type.value = tasset.value;         
-          var operation = addTrustlineOperation(tasset.value, tissuer.value);
+          //asset_type.value = tasset.value;
+          //asset.value = tasset.value;         
+          var operation = addTrustlineOperation(tasset.value, tissuer.value, tlimit.value);
+          asset.value = tasset.value; 
+          console.log("post asset.value: " + asset.value);
+          console.log("post tasset.value: " + tasset.value);
         } catch(err) {
            alert("addTrustlineOperation failed" + err);
         }
@@ -2129,6 +2199,7 @@ function display_history(page){
         } catch(err) {
           alert("createTransaction failed: " + err);
         }
+        //update_balances();
       });
 
       set_inflation_dest.addEventListener("click", function(event) {
@@ -2147,7 +2218,7 @@ function display_history(page){
         console.log("click add_signer");
         try {
           addSignerTransaction();
-          update_balances();
+          //update_balances();
         } catch(err){
           alert("add_signer error: " + err);
         }
@@ -2157,35 +2228,28 @@ function display_history(page){
         console.log("click change_threshold");
         try {
           setOptionsTransaction();
-          update_balances();
+          //update_balances();
         } catch(err){
           alert("change_threshold error: " + err);
         }
       
       });
 
- 
+      
       swap_seed_dest.addEventListener("click", function(event) { 
         var seed_swap = seed.value;
         var accountId_swap = account.value
         seed.value = dest_seed.value;
         dest_seed.value = seed_swap;
-        bal_disp.textContent = 0;
-        clear_table("table_trade_history");
-        clear_table("table");
-        clear_table("table_asset");
         account.value = destination.value;
         account_tx.address = account.value;
         destination.value = accountId_swap;         
-        update_key();
-        
+        update_key();        
         if (dest_seed.value.length == 56) {
           var temp_key = StellarSdk.Keypair.fromSeed(dest_seed.value);
           destination.value = temp_key.accountId();
         }
-        clear_table("table");
         update_balances();
-        get_offers();
         if (seed.value.length == 56){
           save_seed("seed1", "", seed.value);
         }
