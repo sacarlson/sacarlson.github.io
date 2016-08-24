@@ -253,11 +253,22 @@
 
    <div id="addtrust" class="tab-pane fade in " >
       <h2> Add Trustline</h2>
-      <p> Add a trustline to this accountId</p> 
-      <input id="add_trustline" type="button" value="add_trustline" />
-       Asset Type: <input id="tasset" size="12" value = "" />
-       Trust Issuer: <input id="tissuer" size="64" value = "" /><br />
-       Credit Limit: <input id="tlimit" size="12" value = "" /> Set to 0 to delete TrustLine <br />             
+      <p> Add a trustline to this accountId</p>
+      <div class="col-sm-6">
+        <div class="form-group"> 
+          <input id="add_trustline" type="button" value="add_trustline" />
+          Asset Type: <input  id="tasset" size="12" value = "" /><br />
+          <label for="tissuer">  Trust Issuer:</label>
+          <div class="input-group">
+            <input type="text" class="form-control" id="tissuer" value = "" /><br />
+            <span class="input-group-btn">
+              <button type="button" class="btn btn-info" id="fed_lookup_tissuer" >Fed_Lookup</button>
+            </span>
+          </div>
+          
+          Credit Limit: <br /> <input id="tlimit" size="12" value = "" /> Set to 0 to delete TrustLine <br />
+        </div>          
+      </div>           
    </div>
  
    <div id="sign" class="tab-pane fade in" >
@@ -277,9 +288,19 @@
 
    <div id="merge" class="tab-pane fade in" >
       <h2>Merge Accounts</h2>
-      <p>Merge all this accounts Lumen assets into a target accountId</p>  
-      <input id="merge_accounts" type="button" value="merge_accounts" /><br />
-       Merge to AccountId: <input id="merge_dest" size="62" value = "" />            
+      <p>Merge all this accounts Lumen assets into a target accountId, must have no other asset trustlines</p> 
+      <div class="col-sm-6">
+        <div class="form-group"> 
+          <input id="merge_accounts" type="button" value="merge_accounts" /><br />
+          <label for="merge_dest">  Merge Destination AddressID:</label>
+          <div class="input-group">
+             <input  type="text" class="form-control" id="merge_dest"  value = "" />
+             <span class="input-group-btn">
+               <button type="button" class="btn btn-info" id="fed_lookup_merge_dest" >Fed_Lookup</button>
+             </span>
+          </div>
+        </div>
+      </div>            
    </div>
 
    
@@ -287,16 +308,34 @@
    <div id="account_opts" class="tab-pane fade in" >
       <h2>Account Settings Options</h2>
       <p>Advanced Account Settings including:Add signers, Account Signing Threshold Weight settings, Inflation destination, Home Domain Settings.  Caution be careful with threshold setting as you can lock yourself out of your own account</p>
-      <input id="add_signer" type="button" value="add_signer" /> 
-      <input id="signer" size="62" />
-       Weight: <input id="weight" size="3" value = "1" /><br />
-       Inflation Destination: <input id="inflation_dest" size="62" value = "GBL7AE2HGRNQSPWV56ZFLILXNT52QWSMOQGDBBXYOP7XKMQTCKVMX2ZL" />
-      <input id="set_inflation_dest" type="button" value="set_inflation_dest" /><br />
-      <br />
-      <input id="change_threshold" type="button" value="change_options" />
-       Master_weight: <input id="master_weight" size="3" value = 1 /> 
-       Threshold: <input id="threshold" size="3" value = 0 />
-       Home_domain: <input id="home_domain" size="40" value = "equid.co" /> <br />               
+    <div class="col-sm-6">
+     <div class="form-group">
+       
+        <input id="add_signer" type="button" value="add_signer" /><br />
+        <label for="signer">  Signer:</label> 
+        <div class="input-group">
+          <input type="text"  class="form-control" id="signer" />
+          <span class="input-group-btn">
+           <button type="button" class="btn btn-info" id="fed_lookup_signer" >Fed_Lookup</button>
+          </span>
+        </div>
+        <label for="weight">  Weight:</label><br />
+        <input  id="weight" size="3" value = "1" /><br /><br />
+        <label for="inflation_dest">  Inflation Destination:</label>
+        <div class="input-group">
+          <input type="text"  class="form-control" id="inflation_dest" value = "GBL7AE2HGRNQSPWV56ZFLILXNT52QWSMOQGDBBXYOP7XKMQTCKVMX2ZL" />
+          <span class="input-group-btn">
+           <button type="button" class="btn btn-info" id="fed_lookup_inflation_dest" >Fed_Lookup</button>
+          </span>
+        </div>        
+        <input id="set_inflation_dest" type="button" value="set_inflation_dest" /><br />
+        <br />
+        <input id="change_threshold" type="button" value="change_options" />
+        Master_weight: <input id="master_weight" size="3" value = 1 /> 
+        Threshold: <input id="threshold" size="3" value = 0 /><br />
+        Home_domain: <input id="home_domain" size="40" value = "funtracker.site" /> <br /> 
+     </div>
+    </div>                  
    </div>
 
    <div id="trade_history" class="tab-pane fade in" >
@@ -368,16 +407,32 @@
    <div id="create_offer" class="tab-pane fade in" >
       <h2>Create Offer</h2>
       <p>Create an order offer of an asset issuer set for another asset issuer set presently held and trusted by this accountId.
- To sell or buy native Lumens use XLM as Asset_code with no Asset_issuer (blank)</p>  
-      <input id="submit_offer" type="button" value="submit_offer" /><br />
-      Selling Asset_code: <input id="selling_asset_code" size="14" value = "" /> <br />
-       Selling Asset_issuer: <input id="selling_asset_issuer" size="62" value = "" /> <br />
-      Selling Amount: <input id="selling_amount" size="14" value = "" /> <br />
-      Selling Price: <input id="selling_price" size="14" value = "" /> <br /> 
-      Buying Asset_code: <input id="buying_asset_code" size="14" value = "" /> <br />
-      Buying Asset_issuer: <input id="buying_asset_issuer" size="62" value = "" /> <br /> 
-      <input id="cancel_offer" type="button" value="cancel_offer" /> 
-      OfferID: <input id="offerid" size="10" value = "" /> <br />           
+ To sell or buy native Lumens use XLM as Asset_code with no Asset_issuer (blank)</p> 
+      <div class="col-sm-6">
+        <div class="form-group"> 
+          <input id="submit_offer" type="button" value="submit_offer" /><br />
+          Selling Asset_code:<br /> <input id="selling_asset_code" size="14" value = "" /> <br />
+          <label for="selling_asset_issuer">  Selling Asset Issuer:</label>
+          <div class="input-group">
+            <input type="text" class="form-control" id="selling_asset_issuer" value = "" /> 
+            <span class="input-group-btn">
+              <button type="button" class="btn btn-info" id="fed_lookup_selling_asset_issuer" >Fed_Lookup</button>
+            </span>
+          </div>
+          Selling Amount:<br /> <input id="selling_amount" size="14" value = "" /> <br />
+          Selling Price:<br /> <input id="selling_price" size="14" value = "" /> <br /> <br /> 
+          Buying Asset_code:<br /> <input id="buying_asset_code" size="14" value = "" /> <br />
+          <label for="buying_asset_issuer"> Buying Asset Issuer:</label>
+          <div class="input-group">
+             <input type="text" class="form-control" id="buying_asset_issuer" value = "" />
+             <span class="input-group-btn">
+               <button type="button" class="btn btn-info" id="fed_lookup_buying_asset_issuer" >Fed_Lookup</button>
+             </span> 
+          </div> 
+          <br /> <br /><input id="cancel_offer" type="button" value="cancel_offer" /> 
+          OfferID:  <input id="offerid" size="10" value = "" /> <br />  
+        </div>
+      </div>         
   </div>
 
 </div>

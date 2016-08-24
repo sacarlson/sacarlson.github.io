@@ -349,9 +349,27 @@
                      if (send_fed_to == "dest") {
                        console.log("set dest");
                        destination.value = federationRecord.account_id;
-                     } else {
+                     } else if (send_fed_to == "signer") {
+                       console.log("set signer");
+                       signer.value = federationRecord.account_id;
+                     } else if (send_fed_to == "inflation_dest") {
+                       console.log("set inflation_dest");
+                       inflation_dest.value = federationRecord.account_id;
+                     } else if (send_fed_to == "tissuer") {
+                       console.log("set tissuer");
+                       tissuer.value = federationRecord.account_id;
+                     } else if (send_fed_to == "issuer") {
                        console.log("set issuer");
                        issuer.value = federationRecord.account_id;
+                     } else if (send_fed_to == "selling_asset_issuer") {
+                       console.log("set selling_asset_issuer");
+                       selling_asset_issuer.value = federationRecord.account_id;
+                     } else if (send_fed_to == "buying_asset_issuer") {
+                       console.log("set buying_asset_issuer");
+                       buying_asset_issuer.value = federationRecord.account_id;
+                     } else if (send_fed_to == "merge_dest") {
+                       console.log("set merge_dest");
+                       merge_dest.value = federationRecord.account_id;
                      }
                  })
                 .catch(function(err) {
@@ -359,35 +377,7 @@
                 });
           }
 
-     function federation_lookup2(){
-            // need to add stellar.toml lookup at some point or just move to stellar sdk implementation of lookup
-            fed_mode_forward = true;
-            console.log("federation_lookup click detected");
-            //https://equid.co/federation?q=sacarlson*equid.co&type=name'
-            //var url = "https://equid.co/federation?q=" + destination.value + "*equid.co&type=name";
-            var url = "https://api.";
-            // sacarlson*equid.co
-            var index_at = destination.value.indexOf("@");
-            var index_ast = destination.value.indexOf("*");
-            console.log("index_at: " + index_at);
-            console.log("index_ast: " + index_ast);
-            if (index_at == -1 && index_ast == -1){
-              destination.value = destination.value + "*equid.co";
-            }
-            if (index_at >= 0 && index_ast >= 0){
-              console.log("have both * and @ in lookup, so don't change");
-            } else{
-              console.log("only have * or @ in lookup, will change any @ to *");
-              destination.value = destination.value.replace("@", "*");
-            }
-            var start_index = destination.value.indexOf("*");
-            url = url + destination.value.substring(start_index+1);
-            console.log("url: " + url);
-            url = url + "/federation?q=" + destination.value + "&type=name";
-            console.log("url+: " + url);
-            xmlhttp.open("GET", url, true);
-            xmlhttp.send();            
-          }
+    
 
           function reverse_federation_lookup3() {
              // this should work but I think my sdk is too old to support it, maybe on upgrade this will work
@@ -2356,6 +2346,90 @@ function display_history(page){
             reverse_federation_lookup(issuer.value);
           } else {
             federation_lookup(issuer.value);
+          }
+        } catch(err) {
+          alert("fed_lookup error: " + err);
+        }
+      });
+
+     fed_lookup_signer.addEventListener("click", function(event) {
+        send_fed_to = "signer";
+        try {
+          console.log("signer.value.length: " + signer.value.length);
+          if (signer.value.length == 56) {
+            reverse_federation_lookup(signer.value);
+          } else {
+            federation_lookup(signer.value);
+          }
+        } catch(err) {
+          alert("fed_lookup error: " + err);
+        }
+      });
+
+     fed_lookup_inflation_dest.addEventListener("click", function(event) {
+        send_fed_to = "inflation_dest";
+        try {
+          console.log("inflation_dest.value.length: " + inflation_dest.value.length);
+          if (inflation_dest.value.length == 56) {
+            reverse_federation_lookup(inflation_dest.value);
+          } else {
+            federation_lookup(inflation_dest.value);
+          }
+        } catch(err) {
+          alert("fed_lookup error: " + err);
+        }
+      });
+
+      fed_lookup_tissuer.addEventListener("click", function(event) {
+        send_fed_to = "tissuer";
+        try {
+          console.log("tissuer.value.length: " + tissuer.value.length);
+          if (tissuer.value.length == 56) {
+            reverse_federation_lookup(tissuer.value);
+          } else {
+            federation_lookup(tissuer.value);
+          }
+        } catch(err) {
+          alert("fed_lookup error: " + err);
+        }
+      });
+
+     fed_lookup_selling_asset_issuer.addEventListener("click", function(event) {
+        send_fed_to = "selling_asset_issuer";
+        try {
+          console.log("selling_asset_issuer.value.length: " + selling_asset_issuer.value.length);
+          if (selling_asset_issuer.value.length == 56) {
+            reverse_federation_lookup(selling_asset_issuer.value);
+          } else {
+            federation_lookup(selling_asset_issuer.value);
+          }
+        } catch(err) {
+          alert("fed_lookup error: " + err);
+        }
+      });
+
+     fed_lookup_buying_asset_issuer.addEventListener("click", function(event) {
+        send_fed_to = "buying_asset_issuer";
+        try {
+          console.log("buying_asset_issuer.value.length: " + buying_asset_issuer.value.length);
+          if (buying_asset_issuer.value.length == 56) {
+            reverse_federation_lookup(buying_asset_issuer.value);
+          } else {
+            federation_lookup(buying_asset_issuer.value);
+          }
+        } catch(err) {
+          alert("fed_lookup error: " + err);
+        }
+      });
+
+     fed_lookup_merge_dest.addEventListener("click", function(event) {
+        send_fed_to = "merge_dest";
+        try {
+          console.log("merge_dest.value.length: " + merge_dest.value.length);
+          if (merge_dest.value.length == 56) {
+            reverse_federation_lookup(merge_dest.value);
+          } else {
+            federation_lookup(merge_dest.value);
           }
         } catch(err) {
           alert("fed_lookup error: " + err);
