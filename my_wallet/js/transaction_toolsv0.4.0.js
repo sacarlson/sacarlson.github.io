@@ -989,6 +989,15 @@
           createTransaction(key,operation);
         }
 
+     function addSignerTransaction() {
+          console.log("addSignerTransaction");        
+          key = StellarSdk.Keypair.fromSeed(seed.value);
+          console.log(key.accountId());
+          var operation = addSignerOperation();
+          console.log("operation created ok");
+          createTransaction(key,operation);
+        }
+
      function submitTransaction_mss(transaction) {
        console.log("start submitTransaction_mss");
        var b64 = transaction.toEnvelope().toXDR().toString("base64");
