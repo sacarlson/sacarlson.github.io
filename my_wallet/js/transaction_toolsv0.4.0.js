@@ -472,6 +472,26 @@
                 update_balances();
                 console.log("enable_effecthandler is true, so ran update_balances()");
             }
+            if (fromStream){
+              console.log("fromStream true");
+            } else {
+              insertEffect(effect, fromStream)
+                .then(function (displayEffect) {
+                    if (fromStream) {
+                        applyToBalance(effect);
+                        //$rootScope.$broadcast('accountInfoLoaded');
+                    }
+                    else {
+                        if (displayEffect.ef_type == "trade"){
+                          insert_trade_table(displayEffect);
+                        }else {
+                          insert_history_table(displayEffect)
+                        }
+                    }
+                }, function (err) {
+                    console.error(err)
+              });
+            }
             var isRelevant =
                    effect.type === 'account_created'
                 || effect.type === 'account_debited'
