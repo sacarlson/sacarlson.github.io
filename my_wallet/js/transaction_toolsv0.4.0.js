@@ -74,6 +74,8 @@
       var cancel_offer_flag;
       var account_tx;
       var send_fed_to;
+      var enable_effecthandler = true;
+      console.log("enable_effecthandler = true");
 
       var resetAccount = function () {
 	    account_tx = {
@@ -261,26 +263,13 @@
       //var array = [1,2,3,4,5];
       //insRow(array,"table");
 
-      xmlhttp.onreadystatechange = function() {
-              console.log("onreadystatechange");
-              console.log("readystate: " + xmlhttp.readyState + " xmlhttp.status: " + xmlhttp.status);
-              if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-                console.log("responseText: " + xmlhttp.responseText);
-                var myArr = JSON.parse(xmlhttp.responseText);
-                console.log("xmlhttp response");                
-                console.log(myArr);
-                console.log(myArr.account_id);
-                if (fed_mode_forward) {
-                  destination.value = myArr.account_id;
-                  dest_seed.value = "";
-                  update_balances();
-                } else {
-                  destination.value = myArr.stellar_address;
-                }
-              }
-      };
+      // lets try to start 50 sec timer as the horizon connect time out seems to be set at 60 sec
+      var myVar = setInterval(myTimer, (Math.round(50 * 1000)));
 
-
+      function myTimer() { 
+        console.log("timer click detected, do an attachToPaymentsStream('now'); to prevent time out");
+        attachToPaymentsStream('now');
+      }
 
       function makeCode () {
         //console.log("start makeCode");		
@@ -453,23 +442,55 @@
                     var startListeningFrom = latestPayment.paging_token;
                 }
                 attachToPaymentsStream(startListeningFrom);
+                enable_effecthandler = true;
+                console.log("enable_effecthandler = true : startlisteningfrom");    
             })
             .catch(function (err) {                
                 console.log("error start_effects_stream");
                 console.log(err);
-                attachToPaymentsStream('now');               
+                attachToPaymentsStream('now');
+                enable_effecthandler = true;
+                console.log("enable_effecthandler = true : now");                   
             });
           }
 
          
+         function effectHandler(effect,fromStream) {
+            console.log("effectHandler fromStream: " + fromStream);
+            console.log("effect");
+            console.log(effect);
+            console.log(" effect.type ");
+            console.log(effect.type);
+            console.log("enable_effecthandler");
+            console.log(enable_effecthandler);
+
+            // simple quick and yet dirty fix for handling my effects.  just update all balances on all tables and top page XLM view if
+            // I see anything change.  maybe some day I'll figure out a better way.  This will I imagin make updates slower and put
+            // a bigger burden on horizion that shouldn't be needed.
+            //update_balances();
+            if (enable_effecthandler){
+                update_balances();
+                console.log("enable_effecthandler is true, so ran update_balances()");
+            }
+            var isRelevant =
+                   effect.type === 'account_created'
+                || effect.type === 'account_debited'
+                || effect.type === 'account_credited'
+            ;
+
+            if (isRelevant) {
+              console.log(" isRelevant is true ");             
+            }             
+         }
 
     // scotty moded effecthandler  must replace original in transaction_toolsv0.4.0.js
         //var effectHandler = function (effect, fromStream) {
-         function effectHandler(effect,fromStream) {
-            //console.log("effectHandler fromStream: " + fromStream);
-            //console.log("effect");
-            //console.log(effect);
-            //console.log(effect.type);
+         function effectHandler2(effect,fromStream) {
+            console.log("effectHandler fromStream: " + fromStream);
+            console.log("effect");
+            console.log(effect);
+            console.log(" effect.type ");
+            console.log(effect.type);
             var isRelevant =
                    effect.type === 'account_created'
                 || effect.type === 'account_debited'
@@ -895,6 +916,8 @@
      
 
       function update_balances() {
+        enable_effecthandler = false;
+        console.log("enable_effecthandler = false");
         if (server_mode === "mss_server"){
           console.log("update_balances mss mode");
           get_balance_updates_mss();
@@ -1083,6 +1106,7 @@
           console.log("manual memo.text");
           var memo_tr = StellarSdk.Memo.text(memo.value);
         }
+        attachToPaymentsStream('now');
         server.loadAccount(key.accountId())
           .then(function (account) {
              //console.log("memo_tr typeof");
@@ -1098,7 +1122,7 @@
                //console.log(result);
                //console.log(result.result_xdr);               
                tx_status.textContent = "Completed OK";
-               update_balances();
+               //update_balances();
              }).catch(function(e) {
                console.log("submitTransaction error");
                console.log(e);
@@ -2468,7 +2492,7 @@ function display_history(page){
           save.disabled = true;
           update_seed_select(); 
           update_key();
-          update_balances();       
+          //update_balances();       
         }else {
           alert("Sorry, your browser does not support Web Storage...");
         }
