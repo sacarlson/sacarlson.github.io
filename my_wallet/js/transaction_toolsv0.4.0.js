@@ -1429,7 +1429,7 @@
           }
           reset_horizon_server();
           active_network.textContent = tes;
-          update_balances();
+          //update_balances();
 
         }else if (network.value === "live" ){
           server_mode = "horizon";
@@ -1447,7 +1447,7 @@
           }
           reset_horizon_server();
           active_network.textContent = pub;
-          update_balances();
+          //update_balances();
 
         }else if (network.value === "live_default" ){
           server_mode = "horizon";
@@ -1466,7 +1466,7 @@
           }
           reset_horizon_server();
           active_network.textContent = pub;
-          update_balances();
+          //update_balances();
 
         }else if (network.value === "testnet_default" ){
           server_mode = "horizon";
@@ -1485,7 +1485,7 @@
           }
           reset_horizon_server();
           active_network.textContent = tes;
-          update_balances();
+          //update_balances();
 
         }else if (network.value === "mss_server_live") {
           //mss-server mode
@@ -1507,6 +1507,7 @@
           create_socket();
           active_network.textContent = pub;
           current_mode.value = "MSS-server LIVE! mode";
+
         }else if (network.value === "custom") {
           server_mode = "horizon";
           current_mode.value = "Custom Horizon";
@@ -1515,10 +1516,11 @@
           StellarSdk.Network.use(new StellarSdk.Network(net_passphrase.value));
           reset_horizon_server();
           active_network.textContent = net_passphrase.value;
-          update_balances();
+          //update_balances();
 
         }else if (network.value === "no_op") {
           console.log("network.value == no_op, do nothing");
+
         }else  {
           //mss-server mode testnet
           server_mode = "mss_server";
