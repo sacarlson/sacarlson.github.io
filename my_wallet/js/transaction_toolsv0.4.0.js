@@ -1,3 +1,5 @@
+// Copyright (c) 2016 Scott Carlson sacarlson_2000@yahoo.com
+
 "use strict";
    
     // Initialize everything when the window finishes loading
@@ -465,8 +467,8 @@
             console.log(enable_effecthandler);
 
             // simple quick and yet dirty fix for handling my effects.  just update all balances on all tables and top page XLM view if
-            // I see anything change.  maybe some day I'll figure out a better way.  This will I imagin make updates slower and put
-            // a bigger burden on horizion that shouldn't be needed.
+            // I see anything replay from effects return.  maybe some day I'll figure out a better way.  This will I imagin make updates slower and put
+            // a bigger burden on horizion that shouldn't be needed, but hay it works.
             //update_balances();
             if (enable_effecthandler){
                 update_balances();
@@ -478,11 +480,12 @@
               insertEffect(effect, fromStream)
                 .then(function (displayEffect) {
                     if (fromStream) {
-                        applyToBalance(effect);
+                        //applyToBalance(effect);
                         //$rootScope.$broadcast('accountInfoLoaded');
                     }
                     else {
-                        if (displayEffect.ef_type == "trade"){
+                        //if (displayEffect.ef_type == "trade"){
+                        if (displayEffect.type == "trade"){
                           insert_trade_table(displayEffect);
                         }else {
                           insert_history_table(displayEffect)
@@ -542,6 +545,8 @@
 
    // new (temp?) replacement for Centarus applayToBalance,  this never existed so can plugin to transaction_tools..
    function applyToBalance(effect) {
+    // this presently not used not sure if we ever will use it again
+    // partly due to bad effect data bug from horizon https://github.com/stellar/horizon/issues/304.
     console.log("applyToBalance");
     if (effect.type === 'account_debited') {
                if (effect.asset_type === "native") {
@@ -579,6 +584,8 @@
                         .then(function (trx) {
                             try {
                                 var displayEffect = insertTransaction(trx, op, effect, fromStream);
+                                console.log("displayEffect");
+                                console.log(displayEffect);
                                 resolve(displayEffect);
                             }
                             catch (err) {
@@ -598,6 +605,12 @@
    // as far as I can tell so far insertTransaction will work unmoded from Centaurus
   var insertTransaction = function (trx, op, effect, fromStream) {
             console.log("insertTransaction");
+            console.log("effect ");
+            console.log(effect);
+            console.log("trx ");
+            console.log(trx);
+            console.log("op");
+            console.log(op);
             var asset = effect.asset_code;
             if (asset === null || !asset)
                 asset = 'XLM'
@@ -611,23 +624,39 @@
             //console.log(op);
             //console.log("effect");
             //console.log(effect);
+            var debit;
+            if (effect.amount > 0) {
+              debit = false;
+            } else {
+              debit = true;
+            }
            
             var displayEffect = {
                 effectId : effect.paging_token,
                 creationDate: date,
                 creationTimestamp : date.getTime(),
-                asset_code: asset,
+                asset_code: op.asset_code,
+                ef_asset_code: effect.asset_code,
+                op_asset_code: op.asset_code,
+                op_asset_issuer: op.asset_issuer,
+                ef_asset_issuer: effect.asset_issuer,
+                asset_issuer: op.asset_issuer,
                 amount: effect.amount,
-                debit: effect.type === 'account_debited',
+                ef_amount: effect.amount,
+                op_amount: op.amount,
+                //debit: effect.type === 'account_debited',
+                debit: debit,
                 sender: op.from,
+                source_account: op.source_account,
                 receiver: op.to,
                 memo: trx.memo,
                 memoType: trx.memo_type,
                 tx_id: trx.id,
-                envelope_xdr: trx.envelope_xdr,
-                type: op.type,
+                envelope_xdr: trx.envelope_xdr,              
                 asset_type: op.asset_type,
                 details: effect,
+                type: op.type,
+                op_type: op.type,
                 ef_type: effect.type                              
             }
             if (typeof effect.bal != "undefined"){
@@ -771,7 +800,7 @@
         var amount = parseFloat(effect.amount);
         if (effect.debit){
           font_color = red;
-          amount = amount * -1;
+          //amount = amount * -1;
           ar[0] = font_color + effect.receiver + " </font>";
         } else {
           font_color = green;
@@ -2191,7 +2220,6 @@ function display_history(page){
         if (chosenoption.value!="nothing"){
           console.log("selected value: " + chosenoption.value);
           restore_seed_option(chosenoption.value);
-          update_balances();
         }
       }
           
