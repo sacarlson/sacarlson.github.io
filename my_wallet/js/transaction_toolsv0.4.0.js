@@ -59,6 +59,8 @@
       var selling_asset_issuer = document.getElementById("selling_asset_issuer");
       var selling_price = document.getElementById("selling_price");
       var selling_amount = document.getElementById("selling_amount");
+      var default_asset_code = document.getElementById("default_asset_code");
+      var default_issuer = document.getElementById("default_issuer");
       
       var asset_obj = new StellarSdk.Asset.native();
       var socket;
@@ -138,7 +140,14 @@
       //account.value = 'GAMCHGO4ECUREZPKVUCQZ3NRBZMK6ESEQVHPRZ36JLUZNEH56TMKQXEB'
    
       //asset.value = "native";
-      asset.value = "FUNT";
+      asset.value = default_asset_code.value;
+      if (default_asset_code.value != "native"){
+        tasset.value = default_asset_code.value;
+      } else {
+        tasset.value = "";
+      }
+      issuer.value = default_issuer.value;
+      tissuer.value = default_issuer.value;
       tlimit.value = "";
 
       var env_b64 = window.location.href.match(/\?env_b64=(.*)/);
@@ -1429,7 +1438,6 @@
           }
           reset_horizon_server();
           active_network.textContent = tes;
-          //update_balances();
 
         }else if (network.value === "live" ){
           server_mode = "horizon";
@@ -1447,7 +1455,6 @@
           }
           reset_horizon_server();
           active_network.textContent = pub;
-          //update_balances();
 
         }else if (network.value === "live_default" ){
           server_mode = "horizon";
@@ -1466,7 +1473,6 @@
           }
           reset_horizon_server();
           active_network.textContent = pub;
-          //update_balances();
 
         }else if (network.value === "testnet_default" ){
           server_mode = "horizon";
@@ -1485,7 +1491,6 @@
           }
           reset_horizon_server();
           active_network.textContent = tes;
-          //update_balances();
 
         }else if (network.value === "mss_server_live") {
           //mss-server mode
@@ -1516,7 +1521,6 @@
           StellarSdk.Network.use(new StellarSdk.Network(net_passphrase.value));
           reset_horizon_server();
           active_network.textContent = net_passphrase.value;
-          //update_balances();
 
         }else if (network.value === "no_op") {
           console.log("network.value == no_op, do nothing");
@@ -1649,8 +1653,10 @@
         console.log("restore_default_settings");
         console.log(def_settings_json);
         if (def_settings_json == null) {
-          // default setting for a users first time run on this browser
+          // default setting for a users first time run on this browser          
           console.log("type null, restore nothing");
+          default_asset_code.value = "FUNT";
+          default_issuer.value = "GBUYUAI75XXWDZEKLY66CFYKQPET5JR4EENXZBUZ3YXZ7DS56Z4OKOFU";
           network.value ="live_default";
           top_image_url.value = "logo.png";
           top_page_title.value = "Funtracker.site Wallet";
@@ -1669,7 +1675,9 @@
         network.value = obj.network;
         url.value = obj.url;
         port.value = obj.port;
-        secure.value = obj.secure;        
+        secure.value = obj.secure; 
+        default_asset_code.value = obj.default_asset_code;
+        default_issuer.value = obj.default_issuer;       
         if (typeof obj.top_image_url != "undefined" && obj.top_image_url.length > 3) {
           top_image_span.innerHTML = '<img src="' + obj.top_image_url + '" class="img-rounded" alt="Add Optional Image here" width="100" height="100">';
           top_image_url.value = obj.top_image_url;
@@ -1723,6 +1731,8 @@
         obj.background_color = background_color.value;
         obj.text_color = text_color.value;
         obj.background_img = background_img.value;
+        obj.default_asset_code = default_asset_code.value;
+        obj.default_issuer = default_issuer.value;
         var string = JSON.stringify(obj);
         localStorage.setItem("def_settings", string);
       }
@@ -2590,6 +2600,14 @@ function display_history(page){
       change_network.addEventListener("click", function(event) {
         change_network_func();
         set_default_colors();
+        asset.value = default_asset_code.value;
+        issuer.value = default_issuer.value;
+        tissuer.value = default_issuer.value;
+        if (default_asset_code.value != "native"){
+          tasset.value = default_asset_code.value;
+        } else {
+          //tasset.value = "";
+        }
         save_default_settings();               
       }); 
 
