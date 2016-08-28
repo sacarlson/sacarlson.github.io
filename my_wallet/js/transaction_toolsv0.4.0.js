@@ -203,10 +203,23 @@
         }
         if (typeof params["issuer"] != "undefined") {
           issuer.value = params["issuer"];
+          tissuer.value = params["issuer"];
         }
         if (typeof params["destination"] != "undefined") {
           destination.value = params["destination"];
         }
+        if (typeof params["tlimit"] != "undefined") {
+          tlimit.value = params["tlimit"];
+        } 
+        var array_trustlines = [];
+        if (typeof params["trustlines"] != "undefined") {
+          array_trustlines = params["trustlines"].split(",");
+          console.log("array_trustlines.length: " + array_trustlines.length);
+          if (array_trustlines.length == 1){
+            tasset.value = params["trustlines"];
+          }
+        }
+
       } 
       if (encrypted_seed != null) {
         console.log(encrypted_seed[1]);
@@ -531,11 +544,20 @@
                           console.log(displayEffect);
                           console.log("params.trustlines");
                           console.log(params.trustlines);
-                          if (typeof params["trustlines"] != "undefined"){ 
+                          if (typeof params != "undefined" && typeof params["trustlines"] != "undefined"){ 
                             console.log("params.trustlines is defined");
-                            if (check_trust_exists(params.trustlines, Number(auto_trust.value) ,displayEffect) == false){
-                               console.log("trustline : " + params.trustlines + " doen't exist so we will create it now");
-                               activate_trustline(params.trustlines);
+                            var array_opps = [];
+                            for (var i = 0; i < array_trustlines.length; i++) {
+                              if (check_trust_exists(array_trustlines[i], Number(auto_trust.value) ,displayEffect) == false){
+                                 console.log("trustline : " + array_trustlines[i] + " doen't exist so we will create it now");
+                                 //activate_trustline(array_trustlines[i]);
+                                 array_opps[i] = addTrustlineOperation(array_trustlines[i], tissuer.value, tlimit.value);
+                              }
+                            }
+                            console.log("array_opps");
+                            console.log(array_opps);
+                            if (array_opps.length > 0){
+                              createTransaction_array(array_opps);
                             }
                           }
                           effect_fromstream_flag = false;                         
@@ -1188,6 +1210,58 @@
         var tx = new StellarSdk.Transaction(b64_tx);
         tx.sign(signer_key);
         return tx.toEnvelope().toXDR().toString("base64");
+      }
+
+//array.forEach(function (item) { builder.addOperation(item); });
+
+//array.forEach(function (item) {
+//   builder.addOperation(item);
+//});
+
+      function createTransaction_array(array_of_operations) {
+         tx_status.textContent = "Processing";
+         update_key();
+         server.loadAccount(key.accountId())
+          .then(function (account) {
+             transaction = new StellarSdk.TransactionBuilder(account)            
+             array_of_operations.forEach(function (item) {
+               transaction.addOperation(item);
+             });
+             transaction = transaction.build();
+             transaction.sign(key); 
+             console.log("horizon mode sending tx");                               
+             server.submitTransaction(transaction).then(function(result) {              
+               tx_status.textContent = "Completed OK";
+             }).catch(function(e) {
+               console.log("submitTransaction error");
+               console.log(e);
+               tx_status.textContent = "Transaction failed";
+               if (e.extras.result_codes.transaction == "tx_bad_auth"){
+                  tx_status.textContent = "Transaction error: tx_bad_auth";
+               } else {
+                 //console.log(e.extras.result_codes.operations[0]);               
+                 tx_status.textContent = "Transaction error: " + e.extras.result_codes.operations[0];
+               } 
+             });                      
+          })
+          .then(function (transactionResult) {
+            console.log("tx_result");
+            console.log(transactionResult);
+            //update_balances();  
+            if (typeof transactionResult == "undefined") {
+              console.log("tx res undefined");
+            }            
+          })
+          .catch(function (err) {
+            console.log(err);
+            tx_status.textContent = "Transaction Error: " + err; 
+          });
+       }
+
+      function createTransaction_horizon2(key,operation) {
+        var array = [];
+        array[0] = operation;
+        createTransaction_array(array);
       }
 
       function createTransaction_horizon(key,operation) {
@@ -2144,6 +2218,7 @@ function display_history(page){
        console.log("display_asset_table");
        console.log(account_obj.balances);
        clear_table("table_asset");
+       
        var ar = [];
        var len = account_obj.balances.length;
        //console.log("disp length: " + len);
@@ -2156,6 +2231,7 @@ function display_history(page){
            ar[1] = account_obj.balances[i].asset_issuer;
          }
          ar[2] = account_obj.balances[i].balance;
+         ar[3] = account_obj.balances[i].limit;
          insRow(ar,"table_asset");
        }
     }
