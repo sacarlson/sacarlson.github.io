@@ -264,7 +264,7 @@
       var table_sort_asset = new Tablesort(document.getElementById('table_asset'));
       var table_sort_trades = new Tablesort(document.getElementById('table_trade_history'));
 
-      var xmlhttp = new XMLHttpRequest();
+     // var xmlhttp = new XMLHttpRequest();
 
       account_disp.textContent = account.value;
       account_disp2.textContent = account.value;
@@ -419,7 +419,7 @@
 
           function start_effects_stream(account_obj) {
             console.log("start_effects_stream");
-            account_obj_global = account_obj;
+            account_obj_global = clone(account_obj);
             //console.log(account_obj);
             account_tx.address = account.value;
 	        server.effects()
@@ -440,9 +440,10 @@
                 var length = effectResults.records ? effectResults.records.length : 0;
                 //var length = effectResults.records.length;
                 console.log("length: " + length);
+                var currentEffect;
                 for (var i = length-1; i >= 0; i--) {
                     //console.log("index: " + i);
-                    var currentEffect = effectResults.records[i];
+                    currentEffect = effectResults.records[i];
                     //console.log("currentEffect");
                     //console.log(currentEffect);
                     effectHandler(currentEffect, false);
@@ -612,7 +613,8 @@
         };
 
    // as far as I can tell so far insertTransaction will work unmoded from Centaurus
-  var insertTransaction = function (trx, op, effect, fromStream) {
+  //var insertTransaction = function (trx, op, effect, fromStream) {
+        function insertTransaction (trx, op, effect, fromStream) {
             console.log("insertTransaction");
             console.log("effect ");
             console.log(effect);
@@ -974,6 +976,7 @@
      
 
       function update_balances() {
+        resetAccount();
         enable_effecthandler = false;
         console.log("enable_effecthandler = false");
         if (server_mode === "mss_server"){
@@ -982,7 +985,7 @@
           return
         } 
         bal_disp.textContent = 0;
-        clear_all_tables();
+        //update_balances();
         get_offers();           
         get_account_info(account.value,update_balances_set); 
         //if (destination.value.length == 56){
