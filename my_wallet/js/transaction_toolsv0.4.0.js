@@ -61,6 +61,7 @@
       var selling_amount = document.getElementById("selling_amount");
       var default_asset_code = document.getElementById("default_asset_code");
       var default_issuer = document.getElementById("default_issuer");
+      var auto_trust = document.getElementById("auto_trust");
       
       var asset_obj = new StellarSdk.Asset.native();
       var socket;
@@ -79,6 +80,11 @@
       var account_tx;
       var send_fed_to;
       var enable_effecthandler = true;
+      var effect_fromstream_flag = false;
+
+
+      auto_trust.value = 1;      
+
       console.log("enable_effecthandler = true");
 
       var resetAccount = function () {
@@ -428,10 +434,10 @@
             .order('desc')
             .call()
             .then(function (effectResults) {
-                console.log("then effectResults");
-                console.log(effectResults);
-                console.log("account_obj_global");
-                console.log(account_obj_global);
+                //console.log("then effectResults");
+                //console.log(effectResults);
+                //console.log("account_obj_global");
+                //console.log(account_obj_global);
                 // will add balance_splice here that adds balances over time in all effectResults.records[x]
                  effectResults = balance_splice(effectResults,account_obj_global);
                 //console.log(effectResults.records.length);
@@ -439,7 +445,7 @@
                 console.log(effectResults);
                 var length = effectResults.records ? effectResults.records.length : 0;
                 //var length = effectResults.records.length;
-                console.log("length: " + length);
+                //console.log("length: " + length);
                 var currentEffect;
                 for (var i = length-1; i >= 0; i--) {
                     //console.log("index: " + i);
@@ -466,15 +472,33 @@
             });
           }
 
+         function check_trust_exists(asset_code, max_count, displayEffect){
+           //example check_trust_exists("FUNT", displayEffect);
+           // will return true if asset_code already exists or if max_count number of trustlines already exist
+           // this allow max_count = 0 to disable adding trustlines
+           var balances = displayEffect.balances;
+           console.log("trustlines count: " + balances.length);
+           if (balances.length >= max_count){
+              return true;
+           }
+           console.log("balances");
+           console.log(balances);
+           for (var i = 0; i < balances.length; i++) {
+             if (balances[i].asset_code == asset_code){
+               return true;
+             }
+           }
+           return false;
+         }
          
          function effectHandler(effect,fromStream) {
-            console.log("effectHandler fromStream: " + fromStream);
-            console.log("effect");
-            console.log(effect);
-            console.log(" effect.type ");
-            console.log(effect.type);
-            console.log("enable_effecthandler");
-            console.log(enable_effecthandler);
+            //console.log("effectHandler fromStream: " + fromStream);
+            //console.log("effect");
+            //console.log(effect);
+            //console.log(" effect.type ");
+            //console.log(effect.type);
+            //console.log("enable_effecthandler");
+            //console.log(enable_effecthandler);
 
             // simple quick and yet dirty fix for handling my effects.  just update all balances on all tables and top page XLM view if
             // I see anything replay from effects return.  maybe some day I'll figure out a better way.  This will I imagin make updates slower and put
@@ -485,13 +509,14 @@
                 console.log("enable_effecthandler is true, so ran update_balances()");
             }
             if (fromStream){
-              console.log("fromStream true");
+              console.log("fromStream true");            
+              effect_fromstream_flag = true;
             } else {
               insertEffect(effect, fromStream)
                 .then(function (displayEffect) {
                     if (fromStream) {
                         //applyToBalance(effect);
-                        //$rootScope.$broadcast('accountInfoLoaded');
+                        //$rootScope.$broadcast('accountInfoLoaded');                       
                     }
                     else {
                         //if (displayEffect.ef_type == "trade"){
@@ -500,6 +525,22 @@
                         }else {
                           insert_history_table(displayEffect)
                         }
+                        console.log("effect_fromstream_flag: " + effect_fromstream_flag);
+                        if (effect_fromstream_flag){
+                          console.log("displayEffect");
+                          console.log(displayEffect);
+                          console.log("params.trustlines");
+                          console.log(params.trustlines);
+                          if (typeof params["trustlines"] != "undefined"){ 
+                            console.log("params.trustlines is defined");
+                            if (check_trust_exists(params.trustlines, Number(auto_trust.value) ,displayEffect) == false){
+                               console.log("trustline : " + params.trustlines + " doen't exist so we will create it now");
+                               activate_trustline(params.trustlines);
+                            }
+                          }
+                          effect_fromstream_flag = false;                         
+                        }
+                      
                     }
                 }, function (err) {
                     console.error(err)
@@ -594,8 +635,8 @@
                         .then(function (trx) {
                             try {
                                 var displayEffect = insertTransaction(trx, op, effect, fromStream);
-                                console.log("displayEffect");
-                                console.log(displayEffect);
+                                //console.log("displayEffect");
+                                //console.log(displayEffect);
                                 resolve(displayEffect);
                             }
                             catch (err) {
@@ -615,13 +656,13 @@
    // as far as I can tell so far insertTransaction will work unmoded from Centaurus
   //var insertTransaction = function (trx, op, effect, fromStream) {
         function insertTransaction (trx, op, effect, fromStream) {
-            console.log("insertTransaction");
-            console.log("effect ");
-            console.log(effect);
-            console.log("trx ");
-            console.log(trx);
-            console.log("op");
-            console.log(op);
+            //console.log("insertTransaction");
+            //console.log("effect ");
+            //console.log(effect);
+            //console.log("trx ");
+            //console.log(trx);
+            //console.log("op");
+            //console.log(op);
             var asset = effect.asset_code;
             if (asset === null || !asset)
                 asset = 'XLM'
@@ -795,8 +836,8 @@
           }          
           //console.log("end of for loop");                               
         }
-        console.log("page.records");  
-        console.log(page.records);
+        //console.log("page.records");  
+        //console.log(page.records);
         //display_history(page.records);
         return page;
       }
@@ -1308,6 +1349,21 @@
                  return StellarSdk.Operation.setOptions(opts);
                }
 
+      function activate_trustline(asset_code){
+        try {       
+          var operation = addTrustlineOperation(asset_code, tissuer.value, tlimit.value);
+          asset.value = asset_code; 
+        } catch(err) {
+           alert("addTrustlineOperation failed" + err);
+           return;
+        }
+        try {
+          createTransaction(key,operation);
+        } catch(err) {
+          alert("createTransaction failed: " + err);
+        }
+      }
+
       function manageOfferOperation() {
            console.log("manageOfferOperation");
             var opts = {};
@@ -1680,7 +1736,8 @@
         port.value = obj.port;
         secure.value = obj.secure; 
         default_asset_code.value = obj.default_asset_code;
-        default_issuer.value = obj.default_issuer;       
+        default_issuer.value = obj.default_issuer;
+        auto_trust.value = obj.auto_trust;       
         if (typeof obj.top_image_url != "undefined" && obj.top_image_url.length > 3) {
           top_image_span.innerHTML = '<img src="' + obj.top_image_url + '" class="img-rounded" alt="Add Optional Image here" width="100" height="100">';
           top_image_url.value = obj.top_image_url;
@@ -1736,6 +1793,7 @@
         obj.background_img = background_img.value;
         obj.default_asset_code = default_asset_code.value;
         obj.default_issuer = default_issuer.value;
+        obj.auto_trust = auto_trust.value;
         var string = JSON.stringify(obj);
         localStorage.setItem("def_settings", string);
       }
