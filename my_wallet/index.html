@@ -14,7 +14,8 @@
  <script src="https://cdn.rawgit.com/stellar/bower-js-stellar-sdk/cd1ecc03cce645b6f7b12abc211b239d24b39388/stellar-sdk.min.js" integrity="sha384-bJ4QHMD70wZKJdwVRTtrMIxjtS1jSbv+VpWK+9iECEhzwDxzeRWYBKM3MjpBxxxu" crossorigin="anonymous"></script>
  
   <script src="js/transaction_toolsv0.4.0.js"></script>
-  <script src="js/tablesort.min.js"></script>
+  <script src="js/tablesort.js"></script>
+  <script src="js/tablesort.number.js"></script>
 
    
 </head>
@@ -213,6 +214,7 @@
      <li><a data-toggle="tab" href="#account_opts"><h4>Account Options</h4></a></li> 
      <li><a data-toggle="tab" href="#trade_history"><h4>Trade History</h4></a></li>
      <li><a data-toggle="tab" href="#view_offer"><h4>View Offers</h4></a></li>
+     <li><a data-toggle="tab" href="#view_paths"><h4>View Paths</h4></a></li>
      <li><a data-toggle="tab" href="#create_offer"><h4>Create Offers</h4></a></li>                      
   </ul>
   <div class="tab-content">
@@ -409,6 +411,46 @@
      </table>             
    </div>
 
+  <div id="view_paths" class="tab-pane fade in" >
+      <h2>Paths Viewer</h2>
+      <p>Search Paths of offers with a destination address for a destination asset pair at a set amount</p><br />
+      <p>This uses present selected account as source address</p><br />
+      Destination AddressID: <input id="paths_destination_addressID" type="text" size="61" value="" /><br />
+      Destination Asset: <input id="paths_destination_asset" type="text" size="12" value="" /><br />
+      Destination Asset Issuer: <input id="paths_destination_asset_issuer" type="text" size="61" value="" /><br />
+      Destination Amount: <input id="paths_destination_amount" type="text" size="12" value="" /><br />
+       <br /><input id="check_paths" type="button" value="Check_Paths" /><br /><br />
+
+      <! <table id="table_offers" class="table table-hover table-striped table-bordered">
+      <table id="table_paths" class="table table-hover table-striped table-bordered">
+        <thead>
+          <tr>           
+            <th>Destination Asset</th>
+            <th>Destination Issuer</th>
+            <th data-sort-method='number' >Destination Amount</th>
+            <th>Path Asset</th>
+            <th>Path Issuer</th>    
+            <th>Source Asset</th>
+            <th>Source Issuer</th>
+            <th data-sort-method='number' >Source Amount</th>
+              
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+             <td></td> 
+             <td></td>
+             <td></td>
+             <td></td>
+             <td></td>
+             <td></td>
+             <td></td>
+             <td></td>
+          </tr>
+       </tbody>
+     </table>             
+   </div>
+
    <div id="create_offer" class="tab-pane fade in" >
       <h2>Create Offer</h2>
       <p>Create an order offer of an asset issuer set for another asset issuer set presently held and trusted by this accountId.
@@ -435,7 +477,7 @@
              </span> 
           </div> 
           <br /> <br /><input id="cancel_offer" type="button" value="cancel_offer" /> 
-          OfferID:  <input id="offerid" size="10" value = "" /> <br />  
+          OfferID:  <input id="offerid" size="10" value = "" /> <br />           
         </div>
       </div>         
   </div>

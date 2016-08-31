@@ -62,6 +62,11 @@
       var default_asset_code = document.getElementById("default_asset_code");
       var default_issuer = document.getElementById("default_issuer");
       var auto_trust = document.getElementById("auto_trust");
+      var paths_destination_addressID = document.getElementById("paths_destination_addressID");
+      var paths_destination_asset = document.getElementById("paths_destination_asset");
+      var paths_destination_asset_issuer = document.getElementById("paths_destination_asset_issuer");
+      var paths_destination_amount = document.getElementById("paths_destination_amount");
+
       
       var asset_obj = new StellarSdk.Asset.native();
       var socket;
@@ -207,6 +212,7 @@
         }
         if (typeof params["destination"] != "undefined") {
           destination.value = params["destination"];
+          paths_destination_addressID.value =  params["destination"];
         }
         if (typeof params["tlimit"] != "undefined") {
           tlimit.value = params["tlimit"];
@@ -265,6 +271,7 @@
         console.log("dest_seed.value: " + dest_seed.value);
         if (dest_seed.value.length != 0) {
           destination.value = StellarSdk.Keypair.fromSeed(dest_seed.value).accountId();
+          paths_destination_addressID.value = destination.value;
           console.log("dest: " + destination.value); 
         }
       }   
@@ -282,6 +289,7 @@
       });
       var table_sort_asset = new Tablesort(document.getElementById('table_asset'));
       var table_sort_trades = new Tablesort(document.getElementById('table_trade_history'));
+      var table_sort_paths = new Tablesort(document.getElementById('table_paths'));
 
      // var xmlhttp = new XMLHttpRequest();
 
@@ -356,6 +364,7 @@
              if (send_fed_to == "dest") {
                 console.log("pre set dest: " + stellar_address);
                 destination.value = stellar_address;
+                paths_destination_addressID.value = destination.value;
              } else {
                 console.log("pre set issuer: " + stellar_address);
                 issuer.value = stellar_address;
@@ -368,6 +377,7 @@
                      if (send_fed_to == "dest") {
                        console.log("set dest");
                        destination.value = federationRecord.account_id;
+                       paths_destination_addressID.value = destination.value;
                      } else if (send_fed_to == "signer") {
                        console.log("set signer");
                        signer.value = federationRecord.account_id;
@@ -865,8 +875,8 @@
       }
 
        function insert_history_table(effect){        
-        console.log("insert_history_table");
-        console.log(effect);
+        //console.log("insert_history_table");
+        //console.log(effect);
         var ar = [];
         var red = '<font color="red">';
         var green = '<font color="green">';
@@ -931,8 +941,56 @@
         //table_sort_offers.refresh();        
       }
 
-
-      
+      function insert_paths_table(records_obj){        
+        //console.log("insert_paths_table");
+        //console.log(records_obj);
+        var ar = [];
+        var red = '<font color="red">';
+        var green = '<font color="green">';
+        var font_color = green;
+        if (records_obj.destination_asset_type == "native"){
+           records_obj.destination_asset_code = "XLM"
+           records_obj.destination_asset_issuer = "";
+        } 
+        if (records_obj.source_asset_type == "native"){
+           records_obj.source_asset_code = "XLM"
+           records_obj.source_asset_issuer = "";
+        }
+        if (records_obj.destination_asset_issuer.length > 0){
+           records_obj.destination_asset_issuer = records_obj.destination_asset_issuer.substring(0,6) + "...";
+        }
+        if (records_obj.destination_asset_issuer.length > 0){
+           records_obj.source_asset_issuer = records_obj.source_asset_issuer.substring(0,6) + "...";
+        }
+        //records_obj.path[0].asset_type  // "credit_alphanum4 || native",
+        //records_obj.path[0].asset_code 
+        //records_obj.path[0].asset_issuer 
+        if (records_obj.path.length > 0){
+          if (records_obj.path[0].asset_type == "native"){
+            records_obj.path[0].asset_code = "XLM";
+            records_obj.path[0].asset_issuer = "..";
+          } else {
+            records_obj.path[0].asset_issuer = records_obj.path[0].asset_issuer.substring(0,6) + "...";
+          }
+        } else {
+           console.log("records_obj.path");
+           console.log(records_obj.path);
+           records_obj.path[0] = {};
+           records_obj.path[0].asset_code = "..";
+           records_obj.path[0].asset_issuer = "..";
+        }
+            
+               
+        ar[0] = font_color + records_obj.destination_asset_code + " </font>";      
+        ar[1] = font_color + records_obj.destination_asset_issuer + "</font>";         
+        ar[2] = font_color + records_obj.destination_amount + "</font>";
+        ar[3] = font_color + records_obj.path[0].asset_code + "</font>"; 
+        ar[4] = font_color + records_obj.path[0].asset_issuer + "</font>";  
+        ar[5] = font_color + records_obj.source_asset_code + "</font>";
+        ar[6] = font_color + records_obj.source_asset_issuer + "</font>";
+        ar[7] = font_color + records_obj.source_amount + "</font>";                      
+        insRow(ar,"table_paths");        
+      }      
 
       function reset_horizon_server() {
         console.log("reset_horizon_server"); 
@@ -1212,12 +1270,6 @@
         return tx.toEnvelope().toXDR().toString("base64");
       }
 
-//array.forEach(function (item) { builder.addOperation(item); });
-
-//array.forEach(function (item) {
-//   builder.addOperation(item);
-//});
-
       function createTransaction_array(array_of_operations) {
          tx_status.textContent = "Processing";
          update_key();
@@ -1238,8 +1290,7 @@
                tx_status.textContent = "Transaction failed";
                if (e.extras.result_codes.transaction == "tx_bad_auth"){
                   tx_status.textContent = "Transaction error: tx_bad_auth";
-               } else {
-                 //console.log(e.extras.result_codes.operations[0]);               
+               } else {           
                  tx_status.textContent = "Transaction error: " + e.extras.result_codes.operations[0];
                } 
              });                      
@@ -1247,7 +1298,6 @@
           .then(function (transactionResult) {
             console.log("tx_result");
             console.log(transactionResult);
-            //update_balances();  
             if (typeof transactionResult == "undefined") {
               console.log("tx res undefined");
             }            
@@ -2357,12 +2407,34 @@ function display_history(page){
          document.body.style.backgroundImage = 'url(' + background_img.value + ')';
       }
     }
+
+    function check_paths_function() {
+      clear_table("table_paths");
+      var asset_obj;
+      if (paths_destination_asset.value == "native" || paths_destination_asset.value == "XLM"){
+        asset_obj = new StellarSdk.Asset.native();
+      } else {
+        asset_obj = new StellarSdk.Asset(paths_destination_asset.value, paths_destination_asset_issuer.value);
+      }
+      server.paths(account.value, paths_destination_addressID.value, asset_obj, paths_destination_amount.value)
+      .call()
+      .then(function(result) {
+        console.log("results paths: ");
+        console.log(result);
+        var records = result.records;
+        for (var i = 0; i < records.length; i++) {
+          insert_paths_table(records[i]);
+        }
+       });              
+     }
  
 
    //triger the event of readSingleFile when file-input browse button is clicked and a file selected
      //this event reads the data from a local disk file and restores it's contents to the LocalStorage
      // the file selected is assumed to be in seed_save_recover backup format.
      document.getElementById('file-input').addEventListener('change', readSingleFile, false);
+
+     
 
       select_seed.onchange=function(){ //run some code when "onchange" event fires
         var chosenoption=this.options[this.selectedIndex] //this refers to "selectmenu"
@@ -2371,12 +2443,17 @@ function display_history(page){
           restore_seed_option(chosenoption.value);
         }
       }
-          
+        
+
+      check_paths.addEventListener("click", function(event) {
+        check_paths_function();
+      });  
 
       gen_random_dest.addEventListener("click", function(event) {
         console.log("gen_random");         
         var new_keypair = StellarSdk.Keypair.random();
         destination.value = new_keypair.accountId();
+        paths_destination_addressID.value = destination.value;
         dest_seed.value = new_keypair.seed();
         //update_balances();
         amount.value = 20.1;
@@ -2463,11 +2540,13 @@ function display_history(page){
         dest_seed.value = seed_swap;
         account.value = destination.value;
         account_tx.address = account.value;
-        destination.value = accountId_swap;         
+        destination.value = accountId_swap;
+        paths_destination_addressID.value = destination.value;         
         update_key();        
         if (dest_seed.value.length == 56) {
           var temp_key = StellarSdk.Keypair.fromSeed(dest_seed.value);
           destination.value = temp_key.accountId();
+          paths_destination_addressID.value = destination.value;
         }
         update_balances();
         if (seed.value.length == 56){
