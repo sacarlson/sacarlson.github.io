@@ -55,7 +55,7 @@
 <div class="tab-content">
 
 <div id="send" class="tab-pane fade in active" >
-  <h2>Send Tx</h2>
+  <h2>Send Funds</h2>
   <p>Send funds from you to another accountId</p> 
   <button type="button" class="btn btn-success btn-lg" id="send_payment" >Send_Payment</button>
   <label class="checkbox-inline"><input type="checkbox" value="" id="new_account" ><p>Create New Account</p></label>
@@ -101,8 +101,8 @@
 </div>
 
 <div id="rec" class="tab-pane fade">
-  <h2>Receive Tx</h2>
-  <p>Info to provide sender of funds </p>
+  <h2>Receive Funds</h2>
+  <p>Info to provide a sender that will be sending funds to you </p>
   <h3>AccountId: <span id="account_disp2"></span></h3>
   <div id="qrcode2" style="width:200px; height:200px; margin-top:15px;"></div> 
   <p>Public addressId QR-code Compatible with Centaurus: </p><br />
@@ -465,14 +465,18 @@
 
    <div id="view_orderbook" class="tab-pane fade in" >
       <h2>Order Book Viewer</h2>
-      <p>View orderbook summary of all offers with the assets selling and buying</p><br />
+      <p>View orderbook summary of all offers with the assets selling and buying</p>
       <p>These are all prently open orders on the network</p><br />
       Sell Asset: <input id="orderbook_sell_asset" type="text" size="15" value="" /> :Counter Asset<br />
       Sell Issuer: <input id="orderbook_sell_issuer" type="text" size="65" value="" /><br />
       Buy Asset: <input id="orderbook_buy_asset" type="text" size="15" value="" /> :Base Asset<br />
       Buy Issuer: <input id="orderbook_buy_issuer" type="text" size="65" value="" /><br />
-       <br /><input id="check_orderbook_ask_button" type="button" value="Check_OrderBook_Ask" /><br /><br />
-       <br /><input id="check_orderbook_bid_button" type="button" value="Check_OrderBook_Bid" /><br /><br />
+       <br /><input id="check_orderbook_ask_button" type="button" value="Check_OrderBook_Asks" />_____
+       <input id="check_orderbook_bid_button" type="button" value="Check_OrderBook_Bids" /><br /><br />
+       <br /><input id="better_bid_ask_button" type="button" value="Better_Bid_Ask" /> by: <input id="better_bid_ask" type="text" size="6" value="" /> Percent <br />
+        <p>Better bid will setup an order that is +- precent more or less than your results seen in OrderBook table bellow</p>
+        <p>Example if you set Better bid to +10% on an ask it will prepare to setup an order at a price 10% more than the price seen in Orderbook</p><br />
+      <br />
       <! <table id="table_offers" class="table table-hover table-striped table-bordered">
       <table id="table_orderbook" class="table table-hover table-striped table-bordered">
         <thead>

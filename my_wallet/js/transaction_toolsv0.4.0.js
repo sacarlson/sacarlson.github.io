@@ -66,12 +66,11 @@
       var paths_destination_asset = document.getElementById("paths_destination_asset");
       var paths_destination_asset_issuer = document.getElementById("paths_destination_asset_issuer");
       var paths_destination_amount = document.getElementById("paths_destination_amount");
-
       var orderbook_buy_asse = document.getElementById("orderbook_buy_asse");
       var orderbook_buy_issuer = document.getElementById("orderbook_buy_issuer");
       var orderbook_sell_asset = document.getElementById("orderbook_sell_asset");
       var orderbook_sell_issuer = document.getElementById("orderbook_sell_issuer");
-// orderbook_buy_asset, orderbook_buy_issuer, orderbook_sell_asset, orderbook_sell_issuer
+      var better_bid_ask = document.getElementById("better_bid_ask");
 
       
       var asset_obj = new StellarSdk.Asset.native();
@@ -92,6 +91,7 @@
       var send_fed_to;
       var enable_effecthandler = true;
       var effect_fromstream_flag = false;
+      var manageOfferTransaction_flag = false;
 
 
       auto_trust.value = 1;      
@@ -1012,9 +1012,9 @@
         var font_color = green;
         var price_r = Number(records_obj.price_r.d) / Number(records_obj.price_r.n);
         console.log ("records_obj.price.d");
-        console.log(records_obj.price.d);
-        console.log("records_obj.price.n");
-        console.log(records_obj.price.n);        
+        console.log(records_obj.price_r.d);
+        console.log("records_obj.price_r.n");
+        console.log(records_obj.price_r.n);        
         ar[0] = font_color + records_obj.price + " </font>";      
         ar[1] = font_color + price_r + "</font>";         
         ar[2] = font_color + records_obj.amount + "</font>";                       
@@ -1377,7 +1377,10 @@
                //console.log(result);
                //console.log(result.result_xdr);               
                tx_status.textContent = "Completed OK";
-               //update_balances();
+               if (manageOfferTransaction_flag = true){
+                 manageOfferTransaction_flag = false;
+                 update_balances();
+               }
              }).catch(function(e) {
                console.log("submitTransaction error");
                console.log(e);
@@ -1521,13 +1524,21 @@
            console.log("manageOfferOperation");
             var opts = {};
             if (selling_asset_code.value == "XLM") {
+              console.log("sell native");
               opts.selling = new StellarSdk.Asset.native();
             } else {
+              console.log("sell non native: ");
+              console.log(selling_asset_code.value);
+              console.log(selling_asset_issuer.value);
               opts.selling = new StellarSdk.Asset(selling_asset_code.value, selling_asset_issuer.value);             
             }
             if (buying_asset_code.value == "XLM") {
+              console.log("buying native");
               opts.buying = new StellarSdk.Asset.native();
             } else {
+              console.log("buying non native: ");
+              console.log(buying_asset_code.value);
+              console.log(buying_asset_issuer.value);
               opts.buying = new StellarSdk.Asset(buying_asset_code.value, buying_asset_issuer.value);
             }
             opts.amount = selling_amount.value;
@@ -1868,7 +1879,7 @@
           // default setting for a users first time run on this browser          
           console.log("type null, restore nothing");
           default_asset_code.value = "FUNT";
-          default_issuer.value = "GBUYUAI75XXWDZEKLY66CFYKQPET5JR4EENXZBUZ3YXZ7DS56Z4OKOFU";
+          default_issuer.value = "GBUYUAI75XXWDZEKLY66CFYKQPET5JR4EENXZBUZ3YXZ7DS56Z4OKOFU";          
           network.value ="live_default";
           top_image_url.value = "logo.png";
           top_page_title.value = "Funtracker.site Wallet";
@@ -1890,6 +1901,8 @@
         secure.value = obj.secure; 
         default_asset_code.value = obj.default_asset_code;
         default_issuer.value = obj.default_issuer;
+        buying_asset_issuer.value = default_issuer.value;
+        selling_asset_issuer.value = default_issuer.value;
         auto_trust.value = obj.auto_trust;       
         if (typeof obj.top_image_url != "undefined" && obj.top_image_url.length > 3) {
           top_image_span.innerHTML = '<img src="' + obj.top_image_url + '" class="img-rounded" alt="Add Optional Image here" width="100" height="100">';
@@ -2458,6 +2471,7 @@ function display_history(page){
      }
  
     var bidask;
+    var best_bid_ask;
 
     function check_orderbook(bidask_in) {
       bidask = bidask_in;
@@ -2465,16 +2479,32 @@ function display_history(page){
       console.log("check_orderbook bidask: " + bidask);
       // activated with check_orderbook_button click
       // orderbook_buy_asset, orderbook_buy_issuer, orderbook_sell_asset, orderbook_sell_issuer
+      if (orderbook_buy_asset.value.length == 0){
+        orderbook_buy_asset.value = asset.value;
+        orderbook_buy_issuer.value = issuer.value;
+      }
+      if (orderbook_sell_asset.value.length == 0){
+        orderbook_sell_asset.value = asset.value;
+        orderbook_sell_issuer.value = issuer.value;
+      }
       var buy_asset;
       var sell_asset;
       if (orderbook_buy_asset.value == "native" || orderbook_buy_asset.value == "XLM"){
         buy_asset = new StellarSdk.Asset.native();
+        orderbook_buy_issuer.value = "";
       } else {
+        if (orderbook_buy_issuer.value.length == 0){
+          orderbook_buy_issuer.value = issuer.value;
+        }
         buy_asset = new StellarSdk.Asset(orderbook_buy_asset.value, orderbook_buy_issuer.value);
       }
       if (orderbook_sell_asset.value == "native" || orderbook_sell_asset.value == "XLM"){
         sell_asset = new StellarSdk.Asset.native();
+        orderbook_sell_issuer.value = "";
       } else {
+        if (orderbook_sell_issuer.value.length == 0){
+          orderbook_sell_issuer.value = issuer.value;
+        }
         sell_asset = new StellarSdk.Asset(orderbook_sell_asset.value, orderbook_sell_issuer.value);
       }
       server.orderbook(buy_asset,sell_asset)
@@ -2489,14 +2519,55 @@ function display_history(page){
         } else {
           records = result.bids;
         }
+        if (bidask == "ask"){
+          best_bid_ask = 9999999999;
+        } else {
+          best_bid_ask = 0;
+        }
+        var price_r;
         for (var i = 0; i < records.length; i++) {
+          if (bidask == "ask"){
+            price_r = Number(records[i].price_r.d)/Number(records[i].price_r.n);            
+            if (best_bid_ask > price_r ){
+               best_bid_ask = price_r; 
+            } 
+            console.log("price_r: ");
+            console.log(price_r);
+            console.log("best_bid_ask");
+            console.log(best_bid_ask);
+          } else {
+            if (best_bid_ask < Number(records[i].price)){
+               best_bid_ask = Number(records[i].price);
+            }
+            console.log("best_bid_ask: ");
+            console.log(best_bid_ask);
+            console.log("Number(records[i].price)");
+            console.log(Number(records[i].price));
+          }
           insert_orderbook_table(records[i]);
         } 
       })
      .catch(function(err) { console.log(err); });
     }
 
+    function better_bid_ask_function() {
+// orderbook_buy_asset, orderbook_buy_issuer, orderbook_sell_asset, orderbook_sell_issuer
+//selling_asset_code.value, selling_asset_issuer.value, buying_asset_code.value, buying_asset_issuer.value, selling_amount.value, selling_price.value
+      selling_asset_code.value = orderbook_sell_asset.value;
+      console.log("sell code:");
+      console.log(selling_asset_code.value);
+      selling_asset_issuer.value = orderbook_sell_issuer.value;
+      buying_asset_code.value = orderbook_buy_asset.value;
+      buying_asset_issuer.value = orderbook_buy_issuer.value;
 
+      //selling_asset_code.value = orderbook_buy_asset.value;
+      //selling_asset_issuer.value = orderbook_buy_issuer.value;
+      //buying_asset_code.value = orderbook_sell_asset.value;
+      //buying_asset_issuer.value = orderbook_sell_issuer.value;
+      selling_price.value = (best_bid_ask + (best_bid_ask * (Number(better_bid_ask.value)/100)));
+      console.log("selling_price: " + selling_price.value);
+      //window.location.href = "#create_offer";
+    }
  
 
    //triger the event of readSingleFile when file-input browse button is clicked and a file selected
@@ -2512,6 +2583,11 @@ function display_history(page){
           restore_seed_option(chosenoption.value);
         }
       }
+
+      better_bid_ask_button.addEventListener("click", function(event) {
+        //check_orderbook("ask");
+        better_bid_ask_function();
+      }); 
         
       check_orderbook_ask_button.addEventListener("click", function(event) {
         check_orderbook("ask");
@@ -2815,6 +2891,7 @@ function display_history(page){
      submit_offer.addEventListener("click", function(event) {
         console.log("submit_offer clicked");
         cancel_offer_flag = false;
+        manageOfferTransaction_flag = true;
         try {
           manageOfferTransaction();
         } catch(err) {
