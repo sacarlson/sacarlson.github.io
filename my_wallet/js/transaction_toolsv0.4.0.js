@@ -67,6 +67,12 @@
       var paths_destination_asset_issuer = document.getElementById("paths_destination_asset_issuer");
       var paths_destination_amount = document.getElementById("paths_destination_amount");
 
+      var orderbook_buy_asse = document.getElementById("orderbook_buy_asse");
+      var orderbook_buy_issuer = document.getElementById("orderbook_buy_issuer");
+      var orderbook_sell_asset = document.getElementById("orderbook_sell_asset");
+      var orderbook_sell_issuer = document.getElementById("orderbook_sell_issuer");
+// orderbook_buy_asset, orderbook_buy_issuer, orderbook_sell_asset, orderbook_sell_issuer
+
       
       var asset_obj = new StellarSdk.Asset.native();
       var socket;
@@ -290,6 +296,7 @@
       var table_sort_asset = new Tablesort(document.getElementById('table_asset'));
       var table_sort_trades = new Tablesort(document.getElementById('table_trade_history'));
       var table_sort_paths = new Tablesort(document.getElementById('table_paths'));
+      var table_sort_orderbook = new Tablesort(document.getElementById('table_orderbook'));
 
      // var xmlhttp = new XMLHttpRequest();
 
@@ -990,7 +997,29 @@
         ar[6] = font_color + records_obj.source_asset_issuer + "</font>";
         ar[7] = font_color + records_obj.source_amount + "</font>";                      
         insRow(ar,"table_paths");        
-      }      
+      } 
+            
+            //<th data-sort-method='number' >Price</th>
+            //<th data-sort-method='number' >Price R</th>
+            //<th data-sort-method='number' >Amount (qty ask/bid)</th>      
+
+      function insert_orderbook_table(records_obj){        
+        //console.log("insert_orderbook_table");
+        //console.log(records_obj);
+        var ar = [];
+        var red = '<font color="red">';
+        var green = '<font color="green">';
+        var font_color = green;
+        var price_r = Number(records_obj.price_r.d) / Number(records_obj.price_r.n);
+        console.log ("records_obj.price.d");
+        console.log(records_obj.price.d);
+        console.log("records_obj.price.n");
+        console.log(records_obj.price.n);        
+        ar[0] = font_color + records_obj.price + " </font>";      
+        ar[1] = font_color + price_r + "</font>";         
+        ar[2] = font_color + records_obj.amount + "</font>";                       
+        insRow(ar,"table_orderbook");        
+      }  
 
       function reset_horizon_server() {
         console.log("reset_horizon_server"); 
@@ -2428,6 +2457,47 @@ function display_history(page){
        });              
      }
  
+    var bidask;
+
+    function check_orderbook(bidask_in) {
+      bidask = bidask_in;
+      clear_table("table_orderbook");
+      console.log("check_orderbook bidask: " + bidask);
+      // activated with check_orderbook_button click
+      // orderbook_buy_asset, orderbook_buy_issuer, orderbook_sell_asset, orderbook_sell_issuer
+      var buy_asset;
+      var sell_asset;
+      if (orderbook_buy_asset.value == "native" || orderbook_buy_asset.value == "XLM"){
+        buy_asset = new StellarSdk.Asset.native();
+      } else {
+        buy_asset = new StellarSdk.Asset(orderbook_buy_asset.value, orderbook_buy_issuer.value);
+      }
+      if (orderbook_sell_asset.value == "native" || orderbook_sell_asset.value == "XLM"){
+        sell_asset = new StellarSdk.Asset.native();
+      } else {
+        sell_asset = new StellarSdk.Asset(orderbook_sell_asset.value, orderbook_sell_issuer.value);
+      }
+      server.orderbook(buy_asset,sell_asset)
+     //.trades()
+     .call()
+     .then(function(result) {
+        console.log("check_orderbook results");
+        console.log(result);
+        var records;
+        if (bidask == "ask"){
+          records = result.asks;
+        } else {
+          records = result.bids;
+        }
+        for (var i = 0; i < records.length; i++) {
+          insert_orderbook_table(records[i]);
+        } 
+      })
+     .catch(function(err) { console.log(err); });
+    }
+
+
+ 
 
    //triger the event of readSingleFile when file-input browse button is clicked and a file selected
      //this event reads the data from a local disk file and restores it's contents to the LocalStorage
@@ -2435,7 +2505,6 @@ function display_history(page){
      document.getElementById('file-input').addEventListener('change', readSingleFile, false);
 
      
-
       select_seed.onchange=function(){ //run some code when "onchange" event fires
         var chosenoption=this.options[this.selectedIndex] //this refers to "selectmenu"
         if (chosenoption.value!="nothing"){
@@ -2444,10 +2513,17 @@ function display_history(page){
         }
       }
         
+      check_orderbook_ask_button.addEventListener("click", function(event) {
+        check_orderbook("ask");
+      }); 
+
+      check_orderbook_bid_button.addEventListener("click", function(event) {
+        check_orderbook("bid");
+      });
 
       check_paths.addEventListener("click", function(event) {
         check_paths_function();
-      });  
+      });   
 
       gen_random_dest.addEventListener("click", function(event) {
         console.log("gen_random");         

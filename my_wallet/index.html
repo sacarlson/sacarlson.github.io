@@ -46,6 +46,7 @@
         <li><a data-toggle="tab" href="#trans"><h4>Transaction Hist</h4></a></li>
         <li><a data-toggle="tab" href="#assets"><h4>List Assets</h4></a></li>
         <li><a data-toggle="tab" href="#import"><h4>Import/Export Key</h4></a></li>
+        <li><a data-toggle="tab" href="#trade"><h4>Trade</h4></a></li>
         <li><a data-toggle="tab" href="#adv"><h4>Advanced</h4></a></li>
       </ul>
      
@@ -211,11 +212,7 @@
      <li><a data-toggle="tab" href="#addtrust"> <h4>Add Trustlines </h4></a></li>     
      <li><a data-toggle="tab" href="#sign"> <h4> Sign Tx </h4></a></li>
      <li><a data-toggle="tab" href="#merge"><h4>Merge Accounts</h4></a></li>
-     <li><a data-toggle="tab" href="#account_opts"><h4>Account Options</h4></a></li> 
-     <li><a data-toggle="tab" href="#trade_history"><h4>Trade History</h4></a></li>
-     <li><a data-toggle="tab" href="#view_offer"><h4>View Offers</h4></a></li>
-     <li><a data-toggle="tab" href="#view_paths"><h4>View Paths</h4></a></li>
-     <li><a data-toggle="tab" href="#create_offer"><h4>Create Offers</h4></a></li>                      
+     <li><a data-toggle="tab" href="#account_opts"><h4>Account Options</h4></a></li>                     
   </ul>
   <div class="tab-content">
 
@@ -345,7 +342,22 @@
     </div>                  
    </div>
 
-   <div id="trade_history" class="tab-pane fade in" >
+ </div>
+</div>
+
+<div id="trade" class="tab-pane fade">
+  <h2> Trade Transaction Functions</h2>
+  <p> Tools that allow trading of stellar assets</p>
+   <ul class="tabrow">
+     <li class="active" ><a data-toggle="tab" href="#trade_history"><h4>Trade History</h4></a></li>
+     <li><a data-toggle="tab" href="#view_offer"><h4>View Offers</h4></a></li>
+     <li><a data-toggle="tab" href="#view_orderbook"><h4>View OrderBook</h4></a></li>
+     <li><a data-toggle="tab" href="#view_paths"><h4>View Paths</h4></a></li>
+     <li><a data-toggle="tab" href="#create_offer"><h4>Create Offers</h4></a></li>                      
+  </ul>
+ <div class="tab-content">
+
+   <div id="trade_history" class="tab-pane fade in active" >
       <h2>Asset Trade History</h2>
       <p>History of Asset Trade transactions on this AccountId (sortable)</p>
       <div style="overflow-x:auto;"> 
@@ -415,10 +427,10 @@
       <h2>Paths Viewer</h2>
       <p>Search Paths of offers with a destination address for a destination asset pair at a set amount</p><br />
       <p>This uses present selected account as source address</p><br />
-      Destination AddressID: <input id="paths_destination_addressID" type="text" size="61" value="" /><br />
-      Destination Asset: <input id="paths_destination_asset" type="text" size="12" value="" /><br />
-      Destination Asset Issuer: <input id="paths_destination_asset_issuer" type="text" size="61" value="" /><br />
-      Destination Amount: <input id="paths_destination_amount" type="text" size="12" value="" /><br />
+      Destination AddressID: <input id="paths_destination_addressID" type="text" size="65" value="" /><br />
+      Destination Asset: <input id="paths_destination_asset" type="text" size="15" value="" /><br />
+      Destination Asset Issuer: <input id="paths_destination_asset_issuer" type="text" size="65" value="" /><br />
+      Destination Amount: <input id="paths_destination_amount" type="text" size="15" value="" /><br />
        <br /><input id="check_paths" type="button" value="Check_Paths" /><br /><br />
 
       <! <table id="table_offers" class="table table-hover table-striped table-bordered">
@@ -446,6 +458,35 @@
              <td></td>
              <td></td>
              <td></td>
+          </tr>
+       </tbody>
+     </table>             
+   </div>
+
+   <div id="view_orderbook" class="tab-pane fade in" >
+      <h2>Order Book Viewer</h2>
+      <p>View orderbook summary of all offers with the assets selling and buying</p><br />
+      <p>These are all prently open orders on the network</p><br />
+      Sell Asset: <input id="orderbook_sell_asset" type="text" size="15" value="" /> :Counter Asset<br />
+      Sell Issuer: <input id="orderbook_sell_issuer" type="text" size="65" value="" /><br />
+      Buy Asset: <input id="orderbook_buy_asset" type="text" size="15" value="" /> :Base Asset<br />
+      Buy Issuer: <input id="orderbook_buy_issuer" type="text" size="65" value="" /><br />
+       <br /><input id="check_orderbook_ask_button" type="button" value="Check_OrderBook_Ask" /><br /><br />
+       <br /><input id="check_orderbook_bid_button" type="button" value="Check_OrderBook_Bid" /><br /><br />
+      <! <table id="table_offers" class="table table-hover table-striped table-bordered">
+      <table id="table_orderbook" class="table table-hover table-striped table-bordered">
+        <thead>
+          <tr>           
+            <th data-sort-method='number' >Price</th>
+            <th data-sort-method='number' >Price R</th>
+            <th data-sort-method='number' >Amount (qty ask/bid)</th>                       
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+             <td></td> 
+             <td></td>
+             <td></td>             
           </tr>
        </tbody>
      </table>             
