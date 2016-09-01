@@ -2,6 +2,10 @@
 
 "use strict";
    
+     var key;
+     var server;
+     var transaction;
+
     // Initialize everything when the window finishes loading
     window.addEventListener("load", function(event) {
       //StellarSdk.Network.useTestNetwork();
@@ -78,10 +82,10 @@
       var socket_open_flag = false;
       var operation_globle;
       var paymentsEventSource;
-      var server;
-      var key;
+      //var server;
+      //var key;
       var email_flag = false;
-      var transaction;
+      //var transaction;
       var server_mode = "horizon";
       var fed_mode_forward = true;
       var account_obj_global;
@@ -1212,6 +1216,19 @@
           console.log("operation created ok");
           createTransaction(key,operation);
         }
+
+     function cancelOfferTransaction_ID(offer_id){
+       cancel_offer_flag = true;
+       offerid.value = offer_id;
+       try {
+          manageOfferTransaction();
+          cancel_offer_flag = false;
+        } catch(err) {
+          cancel_offer_flag = false;
+          console.log("manageOfferTransaction error catch: " + err);
+          alert("manageOfferTransaction error: "+ err);
+        }   
+     }
 
      function addSignerTransaction() {
           console.log("addSignerTransaction");        
@@ -2404,6 +2421,9 @@ function display_history(page){
            ar[5] = offer_obj.records[i].buying.asset_code;
            ar[6] = offer_obj.records[i].buying.asset_issuer;
          }
+         ar[7] = '<img src="../images/delete.png" onclick="confirm_delete_offer(this)" /> ';
+         console.log("ar[7]: " );
+         console.log(ar[7]);
          insRow(ar,"table_offers");
          //table_sort_offers.refresh();
        }
@@ -2566,7 +2586,7 @@ function display_history(page){
       //buying_asset_issuer.value = orderbook_sell_issuer.value;
       selling_price.value = (best_bid_ask + (best_bid_ask * (Number(better_bid_ask.value)/100)));
       console.log("selling_price: " + selling_price.value);
-      //window.location.href = "#create_offer";
+      //location.href = "#create_offer";
     }
  
 
@@ -2918,7 +2938,7 @@ function display_history(page){
           // Store
           localStorage.setItem(seed_nick.value, encrypted);
           //seed.value = "seed saved to local storage"
-          save.disabled = true;
+          //save.disabled = true;
           update_seed_select(); 
           update_key();
           //update_balances();       
@@ -2982,4 +3002,108 @@ function display_history(page){
 
 
   });
+
+  // this bellow start outside that inits before the rest of the above code to allow cancel order to work
+  // I'm sure there is an easier way I'm just stupid and couldn't find any other way in the time provided
+
+      
+
+    function confirm_delete_offer(o) {
+      console.log("confirm_delete_offer");
+      console.log("o: ");
+      console.log(o);
+      var p=o.parentNode.parentNode;
+      console.log("p: ");
+      console.log(p);
+      var offer_id = p.firstChild.innerHTML;
+      var col_data = p.innerHTML.replace(/<td>/g,'');
+      col_data = col_data.split("</td>");
+      console.log("col_data: ");
+      console.log(col_data);      
+      console.log("offer_id: " + offer_id);
+      var r = confirm("Confirm Delete Order Offer ID: " + offer_id + " ??");
+      if (r == true) {
+        console.log("You pressed OK! deleted Offer ID: " + offer_id );
+        offerTrans(col_data[0],col_data[1],col_data[2],"0",col_data[4],col_data[5],col_data[6]);
+        //var p=o.parentNode.parentNode;
+        p.parentNode.removeChild(p);
+      } else {
+         console.log("You pressed Cancel!");
+      }      
+    }
+ 
+  function offerTrans(offer_id, selling_asset, selling_issuer, amount, price, buying_asset, buying_issuer){
+    console.log("cancaelOfferTrans");
+    var opts = {};
+    if (selling_asset == "XLM") {
+      console.log("selling_asset native");
+      opts.selling = new StellarSdk.Asset.native();
+    } else {
+      opts.selling = new StellarSdk.Asset(selling_asset, selling_issuer); 
+    }
+    if (buying_asset == "XLM") {
+      opts.buying = new StellarSdk.Asset.native();
+      console.log("buying_asset native");
+    } else {
+      console.log("buying_asset");
+      console.log(buying_asset);
+      console.log("buying_issuer");
+      console.log(buying_issuer);
+      opts.buying = new StellarSdk.Asset(buying_asset, buying_issuer);
+    }
+    opts.price = price;
+    opts.offerId = offer_id;
+    opts.amount = amount;
+    var operation = StellarSdk.Operation.manageOffer(opts);
+    console.log("ready to run createTransaction_outside"); 
+    createTransaction_outside(operation);
+  }
+  
+  function createTransaction_outside(operation) {
+         //tx_status.textContent = "Processing";
+         //update_key();
+         server.loadAccount(key.accountId())
+          .then(function (account) {
+             transaction = new StellarSdk.TransactionBuilder(account)            
+             //array_of_operations.forEach(function (item) {
+             //  transaction.addOperation(item);
+             //});
+             transaction.addOperation(operation);
+             transaction = transaction.build();
+             transaction.sign(key); 
+             console.log("horizon mode sending tx");                               
+             server.submitTransaction(transaction).then(function(result) {              
+               //tx_status.textContent = "Completed OK";
+               console.log("Transaction Completed OK");
+               alert("Cancel Order Completed OK ");
+             }).catch(function(e) {
+               console.log("submitTransaction error");
+               console.log(e);
+               //tx_status.textContent = "Transaction failed";
+               var error_report = "Transaction Failed";
+               if (e.extras.result_codes.transaction == "tx_bad_auth"){
+                  //tx_status.textContent = "Transaction error: tx_bad_auth";
+                  error_report = error_report + ": Transaction error: tx_bad_auth"
+               } else {           
+                 //tx_status.textContent = "Transaction error: " + e.extras.result_codes.operations[0];
+                 error_report = error_report + "Transaction error: " + e.extras.result_codes.operations[0];
+               }
+               console.log(error_report);
+               alert(error_report);
+             });                      
+          })
+          .then(function (transactionResult) {
+            console.log("tx_result");
+            console.log(transactionResult);
+            if (typeof transactionResult == "undefined") {
+              console.log("tx res undefined");
+            }            
+          })
+          .catch(function (err) {
+            console.log(err);
+            //tx_status.textContent = "Transaction Error: " + err; 
+          });
+       }
+
+    
 
