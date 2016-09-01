@@ -526,9 +526,9 @@
          }
          
          function effectHandler(effect,fromStream) {
-            //console.log("effectHandler fromStream: " + fromStream);
-            //console.log("effect");
-            //console.log(effect);
+            console.log("effectHandler fromStream: " + fromStream);
+            console.log("effect");
+            console.log(effect);
             //console.log(" effect.type ");
             //console.log(effect.type);
             //console.log("enable_effecthandler");
@@ -548,13 +548,16 @@
             } else {
               insertEffect(effect, fromStream)
                 .then(function (displayEffect) {
+                    console.log("displayEffect: ");
+                    console.log(displayEffect);
                     if (fromStream) {
+                        console.log("effect fromStream");
                         //applyToBalance(effect);
                         //$rootScope.$broadcast('accountInfoLoaded');                       
                     }
                     else {
                         //if (displayEffect.ef_type == "trade"){
-                        if (displayEffect.type == "trade"){
+                        if (displayEffect.type == "manage_offer"){
                           insert_trade_table(displayEffect);
                         }else {
                           insert_history_table(displayEffect)
@@ -750,6 +753,8 @@
                 envelope_xdr: trx.envelope_xdr,              
                 asset_type: op.asset_type,
                 details: effect,
+                //details_op: op,
+                //details_trx: trx,
                 type: op.type,
                 op_type: op.type,
                 ef_type: effect.type                              
@@ -886,7 +891,7 @@
       }
 
        function insert_history_table(effect){        
-        //console.log("insert_history_table");
+        console.log("insert_history_table");
         //console.log(effect);
         var ar = [];
         var red = '<font color="red">';
@@ -928,11 +933,11 @@
         var black = '<font color="black">';
         var font_color = black;
         ar[0] =  font_color + effect.details.offer_id + " </font>";
-        if (effect.sender == account.value){
-          ar[1] = font_color + effect.receiver + " </font>";
-        } else {
-          ar[1] = font_color + effect.sender + " </font>";
-        }
+        //if (effect.sender == account.value){
+        //  ar[1] = font_color + effect.receiver + " </font>";
+        //} else {
+        //  ar[1] = font_color + effect.sender + " </font>";
+        //}
         if (effect.details.bought_asset_type == "native"){
           effect.details.bought_asset_code = "XLM";
           effect.details.bought_asset_issuer = "";
@@ -941,13 +946,13 @@
           effect.details.sold_asset_code = "XLM";
           effect.details.sold_asset_issuer = "";
         }
-        ar[2] = font_color + effect.details.sold_asset_code + "</font>";
-        ar[3] = font_color + effect.details.sold_asset_issuer + "</font>";
-        ar[4] = font_color + effect.details.sold_amount + "</font>";
-        ar[5] = font_color + effect.details.bought_asset_code + "</font>"; 
-        ar[6] = font_color + effect.details.bought_asset_issuer + "</font>";
-        ar[7] = font_color + effect.details.bought_amount + "</font>"; 
-        ar[8] = font_color + effect.creationDate.toISOString() + "</font>";             
+        ar[1] = font_color + effect.details.sold_asset_code + "</font>";
+        ar[2] = font_color + effect.details.sold_asset_issuer + "</font>";
+        ar[3] = font_color + effect.details.sold_amount + "</font>";
+        ar[4] = font_color + effect.details.bought_asset_code + "</font>"; 
+        ar[5] = font_color + effect.details.bought_asset_issuer + "</font>";
+        ar[6] = font_color + effect.details.bought_amount + "</font>"; 
+        ar[7] = font_color + effect.creationDate.toISOString() + "</font>";             
         insRow(ar,"table_trade_history"); 
         //table_sort_offers.refresh();        
       }
