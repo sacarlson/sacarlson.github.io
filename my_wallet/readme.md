@@ -1,4 +1,4 @@
-# Scotty's Wallet aka my_wallet Features
+#  my_wallet Features
 
 * Send funds of any asset type to another accountId.
 * Create Random accountId destination accounts 
@@ -6,7 +6,7 @@
 * Receive funds of any type from another AccountId with QRcode support.
 * Federation support to use names instead of long accountID numbers for sending funds.
 * Auto generation of AccountId on new users that is saved in local browser storage.
-* Memo support for both number and text for send fund transactions
+* Memo support for both number and text for sending fund transactions
 * Table display page of list of presetly held assets (sortable).
 * Table display page of Transaction History (sortable) with realtime update.
 * Save encrypted secret key list in local browser storage .
@@ -15,8 +15,8 @@
 * Export secret keyset using QRcode to the Centaurus wallet android app.
 * TX Status of transaction and detailed error conditions if any, displayed at top of screen. 
 * Balance of accountId in Lumens (XLM) at top of screen updated in realtime by stream link.
-* Generate, Send and recieve links to and from email or other sources to send transactions or prefunded accounts or links to submit request for funds from another account holders.
-* Advanced (section)
+* Generate, Send and recieve URL links to and from email or other sources to send transactions or to send prefunded accounts or links to submit request for funds from another account holder.
+* Advanced (section grouped tabs)
   * Change Network and page settings 
      * Change URL address and port pointing to private/custom Horizon servers.
      * Change Network Passphrase for private/custom networks. 
@@ -33,8 +33,11 @@
      * Change/set signer and master signer weights.
      * Change signing weight thresholds.
      * Change Inflation Destination pointing of accountId.
+* Trade (section grouped tabs)
   * View Table of open order offers of trading assets on this accountID (sortable).
   * View Table display page of Asset Trade History (sortable) with realtime update.
+  * View Table display page of OrderBook to search and view all present open orders on the network
+  * Paths view to allow seeing what path is available to trade an asset between another asset
   * Create offers to submit buy and sell orders to trade from one asset issuer for another.
 * Software Security Features
   * All CDN libs have SHA-384 Subresource Integrity setup to verify authenticity security per https://www.w3.org/TR/SRI/ (not supported on all browser versions).
@@ -73,8 +76,14 @@
 ### Advanced Account Settings for multisig
 ![Advanced Account Settings for multisig](https://sacarlson.github.io/my_wallet/screenshots/Screenshot10.png)
 
-### View Table of accountid present active asset trade offers
+### View Table of accountid present active Open Order Offers
 ![View Table of accountid present active asset trade offers](https://sacarlson.github.io/my_wallet/screenshots/Screenshot11.png)
+
+### View Table of Trade History 
+![View Table of trades made between assets](https://sacarlson.github.io/my_wallet/screenshots/Screenshot14.png)
+
+### Paths View 
+![View paths of trading between one asset and another](https://sacarlson.github.io/my_wallet/screenshots/Screenshot15.png)
 
 ### Create asset trade offer
 ![Create asset trade offer](https://sacarlson.github.io/my_wallet/screenshots/Screenshot12.png)

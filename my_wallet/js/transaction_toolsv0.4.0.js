@@ -75,7 +75,7 @@
       var orderbook_sell_asset = document.getElementById("orderbook_sell_asset");
       var orderbook_sell_issuer = document.getElementById("orderbook_sell_issuer");
       var better_bid_ask = document.getElementById("better_bid_ask");
-
+      var lock_account = document.getElementById("lock_account");
       
       var asset_obj = new StellarSdk.Asset.native();
       var socket;
@@ -100,7 +100,7 @@
 
       auto_trust.value = 1;      
 
-      console.log("enable_effecthandler = true");
+      //console.log("enable_effecthandler = true");
 
       var resetAccount = function () {
 	    account_tx = {
@@ -144,12 +144,12 @@
       //key = StellarSdk.Keypair.fromSeed(seed.value);
       if (seed.value.length != 56) {
         key = StellarSdk.Keypair.random();
-        console.log("key ok");
+        //console.log("key ok");
         account.value = key.accountId();
         account_tx.address = account.value;
-        console.log("account ok");
+        //console.log("account ok");
         seed.value = key.seed();
-        console.log("seed ok");
+        //console.log("seed ok");
         save_seed("seed1", "", seed.value );
       } else {
          account.value = StellarSdk.Keypair.fromSeed(seed.value).accountId();
@@ -185,7 +185,7 @@
         var params = JSON.parse(json_param);
         console.log(params);
         console.log(params["accountID"]);
-        console.log(params["env_b64"]);
+        //console.log(params["env_b64"]);
         if (typeof params["accountID"] != "undefined") {
           account.value = params["accountID"];
           account_tx.address = account.value;
@@ -238,13 +238,13 @@
 
       } 
       if (encrypted_seed != null) {
-        console.log(encrypted_seed[1]);
+        //console.log(encrypted_seed[1]);
         seed.value = encrypted_seed[1];
         update_key();      
       }    
       if (accountID != null) {
-        console.log("here?");
-        console.log(accountID[1]);
+        //console.log("here?");
+       // console.log(accountID[1]);
         account.value = accountID[1];
         account_tx.address = account.value;
       }
@@ -358,11 +358,11 @@
 
           
           function federation_lookup(stellar_address) {
-             console.log("start sendto: " + send_fed_to);
+             //console.log("start sendto: " + send_fed_to);
              var index_at = stellar_address.indexOf("@");
              var index_ast = stellar_address.indexOf("*");
-             console.log("index_at: " + index_at);
-             console.log("index_ast: " + index_ast);
+             //console.log("index_at: " + index_at);
+             //console.log("index_ast: " + index_ast);
              if (index_at == -1 && index_ast == -1){
                stellar_address = stellar_address + "*funtracker.site";
              }
@@ -475,8 +475,8 @@
                 // will add balance_splice here that adds balances over time in all effectResults.records[x]
                  effectResults = balance_splice(effectResults,account_obj_global);
                 //console.log(effectResults.records.length);
-                console.log("post balance_splice: effectResults");
-                console.log(effectResults);
+                //console.log("post balance_splice: effectResults");
+                //console.log(effectResults);
                 var length = effectResults.records ? effectResults.records.length : 0;
                 //var length = effectResults.records.length;
                 //console.log("length: " + length);
@@ -509,7 +509,7 @@
          function check_trust_exists(asset_code, max_count, displayEffect){
            //example check_trust_exists("FUNT", displayEffect);
            // will return true if asset_code already exists or if max_count number of trustlines already exist
-           // this allow max_count = 0 to disable adding trustlines
+           // this allows setting max_count = 0 to disable adding trustlines
            var balances = displayEffect.balances;
            console.log("trustlines count: " + balances.length);
            if (balances.length >= max_count){
@@ -527,8 +527,9 @@
          
          function effectHandler(effect,fromStream) {
             console.log("effectHandler fromStream: " + fromStream);
-            console.log("effect");
-            console.log(effect);
+            disable_change_key();
+            //console.log("effect");
+            //console.log(effect);
             //console.log(" effect.type ");
             //console.log(effect.type);
             //console.log("enable_effecthandler");
@@ -548,14 +549,15 @@
             } else {
               insertEffect(effect, fromStream)
                 .then(function (displayEffect) {
-                    console.log("displayEffect: ");
-                    console.log(displayEffect);
+                    //console.log("displayEffect: ");
+                    //console.log(displayEffect);
                     if (fromStream) {
                         console.log("effect fromStream");
                         //applyToBalance(effect);
                         //$rootScope.$broadcast('accountInfoLoaded');                       
                     }
                     else {
+                        enable_change_key();
                         //if (displayEffect.ef_type == "trade"){
                         if (displayEffect.type == "manage_offer"){
                           insert_trade_table(displayEffect);
@@ -564,10 +566,10 @@
                         }
                         console.log("effect_fromstream_flag: " + effect_fromstream_flag);
                         if (effect_fromstream_flag){
-                          console.log("displayEffect");
-                          console.log(displayEffect);
-                          console.log("params.trustlines");
-                          console.log(params.trustlines);
+                          //console.log("displayEffect");
+                          //console.log(displayEffect);
+                          //console.log("params.trustlines");
+                          //console.log(params.trustlines);
                           if (typeof params != "undefined" && typeof params["trustlines"] != "undefined"){ 
                             console.log("params.trustlines is defined");
                             var array_opps = [];
@@ -578,8 +580,8 @@
                                  array_opps[i] = addTrustlineOperation(array_trustlines[i], tissuer.value, tlimit.value);
                               }
                             }
-                            console.log("array_opps");
-                            console.log(array_opps);
+                            //console.log("array_opps");
+                            //console.log(array_opps);
                             if (array_opps.length > 0){
                               createTransaction_array(array_opps);
                             }
@@ -591,53 +593,10 @@
                 }, function (err) {
                     console.error(err)
               });
-            }
-            var isRelevant =
-                   effect.type === 'account_created'
-                || effect.type === 'account_debited'
-                || effect.type === 'account_credited'
-            ;
-
-            if (isRelevant) {
-              console.log(" isRelevant is true ");             
-            }             
+            }          
          }
 
-    // scotty moded effecthandler  must replace original in transaction_toolsv0.4.0.js
-        //var effectHandler = function (effect, fromStream) {
-         function effectHandler2(effect,fromStream) {
-            console.log("effectHandler fromStream: " + fromStream);
-            console.log("effect");
-            console.log(effect);
-            console.log(" effect.type ");
-            console.log(effect.type);
-            var isRelevant =
-                   effect.type === 'account_created'
-                || effect.type === 'account_debited'
-                || effect.type === 'account_credited'
-            ;
-
-            //if(isRelevant) {
-            if(true) {
-                insertEffect(effect, fromStream)
-                .then(function (displayEffect) {
-                    if (fromStream) {
-                        applyToBalance(effect);
-                        //$rootScope.$broadcast('accountInfoLoaded');
-                    }
-                    else {
-                        if (displayEffect.ef_type == "trade"){
-                          insert_trade_table(displayEffect);
-                        }else {
-                          insert_history_table(displayEffect)
-                        }
-                    }
-                }, function (err) {
-                    console.error(err)
-                });
-
-            }
-        };
+    
 
 
    // new (temp?) replacement for Centarus applayToBalance,  this never existed so can plugin to transaction_tools..
@@ -925,7 +884,7 @@
 
       function insert_trade_table(effect){        
         console.log("insert_trade_table");
-        console.log(effect);
+        //console.log(effect);
         var ar = [];
         var red = '<font color="red">';
         var green = '<font color="green">';
@@ -1081,8 +1040,8 @@
       function update_balances_set(account_obj) {
         console.log("update_balances_set"); 
         if (account_obj.account_id == account.value){
-          console.log("account_obj");
-          console.log(account_obj);
+          //console.log("account_obj");
+          //console.log(account_obj);
           var bal = get_native_balance(account_obj);
           //console.log("bal: " + bal);
           bal_disp.textContent = bal;
@@ -1101,8 +1060,8 @@
       }
 
       function get_native_balance(account_obj){
-        console.log("get_native_balance");
-        console.log(account_obj);
+        //console.log("get_native_balance");
+        //console.log(account_obj);
         var bal = 0;
         if (account_obj.name !== "NotFoundError"){
           account_obj.balances.forEach(function(entry) {
@@ -1136,8 +1095,9 @@
 
       function update_balances() {
         resetAccount();
+        disable_change_key();
         enable_effecthandler = false;
-        console.log("enable_effecthandler = false");
+        //console.log("enable_effecthandler = false");
         if (server_mode === "mss_server"){
           console.log("update_balances mss mode");
           get_balance_updates_mss();
@@ -1162,7 +1122,8 @@
       function sendPaymentTransaction() {
         console.log("sendPaymentTransaction");
         var key = StellarSdk.Keypair.fromSeed(seed.value);
-        if (asset.value == "native") {
+        if (asset.value == "native" || asset.value == "XLM") {
+          issuer.value = "";
           var asset_obj = new StellarSdk.Asset.native();
           //if (dest_balance.value == 0){
           if (new_account.checked){
@@ -1243,6 +1204,16 @@
           console.log("operation created ok");
           createTransaction(key,operation);
         }
+
+      function allowTrustTransaction(trustor,assetCode,authorize) {
+          console.log("allowTrustTransaction");        
+          key = StellarSdk.Keypair.fromSeed(seed.value);
+          console.log(key.accountId());
+          var operation = allowTrustOperation(trustor,assetCode,authorize)
+          console.log("operation created ok");
+          createTransaction(key,operation);
+        }
+      
 
      function submitTransaction_mss(transaction) {
        console.log("start submitTransaction_mss");
@@ -1495,9 +1466,9 @@
       function addTrustlineOperation(asset_type2, address, limit) {
                  //asset_type examples "USD", "CHP"
                  console.log("addTrustlineOperation");
-                 console.log(asset_type2);
-                 console.log(address);
-                 console.log(limit);
+                 //console.log(asset_type2);
+                 //console.log(address);
+                 //console.log(limit);
                  asset = new StellarSdk.Asset(asset_type2, address);
                  if (limit.length == 0){
                    return StellarSdk.Operation.changeTrust({asset: asset});
@@ -1505,6 +1476,19 @@
                    return StellarSdk.Operation.changeTrust({asset: asset,limit: limit}); 
                  }
                }
+
+      function allowTrustOperation(trustor,assetCode,authorize) {
+              // trustor accountID of client you want to allowTrust
+              // assetCode to allowTrust on
+              // authorize set to true to unlock account,
+              //   and false to lock account from any activity on this assetCode
+              console.log("allowTrust trustor: " + trustor + " asset: " + assetCode + " auth: " + authorize);
+              return StellarSdk.Operation.allowTrust({
+                trustor: trustor,
+                assetCode: assetCode,
+                authorize: authorize
+              });
+            }
 
       function setOptionsOperation() {
                  console.log(Number(master_weight.value));
@@ -2330,7 +2314,7 @@ function display_history(page){
 
     function display_asset_table(account_obj){
        console.log("display_asset_table");
-       console.log(account_obj.balances);
+       //console.log(account_obj.balances);
        clear_table("table_asset");
        
        var ar = [];
@@ -2376,12 +2360,12 @@ function display_history(page){
       var cent_keys = {
 	    address : key.accountId(),
 	    secret : key.seed()
-        };
-	  var plain = JSON.stringify(cent_keys);
-	  var backupString = CryptoJS.AES.encrypt(plain, pass_phrase.value);
-	  var body = 'centaurus:backup003' + backupString;
+      };
+      var plain = JSON.stringify(cent_keys);
+      var backupString = CryptoJS.AES.encrypt(plain, pass_phrase.value);
+      var body = 'centaurus:backup003' + backupString;
       console.log("export centaurus: " + body);
-	  return body;
+      return body;
     }
 
    function get_offers(){
@@ -2427,8 +2411,8 @@ function display_history(page){
            ar[6] = offer_obj.records[i].buying.asset_issuer;
          }
          ar[7] = '<img src="../images/delete.png" onclick="confirm_delete_offer(this)" /> ';
-         console.log("ar[7]: " );
-         console.log(ar[7]);
+         //console.log("ar[7]: " );
+         //console.log(ar[7]);
          insRow(ar,"table_offers");
          //table_sort_offers.refresh();
        }
@@ -2593,6 +2577,20 @@ function display_history(page){
       console.log("selling_price: " + selling_price.value);
       //location.href = "#create_offer";
     }
+
+    function disable_change_key(){
+      swap_seed_dest.disabled = true;
+      select_seed.disabled = true; 
+      restore.disabled = true;
+      change_network.disabled = true;
+    }
+
+    function enable_change_key(){
+      swap_seed_dest.disabled = false;
+      select_seed.disabled = false;
+      restore.disabled = false;
+      change_network.disabled = false; 
+    }
  
 
    //triger the event of readSingleFile when file-input browse button is clicked and a file selected
@@ -2692,9 +2690,24 @@ function display_history(page){
         console.log("click add_signer");
         try {
           addSignerTransaction();
-          //update_balances();
         } catch(err){
           alert("add_signer error: " + err);
+        }
+      });
+
+      allowTrust.addEventListener("click", function(event) {
+        console.log("click allowTrust");
+        try {
+          var authorize;
+          if (lock_account.checked){
+            authorize = false;
+          } else {
+            authorize = true;
+          }
+          //console.log("issuer: " + tissuer.value + " asset: " + tasset.value + " tf: " + authorize);
+          allowTrustTransaction(tissuer.value,tasset.value,authorize);
+        } catch(err){
+          alert("allowTrust error: " + err);
         }
       });
 
@@ -2710,7 +2723,8 @@ function display_history(page){
       });
 
       
-      swap_seed_dest.addEventListener("click", function(event) { 
+      swap_seed_dest.addEventListener("click", function(event) {
+        //swap_seed_dest.disabled = true; 
         var seed_swap = seed.value;
         var accountId_swap = account.value
         seed.value = dest_seed.value;
@@ -3015,17 +3029,17 @@ function display_history(page){
 
     function confirm_delete_offer(o) {
       console.log("confirm_delete_offer");
-      console.log("o: ");
-      console.log(o);
+      //console.log("o: ");
+      //console.log(o);
       var p=o.parentNode.parentNode;
-      console.log("p: ");
-      console.log(p);
+      //console.log("p: ");
+      //console.log(p);
       var offer_id = p.firstChild.innerHTML;
       var col_data = p.innerHTML.replace(/<td>/g,'');
       col_data = col_data.split("</td>");
-      console.log("col_data: ");
-      console.log(col_data);      
-      console.log("offer_id: " + offer_id);
+      //console.log("col_data: ");
+      //console.log(col_data);      
+      //console.log("offer_id: " + offer_id);
       var r = confirm("Confirm Delete Order Offer ID: " + offer_id + " ??");
       if (r == true) {
         console.log("You pressed OK! deleted Offer ID: " + offer_id );
