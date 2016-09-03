@@ -1075,6 +1075,7 @@
           return bal;
         } else {
           console.log("no account active return -1");
+          enable_change_key();
           return -1;
         }
       }
