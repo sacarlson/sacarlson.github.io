@@ -43,50 +43,81 @@
   * All CDN libs have SHA-384 Subresource Integrity setup to verify authenticity security per https://www.w3.org/TR/SRI/ (not supported on all browser versions).
   * All code for my_wallet is transparant and open sourced to be openly audited with history on sacarlson.github.io .
 
+Demo Training videos for the wallet in sections:
 
-# Screen Shots (some not updated)
+Sending assets from one accountID to another:
+https://drive.google.com/file/d/0B4pSHwxHXW9SOFl5cHl6dFRfa2M/view?usp=sharing
+
+Create new account with added trustlines demo training video:
+https://drive.google.com/file/d/0B4pSHwxHXW9SQXJvR0RSOE05bms/view?usp=sharing
+
+Import/Export of Key sets to/from file or QR-code:
+https://drive.google.com/file/d/0B4pSHwxHXW9SUW01cFdYWDg3R28/view?usp=sharing
+
+Trade order setup demo training video:
+https://drive.google.com/file/d/0B4pSHwxHXW9SdGh5U09hLUJFdEU/view?usp=sharing
+
+Remotely add trustlines to a customers accountID (for anchors):
+https://drive.google.com/file/d/0B4pSHwxHXW9STjByREFFYWdnLW8/view?usp=sharing
+
+
+# Screen Shots 
 
 ### Send Funds
-![Send Funds](https://sacarlson.github.io/my_wallet/screenshots/Screenshot.png)
+![Send Funds](https://sacarlson.github.io/my_wallet/wallet_screenshots/Screenshot_Wallet_live_send.png)
 
 ### Recieve Funds
-![Recieve Funds](https://sacarlson.github.io/my_wallet/screenshots/Screenshot1.png)
+![Recieve Funds](https://sacarlson.github.io/my_wallet/wallet_screenshots/Screenshot_Wallet_receive.png)
+
 
 ### Transaction History
-![Transaction History](https://sacarlson.github.io/my_wallet/screenshots/Screenshot2.png)
+![Transaction History](https://sacarlson.github.io/my_wallet/wallet_screenshots/Screenshot_Wallet_trade_hist.png)
+
 
 ### List Assets
-![List Assets](https://sacarlson.github.io/my_wallet/screenshots/Screenshot3.png)
+![List Assets](https://sacarlson.github.io/my_wallet/wallet_screenshots/Screenshot_Wallet_list_assets.png)
+
 
 ### Export/Import Secret key sets
-![Export/Import Secret key sets](https://sacarlson.github.io/my_wallet/screenshots/Screenshot5.png)
+![Export/Import Secret key sets](https://sacarlson.github.io/my_wallet/wallet_screenshots/Screenshot_Wallet_imp_exp_key.png)
 
-### Change Network Settings
-![Change Network Settings](https://sacarlson.github.io/my_wallet/screenshots/Screenshot6.png)
+
+### Change Default Site Settings
+![Change Network Settings](https://sacarlson.github.io/my_wallet/wallet_screenshots/Screenshot_Wallet_change_settings.png)
+
 
 ### Add Trustlines
-![Add Trustlines](https://sacarlson.github.io/my_wallet/screenshots/Screenshot7.png)
+![Add Trustlines](https://sacarlson.github.io/my_wallet/wallet_screenshots/Screenshot_Wallet_add_trustlines.png)
 
-### Sign TX transactions for multisig
-![Sign TX transactions for multisig](https://sacarlson.github.io/my_wallet/screenshots/Screenshot8.png)
+
+### Sign TX transactions for multi-signature processing
+![Sign TX transactions for multisig](https://sacarlson.github.io/my_wallet/wallet_screenshots/Screenshot_Wallet_sign_tx.png)
+
 
 ### Merge AccountId's 
-![Merge AccountId's ](https://sacarlson.github.io/my_wallet/screenshots/Screenshot9.png)
+![Merge AccountId's ](https://sacarlson.github.io/my_wallet/wallet_screenshots/Screenshot_Wallet_merge_acc.png)
 
-### Advanced Account Settings for multisig
-![Advanced Account Settings for multisig](https://sacarlson.github.io/my_wallet/screenshots/Screenshot10.png)
 
-### View Table of accountid present active Open Order Offers
-![View Table of accountid present active asset trade offers](https://sacarlson.github.io/my_wallet/screenshots/Screenshot11.png)
+### Advanced Account Settings 
+![Advanced Account Settings for multisig](https://sacarlson.github.io/my_wallet/wallet_screenshots/Screenshot_Wallet_acc_options.png)
+
+
+### View Table of present active Open Order Offers
+![View Table of present active asset trade offers on active accountID](https://sacarlson.github.io/my_wallet/wallet_screenshots/Screenshot_Wallet_view_offers.png)
+
 
 ### View Table of Trade History 
-![View Table of trades made between assets](https://sacarlson.github.io/my_wallet/screenshots/Screenshot14.png)
+![View Table of trades made between assets](https://sacarlson.github.io/my_wallet/wallet_screenshots/Screenshot_Wallet_trade_hist.png)
 
-### Paths View 
-![View paths of trading between one asset and another](https://sacarlson.github.io/my_wallet/screenshots/Screenshot15.png)
+
+### Paths Viewer 
+![View paths of trading between one asset and another](https://sacarlson.github.io/my_wallet/wallet_screenshots/Screenshot_Wallet_path_viewer.png)
+
 
 ### Create asset trade offer
-![Create asset trade offer](https://sacarlson.github.io/my_wallet/screenshots/Screenshot12.png)
+![Create asset trade offers bettween assets](https://sacarlson.github.io/my_wallet/wallet_screenshots/Screenshot_Wallet_create_offers.png)
+
 
 ### Email links of transactions or funded accounts
 ![Email links of transactions or funded accounts](https://sacarlson.github.io/my_wallet/screenshots/Screenshot13.png)
+https://sacarlson.github.io/my_wallet/wallet_screenshots/Screenshot_email_link.png
