@@ -989,7 +989,7 @@
         insRow(ar,"table_orderbook");        
       }  
 
-      function reset_horizon_server() {
+      function reset_horizon_server2() {
         console.log("reset_horizon_server"); 
         //console.log("secure: " + secure.value);
         var tf = true;
@@ -999,6 +999,24 @@
         server = new StellarSdk.Server({     
           hostname: url.value,
           port: Number(port.value),
+          secure: tf
+        });
+      }
+
+       function reset_horizon_server() {
+        console.log("reset_horizon_server"); 
+        //console.log("secure: " + secure.value);
+        var tf = true;
+        var protocol;
+        if (secure.value == "false") { 
+          tf = false;
+        } else {
+          protocol = "https"
+        }  
+        server = new StellarSdk.Server({     
+          hostname: url.value,
+          port: Number(port.value),
+          protocol: protocol,
           secure: tf
         });
       }
@@ -1038,7 +1056,9 @@
        
 
       function update_balances_set(account_obj) {
-        console.log("update_balances_set"); 
+        console.log("update_balances_set");
+        clear_all_tables();
+        get_offers();  
         if (account_obj.account_id == account.value){
           //console.log("account_obj");
           //console.log(account_obj);
@@ -1094,10 +1114,11 @@
       
      
 
-      function update_balances() {
+      function update_balances() {       
         resetAccount();
         disable_change_key();
         enable_effecthandler = false;
+        //clear_all_tables();
         //console.log("enable_effecthandler = false");
         if (server_mode === "mss_server"){
           console.log("update_balances mss mode");
@@ -1106,7 +1127,7 @@
         } 
         bal_disp.textContent = 0;
         //update_balances();
-        get_offers();           
+        //get_offers();           
         get_account_info(account.value,update_balances_set); 
         //if (destination.value.length == 56){
          // get_account_info(destination.value,update_balances_set); 
@@ -1125,6 +1146,7 @@
         var key = StellarSdk.Keypair.fromSeed(seed.value);
         if (asset.value == "native" || asset.value == "XLM") {
           issuer.value = "";
+          console.log("asset: native (XLM)");
           var asset_obj = new StellarSdk.Asset.native();
           //if (dest_balance.value == 0){
           if (new_account.checked){
@@ -1355,7 +1377,7 @@
           console.log("manual memo.text");
           var memo_tr = StellarSdk.Memo.text(memo.value);
         }
-        attachToPaymentsStream('now');
+        //attachToPaymentsStream('now');
         server.loadAccount(key.accountId())
           .then(function (account) {
              //console.log("memo_tr typeof");
@@ -1431,7 +1453,9 @@
       }
 
       function createPaymentOperation(asset_obj) {
-                 console.log("creatPaymentOperation");                 
+                 console.log("creatPaymentOperation"); 
+                 console.log("destination: " + destination.value);
+                 console.log("amount: " + amount.value);               
                  return StellarSdk.Operation.payment({
                    destination: destination.value,
                    amount: fix7dec(amount.value),
@@ -1499,9 +1523,23 @@
                  //opts.inflationDest = "GDGU5OAPHNPU5UCLE5RDJHG7PXZFQYWKCFOEXSXNMR6KRQRI5T6XXCD7";
                  //opts.clearFlags = 1;
                  //opts.setFlags = 1;
+                 var low;
+                 var med;
+                 if (Number(threshold.value) < 2){
+                   low = 0;
+                   med = 0;
+                 } else {
+                   med = Number(threshold.value) - 1;
+                   low = 0;
+                 }
+                 console.log("high threshold: " + Number(threshold.value));
+                 console.log("med threshold: " + med );
+                 console.log("low threshold: " + low);
+                 console.log("master weight: " + Number(master_weight.value));
+
                  opts.masterWeight = Number(master_weight.value);
-                 opts.lowThreshold = Number(threshold.value);
-                 opts.medThreshold = Number(threshold.value);
+                 opts.lowThreshold = low;
+                 opts.medThreshold = med;
                  opts.highThreshold = Number(threshold.value);
 
                  //opts.signer = {
@@ -2592,12 +2630,19 @@ function display_history(page){
       restore.disabled = false;
       change_network.disabled = false; 
     }
- 
+    
 
    //triger the event of readSingleFile when file-input browse button is clicked and a file selected
      //this event reads the data from a local disk file and restores it's contents to the LocalStorage
      // the file selected is assumed to be in seed_save_recover backup format.
      document.getElementById('file-input').addEventListener('change', readSingleFile, false);
+
+     
+
+     lock_account.onchange=function(){
+       console.log("change in lock_account detected");
+       tissuer.value = destination.value;
+     }
 
      
       select_seed.onchange=function(){ //run some code when "onchange" event fires
