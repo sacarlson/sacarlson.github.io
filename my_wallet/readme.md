@@ -71,7 +71,7 @@ https://drive.google.com/file/d/0B4pSHwxHXW9STjByREFFYWdnLW8/view?usp=sharing
 
 
 ### Transaction History
-![Transaction History](https://sacarlson.github.io/my_wallet/wallet_screenshots/Screenshot_Wallet_trade_hist.png)
+![Transaction History](https://sacarlson.github.io/my_wallet/wallet_screenshots/Screenshot_Wallet_trans_history.png)
 
 
 ### List Assets
