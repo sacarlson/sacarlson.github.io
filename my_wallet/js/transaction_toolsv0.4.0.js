@@ -76,6 +76,13 @@
       var orderbook_sell_issuer = document.getElementById("orderbook_sell_issuer");
       var better_bid_ask = document.getElementById("better_bid_ask");
       var lock_account = document.getElementById("lock_account");
+
+      var signer = document.getElementById("signer");
+      var weight = document.getElementById("weight");
+      var master_weight = document.getElementById("master_weight");
+      var threshold = document.getElementById("threshold");
+      var home_domain = document.getElementById("home_domain");
+
       
       var asset_obj = new StellarSdk.Asset.native();
       var socket;
@@ -96,6 +103,7 @@
       var enable_effecthandler = true;
       var effect_fromstream_flag = false;
       var manageOfferTransaction_flag = false;
+      home_domain.value = "funtracker.site";
 
 
       auto_trust.value = 1;      
@@ -116,7 +124,7 @@
 	resetAccount();
     //var server_mode = "mss_server";
       //bal_disp.textContent = "test";
-      reset_horizon_server(); 
+      //reset_horizon_server(); 
       seed.value = restore_seed("seed1", "");
   
       var qrcode = new QRCode(document.getElementById("qrcode"), {
@@ -136,7 +144,7 @@
       StellarSdk.Network.use(new StellarSdk.Network(net_passphrase.value));
       active_network.textContent = net_passphrase.value ;
       //top_image_span.innerHTML = '<img src="scotty.png" class="img-circle" alt="Cinque Terre" width="100" height="100">';
-      
+      reset_horizon_server(); 
 
       console.log("seed.value: " + seed.value);     
       console.log("seed.value.length: " + seed.value.length);
@@ -320,6 +328,96 @@
         attachToPaymentsStream('now');
       }
 
+      function setup_xml () {
+       var xmlhttp_ = new XMLHttpRequest();
+       xmlhttp_.onreadystatechange = function() {
+         if (this.readyState == 4 && this.status == 200) {
+           //var data = JSON.parse(this.responseText);
+           xml_response(this.responseText);
+         }
+       };
+       return xmlhttp_
+     }
+
+
+      function add_trusted_issuer(accountId){
+         // this will add all trustlines of all assets that are seen in this issuers stellar.toml file
+         //add_trusted_issuer('GBUYUAI75XXWDZEKLY66CFYKQPET5JR4EENXZBUZ3YXZ7DS56Z4OKOFU');
+         server.accounts()
+             .accountId(accountId).call()
+             .then(function (accountInfo) {
+               var xmlurl;
+               console.log("accountInfo: ");
+               console.log(accountInfo);
+               //account_obj_global = accountInfo;
+               if (accountInfo.home_domain.length > 0){
+                 xmlurl = "https://www." + accountInfo.home_domain + "/.well-known/stellar.toml";
+                 var xmlhttp = setup_xml()
+                 xmlhttp.open("GET", xmlurl, true);
+                 xmlhttp.send();
+               }else {
+                 console.log("accountInfo.home_domain.length == 0 so can't add trust");
+               }
+             });                            
+      }
+
+      function xml_response(data) {
+        console.log("xml_response: ");
+        console.log(data);
+        var obj = toml.parse(data);
+        console.log("toml.parse : ");
+        console.log(obj);
+        console.log(obj.CURRENCIES);
+        if (obj.CURRENCIES.length >0){
+          console.log("now account_obj_global: ");
+          console.log(account_obj_global);
+          add_trust_array(obj.CURRENCIES,tlimit.value)
+        }else{
+          console.log("no assets to add to trust found");
+        }
+      }
+
+      function add_trust_array(array_trustlines,limit){
+        // example array_trustlines:
+        // [{code:"USD",issuer:"GBUY..."},{code:"THB",issuer:"GBUY..."}]
+        var array_opps = [];
+        for (var i = 0; i < array_trustlines.length; i++) {
+          if (check_trust_exists2(array_trustlines[i]["code"], array_trustlines[i]["issuer"] , Number(auto_trust.value) ,account_obj_global.balances) == false){
+            console.log("trustline : " + array_trustlines[i] + " doen't exist so we will create it now");
+            array_opps[i] = addTrustlineOperation(array_trustlines[i]["code"], array_trustlines[i]["issuer"], limit);
+          }
+        }
+        console.log("array_opps");
+        console.log(array_opps);
+        if (array_opps.length > 0){
+          createTransaction_array(array_opps);
+        }
+     }
+
+     function check_trust_exists2(asset_code, issuer, max_count, balances){
+           //example check_trust_exists("FUNT","GBYX...",3, balances);
+           // will return true if asset_code already exists or if max_count number of trustlines already exist
+           // this allows setting max_count = 0 to disable adding trustlines
+           // balances is an array of all currencies assets presently held on this account being checked
+           // balances = [{asset_code:"USD",issuer:"GBUYU..."},{asset_code:"THB",issuer:"GBUYU..."}]
+           console.log("trustlines count: " + balances.length);
+           if (balances.length >= max_count){
+              return true;
+           }
+           console.log("balances");
+           console.log(balances);
+           for (var i = 0; i < balances.length; i++) {
+             if (balances[i].asset_code == asset_code || balances[i].code == asset_code){
+               if (balances[i].issuer == issuer){
+                 return true;
+               }
+             }
+           }
+           return false;
+         }
+      
+      
+
       function makeCode () {
         //console.log("start makeCode");		
 	    // qr-code generator
@@ -361,81 +459,121 @@
              //console.log("start sendto: " + send_fed_to);
              var index_at = stellar_address.indexOf("@");
              var index_ast = stellar_address.indexOf("*");
+             var fed_rev;
              //console.log("index_at: " + index_at);
              //console.log("index_ast: " + index_ast);
-             if (index_at == -1 && index_ast == -1){
-               stellar_address = stellar_address + "*funtracker.site";
-             }
-             if (index_at >= 0 && index_ast >= 0){
-               console.log("have both * and @ in lookup, so don't change");
-             } else{
-               console.log("only have * or @ in lookup, will change any @ to *");
-               stellar_address = stellar_address.replace("@", "*");
-             }
-             if (send_fed_to == "dest") {
-                console.log("pre set dest: " + stellar_address);
-                destination.value = stellar_address;
-                paths_destination_addressID.value = destination.value;
+             console.log("stellar_address length: " + stellar_address.length);
+             if (stellar_address.length != 56){
+               if (index_at == -1 && index_ast == -1){
+                 stellar_address = stellar_address + "*funtracker.site";
+               }
+               if (index_at >= 0 && index_ast >= 0){
+                 console.log("have both * and @ in lookup, so don't change");
+               } else{
+                 console.log("only have * or @ in lookup, will change any @ to *");
+                 stellar_address = stellar_address.replace("@", "*");
+               }
+               if (send_fed_to == "dest") {
+                  console.log("pre set dest: " + stellar_address);
+                  destination.value = stellar_address;
+                  paths_destination_addressID.value = destination.value;
+               } else {
+                  console.log("pre set issuer: " + stellar_address);
+                  issuer.value = stellar_address;
+               }
              } else {
-                console.log("pre set issuer: " + stellar_address);
-                issuer.value = stellar_address;
+                console.log("address length == 56, pre set issuer: " + stellar_address);
+                //issuer.value = stellar_address;
+                console.log("reverse_federation_lookup: ");
+                reverse_federation_lookup(stellar_address); 
+                return;
              }
-             StellarSdk.FederationServer.resolve(stellar_address)
-                 .then(function(federationRecord) {
-                     //destination.value = federationRecord.account_id;
-                     console.log("federation_lookup results" + federationRecord.account_id);
-                     console.log("send_fed_to: " + send_fed_to);
-                     if (send_fed_to == "dest") {
-                       console.log("set dest");
-                       destination.value = federationRecord.account_id;
-                       paths_destination_addressID.value = destination.value;
-                     } else if (send_fed_to == "signer") {
-                       console.log("set signer");
-                       signer.value = federationRecord.account_id;
-                     } else if (send_fed_to == "inflation_dest") {
-                       console.log("set inflation_dest");
-                       inflation_dest.value = federationRecord.account_id;
-                     } else if (send_fed_to == "tissuer") {
-                       console.log("set tissuer");
-                       tissuer.value = federationRecord.account_id;
-                     } else if (send_fed_to == "issuer") {
-                       console.log("set issuer");
-                       issuer.value = federationRecord.account_id;
-                     } else if (send_fed_to == "selling_asset_issuer") {
-                       console.log("set selling_asset_issuer");
-                       selling_asset_issuer.value = federationRecord.account_id;
-                     } else if (send_fed_to == "buying_asset_issuer") {
-                       console.log("set buying_asset_issuer");
-                       buying_asset_issuer.value = federationRecord.account_id;
-                     } else if (send_fed_to == "merge_dest") {
-                       console.log("set merge_dest");
-                       merge_dest.value = federationRecord.account_id;
-                     }
-                 })
-                .catch(function(err) {
-                    console.log("federation_lookup error: " + err);
-                });
+
+             forward_federation_lookup(stellar_address);
+             
           }
 
-    
+          function forward_federation_lookup(stellar_address){
+            StellarSdk.FederationServer.resolve(stellar_address)
+            //StellarSdk.FederationServer.resolveAddress(stellar_address) no such function
+            .then(function(federationRecord) {
+               //destination.value = federationRecord.account_id;
+               console.log("federationRecord: ");
+               console.log(federationRecord);
+               //console.log("federation_lookup results" + federationRecord.account_id);
+               console.log("send_fed_to: " + send_fed_to);
+               send_fed_destination(federationRecord.account_id);
+               memo.value = federationRecord.memo;
+               if (federationRecord.memo_type == "text"){
+                 memo_mode.value = "memo.text";
+               }else{
+                 memo_mode.value = "memo.id";
+               }
+            })
+            .catch(function(err) {
+               console.log("forward_federation_lookup error: " + err);
+            });
+          }
+        
 
-          function reverse_federation_lookup3() {
-             // this should work but I think my sdk is too old to support it, maybe on upgrade this will work
-             StellarSdk.FederationServer.resolveAccountId(destination.value)
-                 .then(function(federationRecord) {
-                     console.log("federationRecord: ");
-                     console.log(federationRecord);
-                     //destination.value = federationRecord.account_id;
-                     //console.log("federation_lookup results" + destination.value);
-                 })
-                .catch(function(err) {
-                    console.log("reverse_federation_lookup error: " + err);
-                });
+          function reverse_federation_lookup(accountId) {
+            console.log("rev accountId: ");
+            console.log(accountId);
+            server.accounts()
+             .accountId(accountId).call()
+             .then(function (accountInfo) {
+               console.log("accountInfo: ");
+               console.log(accountInfo);
+               if (accountInfo.home_domain) {
+                 return StellarSdk.FederationServer.createForDomain(accountInfo.home_domain)
+                 .then(function (federationServer) {
+                   return federationServer.resolveAccountId(accountId);
+                 });
+               } else {
+                 console.log("reverse_federation_lookup failed");
+                 return "bad reverse lookup";
+               }
+            })
+            .then(function (res) {
+              console.log("reverse fed lookup: ");
+              console.log(res.stellar_address);
+              send_fed_destination(res.stellar_address);
+            });
           }
 
-          function reverse_federation_lookup(address) {
-            console.log("reverse_federation_lookup disabled: " + address);
-          }
+         
+          function send_fed_destination(fed_record){
+            console.log("federation_lookup results" + fed_record);
+            console.log("send_fed_to: " + send_fed_to);
+            if (send_fed_to == "dest") {
+               console.log("set dest");
+               destination.value = fed_record;
+               paths_destination_addressID.value = destination.value;
+            } else if (send_fed_to == "signer") {
+               console.log("set signer");
+               signer.value = fed_record;
+            } else if (send_fed_to == "inflation_dest") {
+               console.log("set inflation_dest");
+               inflation_dest.value = fed_record;
+            } else if (send_fed_to == "tissuer") {
+               console.log("set tissuer");
+               tissuer.value = fed_record;
+            } else if (send_fed_to == "issuer") {
+               console.log("set issuer");
+               issuer.value = fed_record;
+            } else if (send_fed_to == "selling_asset_issuer") {
+               console.log("set selling_asset_issuer");
+               selling_asset_issuer.value = fed_record;
+            } else if (send_fed_to == "buying_asset_issuer") {
+               console.log("set buying_asset_issuer");
+               buying_asset_issuer.value = fed_record;
+            } else if (send_fed_to == "merge_dest") {
+               console.log("set merge_dest");
+               merge_dest.value = fed_record;
+            } else {
+               console.log("bad fed destination");
+            }
+          }  
 
                   
           
@@ -1191,6 +1329,7 @@
       function setOptionsTransaction() {
           console.log("setOptionsTransaction");        
           key = StellarSdk.Keypair.fromSeed(seed.value);
+          console.log("key.accountId: ");
           console.log(key.accountId());
           var operation = setOptionsOperation();
           console.log("operation created ok");
@@ -1518,7 +1657,10 @@
       function setOptionsOperation() {
                  console.log(Number(master_weight.value));
                  console.log(Number(threshold.value));
+                 console.log("home_domain.value: ");
                  console.log(home_domain.value);
+                 console.log("home_domain.value.length");
+                 console.log(home_domain.value.length);
                  var opts = {};
                  //opts.inflationDest = "GDGU5OAPHNPU5UCLE5RDJHG7PXZFQYWKCFOEXSXNMR6KRQRI5T6XXCD7";
                  //opts.clearFlags = 1;
@@ -2718,6 +2860,14 @@ function display_history(page){
           alert("createTransaction failed: " + err);
         }
         //update_balances();
+      });
+
+      add_all_trustlines.addEventListener("click", function(event) {
+        try { 
+          add_trusted_issuer(tissuer.value)
+        } catch(err){
+          alert("add_all_trustlines failed error: " + err);
+        }
       });
 
       set_inflation_dest.addEventListener("click", function(event) {
