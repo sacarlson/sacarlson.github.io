@@ -11,7 +11,7 @@
       //StellarSdk.Network.useTestNetwork();
       
       var network_testnet = document.getElementById("network_testnet");
-      var message = document.getElementById("message");
+      //var message = document.getElementById("message");
       var account = document.getElementById("account");
       var inflation_dest = document.getElementById("inflation_dest");
       var destination = document.getElementById("destination");
@@ -76,12 +76,13 @@
       var orderbook_sell_issuer = document.getElementById("orderbook_sell_issuer");
       var better_bid_ask = document.getElementById("better_bid_ask");
       var lock_account = document.getElementById("lock_account");
-
       var signer = document.getElementById("signer");
       var weight = document.getElementById("weight");
       var master_weight = document.getElementById("master_weight");
       var threshold = document.getElementById("threshold");
       var home_domain = document.getElementById("home_domain");
+      var sound_src = document.getElementById("sound_src");
+      var auto_allow_trust = document.getElementById("auto_allow_trust");
 
       
       var asset_obj = new StellarSdk.Asset.native();
@@ -104,7 +105,10 @@
       var effect_fromstream_flag = false;
       var manageOfferTransaction_flag = false;
       home_domain.value = "funtracker.site";
-
+      //sound_src.value = "sound/coin-drop-3.mp3";
+      var reset_defaults = false;
+      memo_mode.value  = "memo.text";
+      memo.value = "";
 
       auto_trust.value = 1;      
 
@@ -316,9 +320,13 @@
       account_disp2.textContent = account.value;
       makeCode();
       
-      //get_offers();
-      //var array = [1,2,3,4,5];
-      //insRow(array,"table");
+
+      // preload alarm sound
+      var alarm = new Audio();
+      alarm.autoplay = false;
+      //alarm.src = navigator.userAgent.match(/Firefox/) ? 'shutter.ogg' : 'shutter.mp3';
+      alarm.src = sound_src.value;
+      //alarm.play();
 
       // lets try to start 50 sec timer as the horizon connect time out seems to be set at 60 sec
       var myVar = setInterval(myTimer, (Math.round(50 * 1000)));
@@ -326,6 +334,16 @@
       function myTimer() { 
         console.log("timer click detected, do an attachToPaymentsStream('now'); to prevent time out");
         attachToPaymentsStream('now');
+      }
+
+      function play_alarm_sound() {
+        console.log("play_alarm_sound");
+        if (sound_src.value.length > 5){
+          console.log("play_alarm_sound activated");
+          alarm.play();
+        }else{
+          console.log("sound_src set to disable");
+        }
       }
 
       function setup_xml () {
@@ -684,6 +702,7 @@
             if (fromStream){
               console.log("fromStream true");            
               effect_fromstream_flag = true;
+              play_alarm_sound();
             } else {
               insertEffect(effect, fromStream)
                 .then(function (displayEffect) {
@@ -1188,7 +1207,7 @@
       }
 
       function display_message(param) {
-        message.textContent = JSON.stringify(param);
+        //message.textContent = JSON.stringify(param);
       }
 
        
@@ -1303,7 +1322,7 @@
           //}
           console.log("asset: " + asset.value + " issuer: " + issuer.value);
           var asset_obj = new StellarSdk.Asset(asset.value, issuer.value);
-          message.textContent = "started payment: ";
+          //message.textContent = "started payment: ";
           createPaymentTransaction(key,asset_obj);
         }        
       }    
@@ -1767,7 +1786,7 @@
         // Display messages received from the mss-server
         // and feed desired responce to browser input boxes
         socket.addEventListener("message", function(event) {
-          message.textContent = "Server Says: " + event.data;
+          //message.textContent = "Server Says: " + event.data;
           console.log(event.data);
           var event_obj = JSON.parse(event.data);          
           console.log("event_obj.action");
@@ -1802,7 +1821,8 @@
 
         // Display any errors that occur
         socket.addEventListener("error", function(event) {
-          message.textContent = "Error: " + event;
+          //message.textContent = "Error: " + event;
+          console.log("socket error: " + event);
         });
 
         socket.addEventListener("close", function(event) {
@@ -1965,7 +1985,8 @@
           localStorage.setItem(seed_nick_name_, encrypted);
           //seed.value = "seed saved to local storage"        
         }else {
-          message.textContent = "Sorry, your browser does not support Web Storage...";
+          //message.textContent = "Sorry, your browser does not support Web Storage...";
+          alert("Sorry, your browser does not support Web Storage...");
         }
       }
 
@@ -2062,20 +2083,26 @@
         var def_settings_json = localStorage.getItem("def_settings");
         console.log("restore_default_settings");
         console.log(def_settings_json);
-        if (def_settings_json == null) {
+        if (def_settings_json == null || reset_defaults) {
           // default setting for a users first time run on this browser          
           console.log("type null, restore nothing");
           default_asset_code.value = "FUNT";
-          default_issuer.value = "GBUYUAI75XXWDZEKLY66CFYKQPET5JR4EENXZBUZ3YXZ7DS56Z4OKOFU";          
+          default_issuer.value = "GBUYUAI75XXWDZEKLY66CFYKQPET5JR4EENXZBUZ3YXZ7DS56Z4OKOFU";
+          buying_asset_issuer.value = default_issuer.value;
+          selling_asset_issuer.value = default_issuer.value;          
           network.value ="live_default";
           top_image_url.value = "logo.png";
           top_page_title.value = "Funtracker.site Wallet";
+          sound_src.value = "sound/coin-drop-3.mp3";
           background_img.value = "";
           background_color.value = "#888";
           text_color.value = "#000";
+          auto_trust.value = "6";
           change_network_func();
           set_default_colors();
-          save_default_settings(); 
+          save_default_settings();
+          reset_defaults = false;
+          auto_allow_trust.checked = false; 
           return;
         }
         var obj = JSON.parse(def_settings_json);
@@ -2085,12 +2112,29 @@
         network.value = obj.network;
         url.value = obj.url;
         port.value = obj.port;
-        secure.value = obj.secure; 
-        default_asset_code.value = obj.default_asset_code;
-        default_issuer.value = obj.default_issuer;
-        buying_asset_issuer.value = default_issuer.value;
-        selling_asset_issuer.value = default_issuer.value;
-        auto_trust.value = obj.auto_trust;       
+        secure.value = obj.secure;         
+        if (typeof obj.sound_src != "undefined" && reset_defaults != true){
+          sound_src.value = obj.sound_src;
+          default_asset_code.value = obj.default_asset_code;
+          default_issuer.value = obj.default_issuer;
+          buying_asset_issuer.value = default_issuer.value;
+          selling_asset_issuer.value = default_issuer.value;
+          auto_trust.value = obj.auto_trust;
+          auto_allow_trust.checked = false;
+        } else {
+          sound_src.value = "sound/coin-drop-3.mp3";
+          default_asset_code.value = "FUNT";
+          tasset.value = default_asset_code.value;
+          default_issuer.value = "GBUYUAI75XXWDZEKLY66CFYKQPET5JR4EENXZBUZ3YXZ7DS56Z4OKOFU";
+          buying_asset_issuer.value = default_issuer.value;
+          selling_asset_issuer.value = default_issuer.value;
+          top_image_url.value = "logo.png";
+          top_page_title.value = "Funtracker.site Wallet";
+          background_img.value = "";
+          auto_trust.value = "6";
+          auto_allow_trust.checked = false;     
+          save_default_settings(); 
+        }       
         if (typeof obj.top_image_url != "undefined" && obj.top_image_url.length > 3) {
           top_image_span.innerHTML = '<img src="' + obj.top_image_url + '" class="img-rounded" alt="Add Optional Image here" width="100" height="100">';
           top_image_url.value = obj.top_image_url;
@@ -2147,6 +2191,7 @@
         obj.default_asset_code = default_asset_code.value;
         obj.default_issuer = default_issuer.value;
         obj.auto_trust = auto_trust.value;
+        obj.sound_src = sound_src.value;
         var string = JSON.stringify(obj);
         localStorage.setItem("def_settings", string);
       }
@@ -2167,7 +2212,7 @@
          result = result + '"' + encodeURI(localStorage.key( i )) + '"' + " : " + '"' + encodeURI(localStorage.getItem(localStorage.key( i ))) +'"' ;
        }
        result = result + "}";
-       message.textContent = result;
+       //message.textContent = result;
        download(result, 'backup_keys.txt', 'text/plain');
      });
 
@@ -3187,8 +3232,7 @@ function display_history(page){
 
       merge_accounts.addEventListener("click", function(event) {
         accountMergeTransaction();
-      });
-
+      });      
 
       // Close the connection when the Disconnect button is clicked
       close.addEventListener("click", function(event) {
@@ -3196,7 +3240,7 @@ function display_history(page){
         //close.disabled = true;
         close.disabled = false;
         open.disabled = false;
-        message.textContent = "";
+        //message.textContent = "";
         //socket.close();
         
       });
@@ -3213,6 +3257,15 @@ function display_history(page){
           //tasset.value = "";
         }
         save_default_settings();               
+      });
+
+      test_sound.addEventListener("click", function(event) {
+        play_alarm_sound();
+      }); 
+
+      reset_default_button.addEventListener("click", function(event) {
+        reset_defaults = true;
+        restore_default_settings();
       }); 
 
 
