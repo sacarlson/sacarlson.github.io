@@ -2893,7 +2893,7 @@ function display_history(page){
           //asset_type.value = tasset.value;
           //asset.value = tasset.value;         
           var operation = addTrustlineOperation(tasset.value, tissuer.value, tlimit.value);
-          asset.value = tasset.value; 
+          //asset.value = tasset.value; 
           console.log("post asset.value: " + asset.value);
           console.log("post tasset.value: " + tasset.value);
         } catch(err) {
