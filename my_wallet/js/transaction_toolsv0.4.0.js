@@ -173,15 +173,15 @@
       //account.value = 'GAMCHGO4ECUREZPKVUCQZ3NRBZMK6ESEQVHPRZ36JLUZNEH56TMKQXEB'
    
       //asset.value = "native";
-      asset.value = default_asset_code.value;
+      asset.value = clone(default_asset_code.value);
       if (default_asset_code.value != "native"){
         tasset.value = default_asset_code.value;
       } else {
         tasset.value = "";
       }
-      issuer.value = default_issuer.value;
-      tissuer.value = default_issuer.value;
-      tlimit.value = "";
+      issuer.value = clone(default_issuer.value);
+      tissuer.value = clone(default_issuer.value);
+      //tlimit.value = "";
 
       var env_b64 = window.location.href.match(/\?env_b64=(.*)/);
       var encrypted_seed = window.location.href.match(/\?seed=(.*)/);
@@ -210,7 +210,7 @@
           console.log(new StellarSdk.Transaction(envelope_b64.value).operations[0].asset);
           tissuer.value = new StellarSdk.Transaction(envelope_b64.value).operations[0].asset.issuer;
           tasset.value = new StellarSdk.Transaction(envelope_b64.value).operations[0].asset.code;
-          asset_type.value = tasset.value;
+          //asset_type.value = tasset.value;
         }               
         if (typeof params["seed"] != "undefined") {
           seed.value = params["seed"];
@@ -283,8 +283,8 @@
       //console.log("asset_type.length: " + asset_type.value.length);
       if (typeof tasset.value == "undefined" || tissuer.value.length == 0) {     
         //asset_type.value = "AAA";
-        tissuer.value = 'GBUYUAI75XXWDZEKLY66CFYKQPET5JR4EENXZBUZ3YXZ7DS56Z4OKOFU';
-        issuer.value = tissuer.value;
+        issuer.value = 'GBUYUAI75XXWDZEKLY66CFYKQPET5JR4EENXZBUZ3YXZ7DS56Z4OKOFU';
+        tissuer.value = clone(issuer.value);
         tasset.value = 'FUNT';
       }
       
@@ -493,15 +493,12 @@
                }
                if (send_fed_to == "dest") {
                   console.log("pre set dest: " + stellar_address);
-                  destination.value = stellar_address;
                   paths_destination_addressID.value = destination.value;
                } else {
                   console.log("pre set issuer: " + stellar_address);
-                  issuer.value = stellar_address;
                }
              } else {
                 console.log("address length == 56, pre set issuer: " + stellar_address);
-                //issuer.value = stellar_address;
                 console.log("reverse_federation_lookup: ");
                 reverse_federation_lookup(stellar_address); 
                 return;
@@ -521,11 +518,13 @@
                //console.log("federation_lookup results" + federationRecord.account_id);
                console.log("send_fed_to: " + send_fed_to);
                send_fed_destination(federationRecord.account_id);
-               memo.value = federationRecord.memo;
-               if (federationRecord.memo_type == "text"){
-                 memo_mode.value = "memo.text";
-               }else{
-                 memo_mode.value = "memo.id";
+               if (typeof federationRecord.memo != "undefined"){
+                 memo.value = federationRecord.memo;
+                 if (federationRecord.memo_type == "id"){
+                   memo_mode.value = "memo.id";
+                 }else{
+                   memo_mode.value = "memo.text";                
+                 }
                }
             })
             .catch(function(err) {
@@ -565,7 +564,7 @@
             console.log("send_fed_to: " + send_fed_to);
             if (send_fed_to == "dest") {
                console.log("set dest");
-               destination.value = fed_record;
+               destination.value = clone(fed_record);
                paths_destination_addressID.value = destination.value;
             } else if (send_fed_to == "signer") {
                console.log("set signer");
@@ -575,10 +574,11 @@
                inflation_dest.value = fed_record;
             } else if (send_fed_to == "tissuer") {
                console.log("set tissuer");
-               tissuer.value = fed_record;
+               tissuer.value = clone(fed_record);
+               issuer.value = clone(fed_record);
             } else if (send_fed_to == "issuer") {
                console.log("set issuer");
-               issuer.value = fed_record;
+               issuer.value = clone(fed_record);
             } else if (send_fed_to == "selling_asset_issuer") {
                console.log("set selling_asset_issuer");
                selling_asset_issuer.value = fed_record;
@@ -1302,7 +1302,7 @@
         console.log("sendPaymentTransaction");
         var key = StellarSdk.Keypair.fromSeed(seed.value);
         if (asset.value == "native" || asset.value == "XLM") {
-          issuer.value = "";
+          //issuer.value = "";
           console.log("asset: native (XLM)");
           var asset_obj = new StellarSdk.Asset.native();
           //if (dest_balance.value == 0){
@@ -1652,11 +1652,11 @@
                  //console.log(asset_type2);
                  //console.log(address);
                  //console.log(limit);
-                 asset = new StellarSdk.Asset(asset_type2, address);
+                 var asset3 = new StellarSdk.Asset(asset_type2, address);
                  if (limit.length == 0){
-                   return StellarSdk.Operation.changeTrust({asset: asset});
+                   return StellarSdk.Operation.changeTrust({asset: asset3});
                  } else {
-                   return StellarSdk.Operation.changeTrust({asset: asset,limit: limit}); 
+                   return StellarSdk.Operation.changeTrust({asset: asset3,limit: limit}); 
                  }
                }
 
@@ -2828,7 +2828,7 @@ function display_history(page){
 
      lock_account.onchange=function(){
        console.log("change in lock_account detected");
-       tissuer.value = destination.value;
+       tissuer.value = clone(destination.value);
      }
 
      
@@ -2865,7 +2865,9 @@ function display_history(page){
         dest_seed.value = new_keypair.seed();
         //update_balances();
         amount.value = 20.1;
-        issuer.value = "";
+        //issuer.value = "";
+        memo.value = "";
+        memo_mode.value = "memo.text";
         asset.value = "native";
         console.log("new_account:");
         console.log(new_account.checked);
@@ -3248,9 +3250,9 @@ function display_history(page){
       change_network.addEventListener("click", function(event) {
         change_network_func();
         set_default_colors();
-        asset.value = default_asset_code.value;
-        issuer.value = default_issuer.value;
-        tissuer.value = default_issuer.value;
+        asset.value = clone(default_asset_code.value);
+        issuer.value = clone(default_issuer.value);
+        tissuer.value = clone(default_issuer.value);
         if (default_asset_code.value != "native"){
           tasset.value = default_asset_code.value;
         } else {
