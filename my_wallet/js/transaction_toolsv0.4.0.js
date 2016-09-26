@@ -83,6 +83,7 @@
       var home_domain = document.getElementById("home_domain");
       var sound_src = document.getElementById("sound_src");
       var auto_allow_trust = document.getElementById("auto_allow_trust");
+      var dec_round = document.getElementById("dec_round");
 
       
       var asset_obj = new StellarSdk.Asset.native();
@@ -1066,10 +1067,10 @@
         }
         ar[1] = font_color + effect.details.sold_asset_code + "</font>";
         ar[2] = font_color + effect.details.sold_asset_issuer + "</font>";
-        ar[3] = font_color + effect.details.sold_amount + "</font>";
+        ar[3] = font_color + deci_round(effect.details.sold_amount) + "</font>";
         ar[4] = font_color + effect.details.bought_asset_code + "</font>"; 
         ar[5] = font_color + effect.details.bought_asset_issuer + "</font>";
-        ar[6] = font_color + effect.details.bought_amount + "</font>"; 
+        ar[6] = font_color + deci_round(effect.details.bought_amount) + "</font>"; 
         ar[7] = font_color + effect.creationDate.toISOString() + "</font>";             
         insRow(ar,"table_trade_history"); 
         //table_sort_offers.refresh();        
@@ -1117,12 +1118,12 @@
                
         ar[0] = font_color + records_obj.destination_asset_code + " </font>";      
         ar[1] = font_color + records_obj.destination_asset_issuer + "</font>";         
-        ar[2] = font_color + records_obj.destination_amount + "</font>";
+        ar[2] = font_color + deci_round(records_obj.destination_amount) + "</font>";
         ar[3] = font_color + records_obj.path[0].asset_code + "</font>"; 
         ar[4] = font_color + records_obj.path[0].asset_issuer + "</font>";  
         ar[5] = font_color + records_obj.source_asset_code + "</font>";
         ar[6] = font_color + records_obj.source_asset_issuer + "</font>";
-        ar[7] = font_color + records_obj.source_amount + "</font>";                      
+        ar[7] = font_color + deci_round(records_obj.source_amount) + "</font>";                      
         insRow(ar,"table_paths");        
       } 
             
@@ -1138,13 +1139,13 @@
         var green = '<font color="green">';
         var font_color = green;
         var price_r = Number(records_obj.price_r.d) / Number(records_obj.price_r.n);
-        console.log ("records_obj.price.d");
-        console.log(records_obj.price_r.d);
-        console.log("records_obj.price_r.n");
-        console.log(records_obj.price_r.n);        
-        ar[0] = font_color + records_obj.price + " </font>";      
-        ar[1] = font_color + price_r + "</font>";         
-        ar[2] = font_color + records_obj.amount + "</font>";                       
+        //console.log ("records_obj.price.d");
+        //console.log(records_obj.price_r.d);
+        //console.log("records_obj.price_r.n");
+        //console.log(records_obj.price_r.n);        
+        ar[0] = font_color + deci_round(records_obj.price) + " </font>";      
+        ar[1] = font_color + deci_round(price_r) + "</font>";         
+        ar[2] = font_color + deci_round(records_obj.amount) + "</font>";                       
         insRow(ar,"table_orderbook_ask");        
       }  
 
@@ -1156,14 +1157,18 @@
         var green = '<font color="green">';
         var font_color = green;
         var price_r = Number(records_obj.price_r.d) / Number(records_obj.price_r.n);
-        console.log ("records_obj.price.d");
-        console.log(records_obj.price_r.d);
-        console.log("records_obj.price_r.n");
-        console.log(records_obj.price_r.n);        
-        ar[0] = font_color + records_obj.price + " </font>";      
-        ar[1] = font_color + price_r + "</font>";         
-        ar[2] = font_color + records_obj.amount + "</font>";                       
+        //console.log ("records_obj.price.d");
+        //console.log(records_obj.price_r.d);
+        //console.log("records_obj.price_r.n");
+        //console.log(records_obj.price_r.n);        
+        ar[0] = font_color + deci_round(records_obj.price) + " </font>";      
+        ar[1] = font_color + deci_round(price_r) + "</font>";         
+        ar[2] = font_color + deci_round(records_obj.amount) + "</font>";                       
         insRow(ar,"table_orderbook_bid");        
+      }
+
+      function deci_round(num){
+         return Number(num).toFixed(dec_round.value)
       }  
 
       function reset_horizon_server2() {
@@ -2122,7 +2127,8 @@
           set_default_colors();
           save_default_settings();
           reset_defaults = false;
-          auto_allow_trust.checked = false; 
+          auto_allow_trust.checked = false;
+          dec_round.value = 4; 
           return;
         }
         var obj = JSON.parse(def_settings_json);
@@ -2133,7 +2139,7 @@
         url.value = obj.url;
         port.value = obj.port;
         secure.value = obj.secure;         
-        if (typeof obj.sound_src != "undefined" && reset_defaults != true){
+        if (typeof obj.dec_round != "undefined" && reset_defaults != true){
           sound_src.value = obj.sound_src;
           default_asset_code.value = obj.default_asset_code;
           default_issuer.value = obj.default_issuer;
@@ -2141,6 +2147,7 @@
           selling_asset_issuer.value = default_issuer.value;
           auto_trust.value = obj.auto_trust;
           auto_allow_trust.checked = false;
+          dec_round.value = obj.dec_round;
         } else {
           sound_src.value = "sound/coin-drop-3.mp3";
           default_asset_code.value = "FUNT";
@@ -2152,7 +2159,8 @@
           top_page_title.value = "Funtracker.site Wallet";
           background_img.value = "";
           auto_trust.value = "6";
-          auto_allow_trust.checked = false;     
+          auto_allow_trust.checked = false;
+          dec_round.value = 4;     
           save_default_settings(); 
         }       
         if (typeof obj.top_image_url != "undefined" && obj.top_image_url.length > 3) {
@@ -2212,6 +2220,7 @@
         obj.default_issuer = default_issuer.value;
         obj.auto_trust = auto_trust.value;
         obj.sound_src = sound_src.value;
+        obj.dec_round = dec_round.value;
         var string = JSON.stringify(obj);
         localStorage.setItem("def_settings", string);
       }
@@ -2544,11 +2553,11 @@ function display_history(page){
     
     ar[1] = font_color + page[i].type + "</font>";
     ar[2] = font_color + page[i].asset_code + "</font>";
-    ar[3] = font_color + page[i].amount + "</font>";  
+    ar[3] = font_color + deci_round(page[i].amount) + "</font>";  
     if (page[i].asset_code == "XLM" || page[i].asset_code == "native") {
-      ar[4] =  font_color + page[i].bal.native + "</font>";
+      ar[4] =  font_color + deci_round(page[i].bal.native) + "</font>";
     } else {
-      ar[4] = font_color + fix7dec(find_asset_balance(page[i].bal.balances,page[i].asset_code,"")) + "</font>";
+      ar[4] = font_color + deci_round(find_asset_balance(page[i].bal.balances,page[i].asset_code,"")) + "</font>";
     }
     ar[5] = font_color + page[i].memo + "</font>";
     ar[6] = font_color + page[i].created_at + "</font>";
@@ -2574,8 +2583,12 @@ function display_history(page){
            ar[0] = account_obj.balances[i].asset_code;
            ar[1] = account_obj.balances[i].asset_issuer;
          }
-         ar[2] = account_obj.balances[i].balance;
-         ar[3] = account_obj.balances[i].limit;
+         ar[2] = deci_round(account_obj.balances[i].balance);
+         if (typeof account_obj.balances[i].limit !== "undefined"){
+           ar[3] = Number(account_obj.balances[i].limit).toFixed(0);
+         } else {
+           ar[3] = account_obj.balances[i].limit;
+         }  
          insRow(ar,"table_asset");
        }
     }
@@ -2647,8 +2660,8 @@ function display_history(page){
            ar[1] = offer_obj.records[i].selling.asset_code;
            ar[2] = offer_obj.records[i].selling.asset_issuer;  
          }                
-         ar[3] = offer_obj.records[i].amount;
-         ar[4] = offer_obj.records[i].price; 
+         ar[3] = deci_round(offer_obj.records[i].amount);
+         ar[4] = deci_round(offer_obj.records[i].price); 
          if (offer_obj.records[i].buying.asset_type == "native") {
            ar[5] = "XLM";
            ar[6] = "";
