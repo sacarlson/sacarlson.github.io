@@ -476,19 +476,20 @@
       Sell Issuer: <input id="orderbook_sell_issuer" type="text" size="65" value="" /><br />
       Buy Asset: <input id="orderbook_buy_asset" type="text" size="15" value="" /> :Base Asset<br />
       Buy Issuer: <input id="orderbook_buy_issuer" type="text" size="65" value="" /><br />
-       <br /><input id="check_orderbook_ask_button" type="button" value="Check_OrderBook_Asks" />_____
-       <input id="check_orderbook_bid_button" type="button" value="Check_OrderBook_Bids" /><br /><br />
-       <br /><input id="better_bid_ask_button" type="button" value="Better_Bid_Ask" /> by: <input id="better_bid_ask" type="text" size="6" value="" /> Percent <br />
-        <p>Better bid will setup an order that is +- precent more or less than your results seen in OrderBook table bellow</p>
-        <p>Example if you set Better bid to +10% on an ask it will prepare to setup an order at a price 10% more than the price seen in Orderbook</p><br />
+       <br /><input id="check_orderbook_button" type="button" value="Check_OrderBook" /><br /><br />
+       <br /><input id="better_ask_button" type="button" value="Better_Ask" /> by: <input id="better_bid_ask" type="text" size="6" value="" /> Percent <input id="better_bid_button" type="button" value="Better_Bid" /><br />
+        <p>Better bid will setup an order in Create Offers that is +- precent more or less than your results seen in OrderBook tables seen bellow</p>
+        <p>Example if you set Better_Bid to -10% on a bid it will prepare to setup an order at a bid price -10% less than the best price seen in Orderbook</p>
+        <p>Example if you set Better_Ask to 10  on an ask it will prepare to setup an order at an ask price +10% more than best price seen in Orderbook</p>
       <br />
+      <p> Ask Table </p> 
       <! <table id="table_offers" class="table table-hover table-striped table-bordered">
-      <table id="table_orderbook" class="table table-hover table-striped table-bordered">
+      <table id="table_orderbook_ask" class="table table-hover table-striped table-bordered">
         <thead>
           <tr>           
             <th data-sort-method='number' >Price</th>
             <th data-sort-method='number' >Price R</th>
-            <th data-sort-method='number' >Amount (qty ask/bid)</th>                       
+            <th data-sort-method='number' >Amount (Qty Ask)</th>                       
           </tr>
         </thead>
         <tbody>
@@ -498,7 +499,27 @@
              <td></td>             
           </tr>
        </tbody>
-     </table>             
+     </table>  
+
+     <br />
+      <p> Bid Table </p> 
+      <! <table id="table_offers" class="table table-hover table-striped table-bordered">
+      <table id="table_orderbook_bid" class="table table-hover table-striped table-bordered">
+        <thead>
+          <tr>           
+            <th data-sort-method='number' >Price</th>
+            <th data-sort-method='number' >Price R</th>
+            <th data-sort-method='number' >Amount (Qty Bid)</th>                       
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+             <td></td> 
+             <td></td>
+             <td></td>             
+          </tr>
+       </tbody>
+     </table>               
    </div>
 
    <div id="create_offer" class="tab-pane fade in" >

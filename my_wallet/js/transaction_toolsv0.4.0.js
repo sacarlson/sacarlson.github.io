@@ -70,7 +70,7 @@
       var paths_destination_asset = document.getElementById("paths_destination_asset");
       var paths_destination_asset_issuer = document.getElementById("paths_destination_asset_issuer");
       var paths_destination_amount = document.getElementById("paths_destination_amount");
-      var orderbook_buy_asse = document.getElementById("orderbook_buy_asse");
+      var orderbook_buy_asset = document.getElementById("orderbook_buy_asset");
       var orderbook_buy_issuer = document.getElementById("orderbook_buy_issuer");
       var orderbook_sell_asset = document.getElementById("orderbook_sell_asset");
       var orderbook_sell_issuer = document.getElementById("orderbook_sell_issuer");
@@ -312,7 +312,9 @@
       var table_sort_asset = new Tablesort(document.getElementById('table_asset'));
       var table_sort_trades = new Tablesort(document.getElementById('table_trade_history'));
       var table_sort_paths = new Tablesort(document.getElementById('table_paths'));
-      var table_sort_orderbook = new Tablesort(document.getElementById('table_orderbook'));
+      //var table_sort_orderbook = new Tablesort(document.getElementById('table_orderbook'));
+      var table_sort_orderbook_ask = new Tablesort(document.getElementById('table_orderbook_ask'));
+      var table_sort_orderbook_bid = new Tablesort(document.getElementById('table_orderbook_bid'));
 
      // var xmlhttp = new XMLHttpRequest();
 
@@ -1128,7 +1130,7 @@
             //<th data-sort-method='number' >Price R</th>
             //<th data-sort-method='number' >Amount (qty ask/bid)</th>      
 
-      function insert_orderbook_table(records_obj){        
+      function insert_orderbook_table_ask(records_obj){        
         //console.log("insert_orderbook_table");
         //console.log(records_obj);
         var ar = [];
@@ -1143,7 +1145,25 @@
         ar[0] = font_color + records_obj.price + " </font>";      
         ar[1] = font_color + price_r + "</font>";         
         ar[2] = font_color + records_obj.amount + "</font>";                       
-        insRow(ar,"table_orderbook");        
+        insRow(ar,"table_orderbook_ask");        
+      }  
+
+      function insert_orderbook_table_bid(records_obj){        
+        //console.log("insert_orderbook_table");
+        //console.log(records_obj);
+        var ar = [];
+        var red = '<font color="red">';
+        var green = '<font color="green">';
+        var font_color = green;
+        var price_r = Number(records_obj.price_r.d) / Number(records_obj.price_r.n);
+        console.log ("records_obj.price.d");
+        console.log(records_obj.price_r.d);
+        console.log("records_obj.price_r.n");
+        console.log(records_obj.price_r.n);        
+        ar[0] = font_color + records_obj.price + " </font>";      
+        ar[1] = font_color + price_r + "</font>";         
+        ar[2] = font_color + records_obj.amount + "</font>";                       
+        insRow(ar,"table_orderbook_bid");        
       }  
 
       function reset_horizon_server2() {
@@ -2705,13 +2725,13 @@ function display_history(page){
        });              
      }
  
-    var bidask;
-    var best_bid_ask;
+    var best_bid = 0;
+    var best_ask  = 9999999999;
 
-    function check_orderbook(bidask_in) {
-      bidask = bidask_in;
-      clear_table("table_orderbook");
-      console.log("check_orderbook bidask: " + bidask);
+    function check_orderbook() {
+      console.log("check_orderbook");
+      clear_table("table_orderbook_ask");
+      clear_table("table_orderbook_bid");
       // activated with check_orderbook_button click
       // orderbook_buy_asset, orderbook_buy_issuer, orderbook_sell_asset, orderbook_sell_issuer
       if (orderbook_buy_asset.value.length == 0){
@@ -2748,44 +2768,28 @@ function display_history(page){
      .then(function(result) {
         console.log("check_orderbook results");
         console.log(result);
-        var records;
-        if (bidask == "ask"){
-          records = result.asks;
-        } else {
-          records = result.bids;
+        var price_r;     
+        for (var i = 0; i < result.asks.length; i++) {         
+          price_r = Number(result.asks[i].price_r.d)/Number(result.asks[i].price_r.n);            
+          if (best_ask > price_r ){
+             best_ask = price_r; 
+          } 
+          insert_orderbook_table_ask(result.asks[i])
         }
-        if (bidask == "ask"){
-          best_bid_ask = 9999999999;
-        } else {
-          best_bid_ask = 0;
-        }
-        var price_r;
-        for (var i = 0; i < records.length; i++) {
-          if (bidask == "ask"){
-            price_r = Number(records[i].price_r.d)/Number(records[i].price_r.n);            
-            if (best_bid_ask > price_r ){
-               best_bid_ask = price_r; 
-            } 
-            console.log("price_r: ");
-            console.log(price_r);
-            console.log("best_bid_ask");
-            console.log(best_bid_ask);
-          } else {
-            if (best_bid_ask < Number(records[i].price)){
-               best_bid_ask = Number(records[i].price);
-            }
-            console.log("best_bid_ask: ");
-            console.log(best_bid_ask);
-            console.log("Number(records[i].price)");
-            console.log(Number(records[i].price));
+
+        for (var i = 0; i < result.bids.length; i++) {                 
+          if (best_bid < Number(result.bids[i].price)){
+               best_bid = Number(result.bids[i].price);
           }
-          insert_orderbook_table(records[i]);
-        } 
+          insert_orderbook_table_bid(result.bids[i])
+        }
+        console.log("best_bid: " + best_bid);
+        console.log("best_ask: " + best_ask);  
       })
      .catch(function(err) { console.log(err); });
     }
 
-    function better_bid_ask_function() {
+    function better_bid_ask_function(bid_ask) {
 // orderbook_buy_asset, orderbook_buy_issuer, orderbook_sell_asset, orderbook_sell_issuer
 //selling_asset_code.value, selling_asset_issuer.value, buying_asset_code.value, buying_asset_issuer.value, selling_amount.value, selling_price.value
       selling_asset_code.value = orderbook_sell_asset.value;
@@ -2799,8 +2803,13 @@ function display_history(page){
       //selling_asset_issuer.value = orderbook_buy_issuer.value;
       //buying_asset_code.value = orderbook_sell_asset.value;
       //buying_asset_issuer.value = orderbook_sell_issuer.value;
-      selling_price.value = (best_bid_ask + (best_bid_ask * (Number(better_bid_ask.value)/100)));
-      console.log("selling_price: " + selling_price.value);
+      if (bid_ask == "ask"){
+        selling_price.value = (best_ask + (best_ask * (Number(better_bid_ask.value)/100)));
+        console.log("selling_price: " + selling_price.value);
+      } else {
+        selling_price.value = (best_bid + (best_bid * (Number(better_bid_ask.value)/100)));
+        console.log("selling_price: " + selling_price.value);
+      }
       //location.href = "#create_offer";
     }
 
@@ -2840,17 +2849,21 @@ function display_history(page){
         }
       }
 
-      better_bid_ask_button.addEventListener("click", function(event) {
-        //check_orderbook("ask");
-        better_bid_ask_function();
-      }); 
-        
-      check_orderbook_ask_button.addEventListener("click", function(event) {
-        check_orderbook("ask");
-      }); 
+      
 
-      check_orderbook_bid_button.addEventListener("click", function(event) {
-        check_orderbook("bid");
+      better_ask_button.addEventListener("click", function(event) {
+        //check_orderbook("ask");
+        better_bid_ask_function("ask");
+      });
+
+      better_bid_button.addEventListener("click", function(event) {
+        //check_orderbook("ask");
+        better_bid_ask_function("bid");
+      });
+              
+
+      check_orderbook_button.addEventListener("click", function(event) {
+        check_orderbook();
       });
 
       check_paths.addEventListener("click", function(event) {
