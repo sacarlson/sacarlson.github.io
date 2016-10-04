@@ -1,0 +1,187 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<! <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Stellar Asset Price History</title>
+ 
+ <link rel="stylesheet" href="style.css">
+ <style type="text/css">
+   p, h1, h2, h3, h4, h5, th { color: red; }
+ </style> 
+<script src='tablesort.min.js'></script>
+
+
+
+<script>
+ "use strict";
+  window.addEventListener("load", function(event) {
+    var t1 = new Tablesort(document.getElementById('table'));
+    var e = 0;
+
+    var socket;
+    var url = "ws://b.funtracker.site:9494";
+    var action = '{"action":"get_ticker_list"}';
+    
+      //http://www.funtracker.site/chart/index.html?json=%7b%22asset_code%22:%22THB%22,%22base_code%22:%22USD%22,%22url_ws%22:%22ws://b.funtracker.site:9494%22%7d
+     create_socket();
+
+      function create_socket() {
+
+        socket = new WebSocket(url, "echo-protocol");
+      
+        socket.addEventListener("open", function(event) {
+          console.log("Websocket Connected");
+          socket.send(action);
+        });
+   
+        
+
+        // Display messages received from the server
+        socket.addEventListener("message", function(event) {
+           var data = JSON.parse(event.data);
+           console.log("data");
+           console.log(data);
+           var link;
+           var link_start = '<a href="./chart.html?json=%7b%22asset_code%22:%22';
+           var link_mid = '%22,%22base_code%22:%22';
+           var link_end = '%22%7d">Chart_link</a>';
+           if (data.action == "get_ticker_list"){
+              console.log("get_ticker_list detected");
+              for (var key in data.asset_pairs) {
+                //console.log(key, data.asset_pairs[key]);
+                link = link_start + data.asset_pairs[key][0] +link_mid + data.asset_pairs[key][2] + link_end;
+                data.asset_pairs[key].unshift(link);
+                data.asset_pairs[key].unshift(data.asset_pairs[key][5]);
+                data.asset_pairs[key].unshift(key);
+                data.asset_pairs[key].pop();
+                data.asset_pairs[key][4] = data.asset_pairs[key][4].substring(0, 5) + "..."
+                data.asset_pairs[key][6] = data.asset_pairs[key][6].substring(0, 5) + "..."
+                //console.log("link: " + link);
+                //data.asset_pairs[key][6] = link;
+                insRow(data.asset_pairs[key],"table");
+              }
+           }
+        });
+
+
+        // Display any errors that occur
+        socket.addEventListener("error", function(event) {
+          console.log("socket error: " + event);
+        });
+
+        socket.addEventListener("close", function(event) {
+          console.log("socket close");
+        });
+      }
+
+     function color_text(to_color) {
+        console.log("change_color_text" + to_color);
+       }
+
+     function change_color(text_color,background_color) {
+        console.log("change_color_text");
+        document.body.style.backgroundColor = background_color;
+        document.body.style.color = text_color;
+        var el = [
+	document.getElementsByTagName('p'),
+	document.getElementsByTagName('h1'),
+	document.getElementsByTagName('h2'),
+	document.getElementsByTagName('h3'),
+	document.getElementsByTagName('h4'),
+        document.getElementsByTagName('h5'),
+        document.getElementsByTagName('th'),
+	];
+        var i;
+        var j;
+	for ( i in el) {
+	  for (j in el[i]) {
+	    if (el[i][j].style){
+	     el[i][j].style.color = text_color;
+            }
+	  }
+	}
+      } 
+
+      var t_color = "black";
+      change_color(t_color,"#777");
+      //document.body.style.backgroundImage = 'url(' + 'images/small_waves_big_slow.gif' + ')';
+ 
+      //document.body.style.backgroundColor = "#777";
+     // array = [1,2,3,4]
+      function insRow(array,id) {
+        var cells = [];
+        var x = document.getElementById(id).insertRow(1);
+        for(var i = 0; i < array.length; i++) {
+          cells[i] = x.insertCell(i);        
+          cells[i].innerHTML = array[i];        
+        }     
+      }
+
+      
+
+  function clear_table(id) {
+    // stupid clear fix to allow table sort to work
+    console.log("clear_table");
+    var col_count = document.getElementById(id).rows[0].cells.length;      
+    var myTable = document.getElementById(id);
+    var rowCount = myTable.rows.length;
+    for (var x=rowCount-2; x>0; x--) {    
+      myTable.deleteRow(x);
+    }
+    var first_row = document.getElementById(id).rows[1].cells;
+    for (var x=col_count-1; x>=0; x--) {   
+      first_row[x].innerHTML = "";
+    }   
+ }
+     
+      
+  });
+
+</script>
+
+
+ 
+</head>
+<body>
+ <h1> Funtracker.site Asset Price History </h1>
+ <p> Values from the Stellar.org network order books</p>
+
+  <div style="overflow-x:auto;">
+	<table  id="table" class="not_sort1">
+		<thead>
+			<tr>
+				<th><h3>Asset Pair</h3></th>
+                                <th><h3>Ask Price</h3></th>
+                                <th><h3>History Chart</h3></th>
+				<th><h3>Asset Code</h3></th>
+				<th><h3>Asset Issuer</h3></th>
+				<th><h3>Asset Base</h3></th>
+				<th><h3>Asset Base Issuer</h3></th>                         				
+			</tr>
+		</thead>
+		<tbody>
+			<tr>				
+				
+			</tr>
+  			
+			
+		</tbody>
+  </table>
+	
+</div>	
+
+
+  
+</div>
+
+  <script type="text/javascript">
+  //window.addEventListener("load", function(event) {
+  console.log("here2?");
+
+  console.log("after");
+  </script>
+	
+</body>
+</html>

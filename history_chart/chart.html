@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chart</title>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+	<nav class="navbar navbar-default navbar-static-top">
+	    <div class="container">
+	        <div class="navbar-header">
+	            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+	            	<span class="sr-only">Toggle navigation</span>
+	            	<span class="icon-bar"></span>
+	            	<span class="icon-bar"></span>
+	            	<span class="icon-bar"></span>
+	            </button>
+	            <a class="navbar-brand" href="index.php">Chart</a>
+	        </div>
+	    </div>
+	</nav>
+
+
+    <div class="container" id="container">
+
+
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://code.highcharts.com/stock/highstock.js"></script>
+	<script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
+<script type="text/javascript">
+
+  var socket;
+  var url = "ws://b.funtracker.site:9494";
+  var action = '{"action":"get_ticker","timestamp_end":"1474299960","mode":"2","asset_code":"THB","base_asset_code":"USD"}';
+  //var action = '{"action":"get_ticker","timestamp_end":"1474299960","mode":"2","asset_code":"USD","base_asset_code":"THB"}';
+
+  // mode 2 is array with 5 elements timestamp, ask,ask,ask,ask
+  //{"action":"get_ticker","limit":"720","mode":"2"}';
+  // mode 1 is array with added 6 element with a[5] = ask_volume
+  //{"action":"get_ticker","limit":"720","mode":"1"}';
+  // sample rate is 1 per hour so limit 720 should provide up to 1 months data
+
+  // pull json params from url link 
+  //http://www.funtracker.site/chart/index.html?json=%7B%22asset_code%22:%22THB%22,%22base_code%22:%22USD%22%7D
+  // optional you can add web socket url in params
+  //http://www.funtracker.site/chart/index.html?json=%7B%22asset_code%22:%22THB%22,%22base_code%22:%22USD%22,%22url_ws%22:%22ws://b.funtracker.site:9494%22%7D
+  var json_param = window.location.href.match(/\?json=(.*)/);
+
+  var action_start = '{"action":"get_ticker","mode":"2","asset_code":"'
+  var action_mid = '","base_asset_code":"'
+  var action_end = '"}'
+
+  if (json_param != null) {
+    //escape(str)
+    console.log("json_param detected");
+    json_param = unescape(json_param[1]);
+    var params = JSON.parse(json_param);
+    console.log(params);
+    //console.log(params["accountID"]);
+    //console.log(params["env_b64"]);
+    if (typeof params["url_ws"] != "undefined") {
+       console.log("url_ws: " + params["url_ws"]);
+       url = params["url_ws"];
+    }
+
+    if (typeof params["base_code"] != "undefined" && typeof params["asset_code"] != "undefined") {
+       console.log("asset_code: " + params["asset_code"]);
+       console.log("base_code: " + params["base_code"]);
+       action = action_start + params["asset_code"] + action_mid + params["base_code"] + action_end;
+       console.log("action: " + action);
+    }
+  }
+  
+  var ohlc = [],
+      volume = [],
+      dataLength = 0,
+      // set the allowed units for data grouping
+      groupingUnits = [[  
+         'minute',
+         [1,10,30]
+    ], [
+         'hour',                         // unit name
+         [1,2,6,12]                            // allowed multiples
+    ], [
+         'day',
+         [1]
+    ], [
+         'week',
+         [4]
+      ]];
+
+  var currency_pair;
+
+  create_socket();
+
+      function create_socket() {
+
+        socket = new WebSocket(url, "echo-protocol");
+      
+        socket.addEventListener("open", function(event) {
+          console.log("Websocket Connected");
+          socket.send(action);
+        });
+
+        // Display messages received from the server
+        socket.addEventListener("message", function(event) {
+           var data = JSON.parse(event.data);
+           console.log("data");
+           console.log(data);
+           if (data.action == "get_ticker"){
+             currency_pair =  data.base_asset_code + "/" +  data.asset_code
+             plot_graph(format_data(data.data));
+           }
+        });
+
+        // Display any errors that occur
+        socket.addEventListener("error", function(event) {
+          console.log("socket error: " + event);
+        });
+
+        socket.addEventListener("close", function(event) {
+          console.log("socket close");
+        });
+      }
+
+  function format_data(data_in){
+            console.log("data c");
+            console.log(data_in);
+            dataLength = data_in.length;
+          
+            var i = 0;
+
+        for (i; i < dataLength; i += 1) {
+            ohlc.push([
+                data_in[i][0], // the date
+                data_in[i][1], // open
+                data_in[i][2], // high
+                data_in[i][3], // low
+                data_in[i][4] // close
+            ]);
+
+            volume.push([
+                data_in[i][0], // the date
+                data_in[i][5] // the volume
+            ]);
+        }
+     return 
+  }
+
+  function plot_graph(data) {
+    $('#container').highcharts('StockChart', {
+           //console.log("data b");
+           //console.log(data);
+
+      
+	   rangeSelector: {
+                allButtonsEnabled: true,
+                selected: 0,
+                enabled: true
+            },
+
+            title: {
+                text: currency_pair + ' Historical Rate'
+            },
+
+            yAxis: [{
+                labels: {
+                    align: 'right',
+                    x: -3
+                },
+                title: {
+                    text: 'Ask to Bid'
+                },
+                height: '60%',
+                lineWidth: 2
+            }, {
+                labels: {
+                    align: 'right',
+                    x: -3
+                },
+                title: {
+                    text: 'Volume'
+                },
+                top: '65%',
+                height: '35%',
+                offset: 0,
+                lineWidth: 2
+            }],
+
+            series: [{
+                type: 'candlestick',
+                name: currency_pair ,
+                data: ohlc,
+                dataGrouping: {
+                     units: groupingUnits
+                }
+            }, {
+                type: 'column',
+                name: 'Volume',
+                data: volume,
+                yAxis: 1,
+                dataGrouping: {
+                    units: groupingUnits
+                }
+            }]
+        });
+  }
+
+  
+
+
+
+
+</script>
+</body>
+</html>
+
