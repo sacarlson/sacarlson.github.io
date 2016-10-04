@@ -62,6 +62,8 @@
       var selling_asset_code = document.getElementById("selling_asset_code");      
       var selling_asset_issuer = document.getElementById("selling_asset_issuer");
       var selling_price = document.getElementById("selling_price");
+      var selling_price_R = document.getElementById("selling_price_R");
+      var asset_pair_span = document.getElementById("asset_pair_span");
       var selling_amount = document.getElementById("selling_amount");
       var default_asset_code = document.getElementById("default_asset_code");
       var default_issuer = document.getElementById("default_issuer");
@@ -1131,24 +1133,6 @@
             //<th data-sort-method='number' >Price R</th>
             //<th data-sort-method='number' >Amount (qty ask/bid)</th>      
 
-      function insert_orderbook_table_ask(records_obj){        
-        //console.log("insert_orderbook_table");
-        //console.log(records_obj);
-        var ar = [];
-        var red = '<font color="red">';
-        var green = '<font color="green">';
-        var font_color = green;
-        var price_r = Number(records_obj.price_r.d) / Number(records_obj.price_r.n);
-        //console.log ("records_obj.price.d");
-        //console.log(records_obj.price_r.d);
-        //console.log("records_obj.price_r.n");
-        //console.log(records_obj.price_r.n);        
-        ar[0] = font_color + deci_round(records_obj.price) + " </font>";      
-        ar[1] = font_color + deci_round(price_r) + "</font>";         
-        ar[2] = font_color + deci_round(records_obj.amount) + "</font>";                       
-        insRow(ar,"table_orderbook_ask");        
-      }  
-
       function insert_orderbook_table_bid(records_obj){        
         //console.log("insert_orderbook_table");
         //console.log(records_obj);
@@ -1161,10 +1145,37 @@
         //console.log(records_obj.price_r.d);
         //console.log("records_obj.price_r.n");
         //console.log(records_obj.price_r.n);        
-        ar[0] = font_color + deci_round(records_obj.price) + " </font>";      
-        ar[1] = font_color + deci_round(price_r) + "</font>";         
-        ar[2] = font_color + deci_round(records_obj.amount) + "</font>";                       
+        //ar[0] = font_color + deci_round(records_obj.price) + " </font>";      
+        //ar[1] = font_color + deci_round(price_r) + "</font>";         
+        //ar[2] = font_color + deci_round(records_obj.amount * records_obj.price) + "</font>"; 
+     
+        ar[0] = font_color + deci_round(price_r) + "</font>";         
+        ar[1] = font_color + deci_round(records_obj.amount * records_obj.price) + "</font>";  
+        ar[2] = font_color + deci_round(price_r * records_obj.amount * records_obj.price) + "</font>";                      
         insRow(ar,"table_orderbook_bid");        
+      }  
+
+      function insert_orderbook_table_ask(records_obj){        
+        //console.log("insert_orderbook_table");
+        //console.log(records_obj);
+        var ar = [];
+        var red = '<font color="red">';
+        var green = '<font color="green">';
+        var font_color = green;
+        var price_r = Number(records_obj.price_r.d) / Number(records_obj.price_r.n);
+        //console.log ("records_obj.price.d");
+        //console.log(records_obj.price_r.d);
+        //console.log("records_obj.price_r.n");
+        //console.log(records_obj.price_r.n);        
+        //ar[0] = font_color + deci_round(records_obj.price) + " </font>";      
+        //ar[1] = font_color + deci_round(price_r) + "</font>";         
+        //ar[2] = font_color + deci_round(records_obj.amount) + "</font>";
+ 
+        //ar[0] = font_color + deci_round(records_obj.price) + " </font>";      
+        ar[0] = font_color + deci_round(price_r) + "</font>";         
+        ar[1] = font_color + deci_round(records_obj.amount) + "</font>";
+        ar[2] = font_color + deci_round(price_r * records_obj.amount) + "</font>";                             
+        insRow(ar,"table_orderbook_ask");        
       }
 
       function deci_round(num){
@@ -1753,6 +1764,9 @@
 
       function manageOfferOperation() {
            console.log("manageOfferOperation");
+            console.log("selling_priceR: " + selling_price_R.value);
+            console.log("selling_price: " + fix7dec(1.0 / selling_price_R.value));
+            selling_price.textContent = fix7dec(1.0 / selling_price_R.value);
             var opts = {};
             if (selling_asset_code.value == "XLM") {
               console.log("sell native");
@@ -1773,7 +1787,8 @@
               opts.buying = new StellarSdk.Asset(buying_asset_code.value, buying_asset_issuer.value);
             }
             opts.amount = selling_amount.value;
-            opts.price = selling_price.value;
+            //opts.price = selling_price.value;
+            opts.price = selling_price.textContent;
             if (cancel_offer_flag) {
               console.log("cancel_offer_flag true");
               opts.offerId = offerid.value;
@@ -2336,9 +2351,12 @@ function displayContents(contents) {
     // stupid clear fix to allow table sort to work
     // for reasons uknown can't delete the first data line, can only clear it's contents to keep sort working
     console.log("clear_table");
-    var col_count = document.getElementById(id).rows[0].cells.length;        
+    console.log("id: " + id);
+    var col_count = document.getElementById(id).rows[0].cells.length;
+    console.log("col_count: " + col_count);        
     var myTable = document.getElementById(id);
     var rowCount = myTable.rows.length;
+    console.log("rowCount: " + rowCount);
     for (var x=rowCount-2; x>0; x--) {
       myTable.deleteRow(x);
     }
@@ -2658,18 +2676,20 @@ function display_history(page){
            ar[2] = "";
          } else {        
            ar[1] = offer_obj.records[i].selling.asset_code;
-           ar[2] = offer_obj.records[i].selling.asset_issuer;  
+           ar[2] = offer_obj.records[i].selling.asset_issuer.substring(0, 5)+"...";  
          }                
          ar[3] = deci_round(offer_obj.records[i].amount);
          ar[4] = deci_round(offer_obj.records[i].price); 
+         //ar[5] = deci_round(offer_obj.records[i].price); 
+         ar[5] = deci_round(offer_obj.records[i].price * offer_obj.records[i].amount);           
          if (offer_obj.records[i].buying.asset_type == "native") {
-           ar[5] = "XLM";
-           ar[6] = "";
+           ar[6] = "XLM";
+           ar[7] = "";
          } else {     
-           ar[5] = offer_obj.records[i].buying.asset_code;
-           ar[6] = offer_obj.records[i].buying.asset_issuer;
+           ar[6] = offer_obj.records[i].buying.asset_code;
+           ar[7] = offer_obj.records[i].buying.asset_issuer.substring(0, 5)+"...";
          }
-         ar[7] = '<img src="../images/delete.png" onclick="confirm_delete_offer(this)" /> ';
+         ar[8] = '<img src="../images/delete.png" onclick="confirm_delete_offer(this)" /> ';
          //console.log("ar[7]: " );
          //console.log(ar[7]);
          insRow(ar,"table_offers");
@@ -2738,8 +2758,10 @@ function display_history(page){
        });              
      }
  
-    var best_bid = 0;
-    var best_ask  = 9999999999;
+    //var best_bid = 0;
+    //var best_ask  = 9999999999;
+    var best_bid = 9999999999;
+    var best_ask  = 0;
 
     function check_orderbook() {
       console.log("check_orderbook");
@@ -2775,26 +2797,29 @@ function display_history(page){
         }
         sell_asset = new StellarSdk.Asset(orderbook_sell_asset.value, orderbook_sell_issuer.value);
       }
+      asset_pair_span.textContent = orderbook_sell_asset.value +"/"+ orderbook_buy_asset.value;
       server.orderbook(buy_asset,sell_asset)
      //.trades()
      .call()
      .then(function(result) {
         console.log("check_orderbook results");
         console.log(result);
-        var price_r;     
+        var price_r;
+        // I'm not really sure why but it seems return from stellar sdk has ask and bid reversed
+        // in any case this seems to work for me this way at least at the moment, I may later look back at this as stupid    
         for (var i = 0; i < result.asks.length; i++) {         
           price_r = Number(result.asks[i].price_r.d)/Number(result.asks[i].price_r.n);            
-          if (best_ask > price_r ){
-             best_ask = price_r; 
-          } 
-          insert_orderbook_table_ask(result.asks[i])
+          if (best_bid > price_r ){
+             best_bid = price_r; 
+          }  
+          insert_orderbook_table_bid(result.asks[i])
         }
 
         for (var i = 0; i < result.bids.length; i++) {                 
-          if (best_bid < Number(result.bids[i].price)){
-               best_bid = Number(result.bids[i].price);
+          if (best_ask < Number(1.0 / result.bids[i].price)){
+               best_ask = Number(1.0 / result.bids[i].price);
           }
-          insert_orderbook_table_bid(result.bids[i])
+          insert_orderbook_table_ask(result.bids[i])
         }
         console.log("best_bid: " + best_bid);
         console.log("best_ask: " + best_ask);  
@@ -2812,16 +2837,16 @@ function display_history(page){
       buying_asset_code.value = orderbook_buy_asset.value;
       buying_asset_issuer.value = orderbook_buy_issuer.value;
 
-      //selling_asset_code.value = orderbook_buy_asset.value;
-      //selling_asset_issuer.value = orderbook_buy_issuer.value;
-      //buying_asset_code.value = orderbook_sell_asset.value;
-      //buying_asset_issuer.value = orderbook_sell_issuer.value;
-      if (bid_ask == "ask"){
-        selling_price.value = (best_ask + (best_ask * (Number(better_bid_ask.value)/100)));
-        console.log("selling_price: " + selling_price.value);
+      if (bid_ask == "bid"){
+        selling_price.textContent = fix7dec(1.0 / (best_bid + (best_bid * (Number(better_bid_ask.value)/100))));
+        selling_price_R.value = fix7dec((best_bid + (best_bid * (Number(better_bid_ask.value)/100))));
+        console.log("selling_price: " + selling_price.textContent);
+        console.log("selling_priceR: " + selling_price_R.value);
       } else {
-        selling_price.value = (best_bid + (best_bid * (Number(better_bid_ask.value)/100)));
-        console.log("selling_price: " + selling_price.value);
+        selling_price.textContent = fix7dec(1.0 / (best_ask + (best_ask * (Number(better_bid_ask.value)/100))));
+        selling_price_R.value = fix7dec((best_ask + (best_ask * (Number(better_bid_ask.value)/100))));
+        console.log("selling_price: " + selling_price.textContent);
+        console.log("selling_priceR: " + selling_price_R.value);
       }
       //location.href = "#create_offer";
     }
@@ -3320,7 +3345,7 @@ function display_history(page){
       var r = confirm("Confirm Delete Order Offer ID: " + offer_id + " ??");
       if (r == true) {
         console.log("You pressed OK! deleted Offer ID: " + offer_id );
-        offerTrans(col_data[0],col_data[1],col_data[2],"0",col_data[4],col_data[5],col_data[6]);
+        offerTrans(col_data[0],col_data[1],col_data[2],"0",col_data[5],col_data[6],col_data[7]);
         //var p=o.parentNode.parentNode;
         p.parentNode.removeChild(p);
       } else {

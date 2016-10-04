@@ -406,8 +406,9 @@
             <th class='sort-default' >Offer ID</th>  
             <th>Selling Asset</th>
             <th>Selling Issuer</th>
-            <th>Amount</th>
+            <th>Amount</th>            
             <th>Price</th>
+            <th>You Get</th>            
             <th>Buying Asset</th>
             <th>Buying Issuer</th>  
             <th>Cancel</th> 
@@ -416,6 +417,7 @@
         <tbody>
           <tr>
              <td></td> 
+             <td></td>
              <td></td>
              <td></td>
              <td></td>
@@ -482,15 +484,15 @@
         <p>Better bid will setup an order in Create Offers that is +- precent more or less than your results seen in OrderBook tables seen bellow</p>
         <p>Example if you set Better_Bid to -10% on a bid it will prepare to setup an order at a bid price -10% less than the best price seen in Orderbook</p>
         <p>Example if you set Better_Ask to 10  on an ask it will prepare to setup an order at an ask price +10% more than best price seen in Orderbook</p>
-      <br />
-      <p> Ask Table </p> 
+      <br /> <h3> <span id="asset_pair_span"></span> </h3> 
+      <p> Bid Table </p>   
       <! <table id="table_offers" class="table table-hover table-striped table-bordered">
-      <table id="table_orderbook_ask" class="table table-hover table-striped table-bordered">
+      <table id="table_orderbook_bid" class="table table-hover table-striped table-bordered">
         <thead>
           <tr>           
-            <th data-sort-method='number' >Price</th>
-            <th data-sort-method='number' >Price R</th>
-            <th data-sort-method='number' >Amount (Qty Ask)</th>                       
+            <th data-sort-method='number' >Bid</th>            
+            <th data-sort-method='number' >Amount</th>
+            <th data-sort-method='number' >Value</th>                       
           </tr>
         </thead>
         <tbody>
@@ -503,14 +505,14 @@
      </table>  
 
      <br />
-      <p> Bid Table </p> 
+      <p> Ask Table </p> 
       <! <table id="table_offers" class="table table-hover table-striped table-bordered">
-      <table id="table_orderbook_bid" class="table table-hover table-striped table-bordered">
+      <table id="table_orderbook_ask" class="table table-hover table-striped table-bordered">
         <thead>
           <tr>           
-            <th data-sort-method='number' >Price</th>
-            <th data-sort-method='number' >Price R</th>
-            <th data-sort-method='number' >Amount (Qty Bid)</th>                       
+            <th data-sort-method='number' >Ask</th>
+            <th data-sort-method='number' >Amount</th>
+            <th data-sort-method='number' >Value</th>                       
           </tr>
         </thead>
         <tbody>
@@ -538,9 +540,12 @@
               <button type="button" class="btn btn-info" id="fed_lookup_selling_asset_issuer" >Fed_Lookup</button>
             </span>
           </div>
-          Selling Amount:<br /> <input id="selling_amount" size="14" value = "" /> <br />
-          Selling Price:<br /> <input id="selling_price" size="14" value = "" /> <br /> <br /> 
-          Buying Asset_code:<br /> <input id="buying_asset_code" size="14" value = "" /> <br />
+          Selling Amount:  Number of selling asset you are selling.
+          <br /> <input id="selling_amount" size="14" value = "" /> <br />
+          Selling Price:  Number of buying asset expected for 1 selling asset.
+          <br /> <input id="selling_price_R" size="14" value = "" />  Selling PriceR <span id="selling_price"></span><br /> <br /> 
+          Buying Asset_code:
+          <br /> <input id="buying_asset_code" size="14" value = "" /> <br />
           <label for="buying_asset_issuer"> Buying Asset Issuer:</label>
           <div class="input-group">
              <input type="text" class="form-control" id="buying_asset_issuer" value = "" />
