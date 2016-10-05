@@ -29,7 +29,8 @@
 
       function create_socket() {
 
-        socket = new WebSocket(url, "echo-protocol");
+        //socket = new WebSocket(url, "echo-protocol");
+        socket = new WebSocket(url);
       
         socket.addEventListener("open", function(event) {
           console.log("Websocket Connected");
@@ -47,20 +48,22 @@
            var link_start = '<a href="./chart.html?json=%7b%22asset_code%22:%22';
            var link_mid = '%22,%22base_code%22:%22';
            var link_end = '%22%7d">Chart_link</a>';
+           var array_table = [];
            if (data.action == "get_ticker_list"){
               console.log("get_ticker_list detected");
-              for (var key in data.asset_pairs) {
                 //console.log(key, data.asset_pairs[key]);
+              for (var key in data.asset_pairs) {
                 link = link_start + data.asset_pairs[key][0] +link_mid + data.asset_pairs[key][2] + link_end;
-                data.asset_pairs[key].unshift(link);
-                data.asset_pairs[key].unshift(data.asset_pairs[key][5]);
-                data.asset_pairs[key].unshift(key);
-                data.asset_pairs[key].pop();
-                data.asset_pairs[key][4] = data.asset_pairs[key][4].substring(0, 5) + "..."
-                data.asset_pairs[key][6] = data.asset_pairs[key][6].substring(0, 5) + "..."
-                //console.log("link: " + link);
-                //data.asset_pairs[key][6] = link;
-                insRow(data.asset_pairs[key],"table");
+                console.log("link: " + link);
+                array_table[0] = key;
+                array_table[1] = data.asset_pairs[key][5];
+                array_table[2] = data.asset_pairs[key][4];
+                array_table[3] = link;
+                array_table[4] = data.asset_pairs[key][0];
+                array_table[5] = data.asset_pairs[key][1].substring(0, 5) + "...";
+                array_table[6] = data.asset_pairs[key][2];
+                array_table[7] = data.asset_pairs[key][3].substring(0, 5) + "...";
+                insRow(array_table,"table");
               }
            }
         });
@@ -153,6 +156,7 @@
 		<thead>
 			<tr>
 				<th><h3>Asset Pair</h3></th>
+                                <th><h3>Bid Price</h3></th>
                                 <th><h3>Ask Price</h3></th>
                                 <th><h3>History Chart</h3></th>
 				<th><h3>Asset Code</h3></th>

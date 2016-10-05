@@ -106,7 +106,8 @@
 
       function create_socket() {
 
-        socket = new WebSocket(url, "echo-protocol");
+        //socket = new WebSocket(url, "echo-protocol");
+        socket = new WebSocket(url);
       
         socket.addEventListener("open", function(event) {
           console.log("Websocket Connected");
