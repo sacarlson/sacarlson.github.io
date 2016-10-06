@@ -339,6 +339,7 @@
       function myTimer() { 
         console.log("timer click detected, do an attachToPaymentsStream('now'); to prevent time out");
         attachToPaymentsStream('now');
+        get_offers();
       }
 
       function play_alarm_sound() {
@@ -2902,6 +2903,11 @@ function display_history(page){
 
       check_orderbook_button.addEventListener("click", function(event) {
         check_orderbook();
+      });
+
+      update_offers_button.addEventListener("click", function(event) {
+        clear_table("table_offers");
+        get_offers();
       });
 
       check_paths.addEventListener("click", function(event) {
