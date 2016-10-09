@@ -86,6 +86,7 @@
       var sound_src = document.getElementById("sound_src");
       var auto_allow_trust = document.getElementById("auto_allow_trust");
       var dec_round = document.getElementById("dec_round");
+      var force_enable_change_key = document.getElementById("force_enable_change_key");
 
       
       var asset_obj = new StellarSdk.Asset.native();
@@ -2144,7 +2145,8 @@
           save_default_settings();
           reset_defaults = false;
           auto_allow_trust.checked = false;
-          dec_round.value = 4; 
+          dec_round.value = 4;
+          force_enable_change_key.value = "false"; 
           return;
         }
         var obj = JSON.parse(def_settings_json);
@@ -2155,7 +2157,7 @@
         url.value = obj.url;
         port.value = obj.port;
         secure.value = obj.secure;         
-        if (typeof obj.dec_round != "undefined" && reset_defaults != true){
+        if (typeof obj.force_enable_change_key != "undefined" && reset_defaults != true){
           sound_src.value = obj.sound_src;
           default_asset_code.value = obj.default_asset_code;
           default_issuer.value = obj.default_issuer;
@@ -2164,6 +2166,7 @@
           auto_trust.value = obj.auto_trust;
           auto_allow_trust.checked = false;
           dec_round.value = obj.dec_round;
+          force_enable_change_key.value = obj.force_enable_change_key;
         } else {
           sound_src.value = "sound/coin-drop-3.mp3";
           default_asset_code.value = "FUNT";
@@ -2176,7 +2179,8 @@
           background_img.value = "";
           auto_trust.value = "6";
           auto_allow_trust.checked = false;
-          dec_round.value = 4;     
+          dec_round.value = 4;
+          force_enable_change_key.value = "false";     
           save_default_settings(); 
         }       
         if (typeof obj.top_image_url != "undefined" && obj.top_image_url.length > 3) {
@@ -2237,6 +2241,7 @@
         obj.auto_trust = auto_trust.value;
         obj.sound_src = sound_src.value;
         obj.dec_round = dec_round.value;
+        obj.force_enable_change_key = force_enable_change_key.value;
         var string = JSON.stringify(obj);
         localStorage.setItem("def_settings", string);
       }
@@ -2853,6 +2858,11 @@ function display_history(page){
     }
 
     function disable_change_key(){
+      if (force_enable_change_key.value == "true"){
+        console.log("force_enable_change_key set true, will disable disable_change_key()");
+        enable_change_key();
+        return
+      }
       swap_seed_dest.disabled = true;
       select_seed.disabled = true; 
       restore.disabled = true;
