@@ -39,7 +39,7 @@
     </div>
   </div>
 
-      <ul class="tabrow">
+      <ul id="top_ul" class="tabrow">
         <li class="active"><a data-toggle="tab"  href="#send"> <h4>Send</h4></a></li>     
         <li><a data-toggle="tab" href="#rec"> <h4> Receive </h4></a></li>
         <li><a data-toggle="tab" href="#trans"><h4>Transaction Hist</h4></a></li>
@@ -354,7 +354,7 @@
 <div id="trade" class="tab-pane fade">
   <h2> Trade Transaction Tools</h2>
   <p> Tools that allow trading of stellar assets for other assets</p>
-   <ul class="tabrow">
+   <ul id="trade_ul" class="tabrow">
      <li class="active" ><a data-toggle="tab" href="#trade_history"><h4>Trade History</h4></a></li>
      <li><a data-toggle="tab" href="#view_offer"><h4>View Offers</h4></a></li>
      <li><a data-toggle="tab" href="#view_orderbook"><h4>View OrderBook</h4></a></li>
@@ -554,8 +554,7 @@
                <button type="button" class="btn btn-info" id="fed_lookup_buying_asset_issuer" >Fed_Lookup</button>
              </span> 
           </div> 
-          <br /> <br /><input id="cancel_offer" type="button" value="cancel_offer" /> 
-          OfferID:  <input id="offerid" size="10" value = "" /> <br />           
+                    
         </div>
       </div>         
   </div>

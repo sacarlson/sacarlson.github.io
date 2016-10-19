@@ -197,7 +197,10 @@
       if (json_param != null) {
         //escape(str)
         console.log("json_param detected");
+        console.log(json_param);
         json_param = unescape(json_param[1]);
+        console.log("post unescape:");
+        console.log(json_param);
         var params = JSON.parse(json_param);
         console.log(params);
         console.log(params["accountID"]);
@@ -242,7 +245,33 @@
         }
         if (typeof params["tlimit"] != "undefined") {
           tlimit.value = params["tlimit"];
+        }
+
+        if (typeof params["selling_asset_code"] != "undefined") {
+          selling_asset_code.value = params["selling_asset_code"];
+          to_trade_page();
+        }
+
+        if (typeof params["selling_asset_issuer"] != "undefined") {
+          selling_asset_issuer.value = params["selling_asset_issuer"];
         } 
+        if (typeof params["selling_amount"] != "undefined") {
+          selling_amount.value = params["selling_amount"];
+        }
+
+        if (typeof params["selling_price"] != "undefined") {
+          selling_price_R.value = params["selling_price"];
+        } 
+
+        if (typeof params["buying_asset_code"] != "undefined") {
+          buying_asset_code.value = params["buying_asset_code"];
+          to_trade_page();
+        }  
+
+        if (typeof params["buying_asset_issuer"] != "undefined") {
+          buying_asset_issuer.value = params["buying_asset_issuer"];
+        }  
+ 
         var array_trustlines = [];
         if (typeof params["trustlines"] != "undefined") {
           array_trustlines = params["trustlines"].split(",");
@@ -325,15 +354,14 @@
       account_disp.textContent = account.value;
       account_disp2.textContent = account.value;
       makeCode();
-      
 
       // preload alarm sound
       var alarm = new Audio();
       alarm.autoplay = false;
       //alarm.src = navigator.userAgent.match(/Firefox/) ? 'shutter.ogg' : 'shutter.mp3';
       alarm.src = sound_src.value;
-      //alarm.play();
-
+      //alarm.play();     
+        
       // lets try to start 50 sec timer as the horizon connect time out seems to be set at 60 sec
       var myVar = setInterval(myTimer, (Math.round(50 * 1000)));
 
@@ -341,6 +369,19 @@
         console.log("timer click detected, do an attachToPaymentsStream('now'); to prevent time out");
         attachToPaymentsStream('now');
         get_offers();
+      }
+
+      function to_trade_page() {
+        document.getElementById('top_ul').getElementsByTagName('li')[0].className = "";
+        document.getElementById('top_ul').getElementsByTagName('li')[5].className = "active";
+        document.getElementById('send').className = "tab-pane fade";
+        document.getElementById('trade').className = "active";
+        document.getElementById('trade_ul').getElementsByTagName('li')[0].className = "";
+        document.getElementById('trade_ul').getElementsByTagName('li')[2].className = "";
+        document.getElementById('trade_ul').getElementsByTagName('li')[4].className = "active";
+        document.getElementById('trade_history').className = "tab-pane fade";
+        document.getElementById('view_orderbook').className = "tab-pane fade";
+        document.getElementById('create_offer').className = "active";
       }
 
       function play_alarm_sound() {
@@ -1883,6 +1924,7 @@
      
      
       function change_network_func() {
+        console.log("start change_network_func");
         if (top_image_url.value.length > 4) {
           top_image_span.innerHTML = '<img src="' + top_image_url.value + '" class="img-circle" alt="Add Optional Image here" width="100" height="100">';
         } else {
@@ -2903,11 +2945,13 @@ function display_history(page){
       better_ask_button.addEventListener("click", function(event) {
         //check_orderbook("ask");
         better_bid_ask_function("ask");
+        to_trade_page();
       });
 
       better_bid_button.addEventListener("click", function(event) {
         //check_orderbook("ask");
         better_bid_ask_function("bid");
+        to_trade_page();
       });
               
 
@@ -3249,18 +3293,7 @@ function display_history(page){
         }       
       });
 
-     cancel_offer.addEventListener("click", function(event) {
-        console.log("submit cancel offer clicked");
-        cancel_offer_flag = true;
-        //get_offerid();
-        try {
-          manageOfferTransaction();
-        } catch(err) {
-          console.log("manageOfferTransaction error catch: " + err);
-          alert("manageOfferTransaction error: "+ err);
-        }    
-      });
-
+    
        save.addEventListener("click", function(event) {         
         if (typeof(Storage) !== "undefined") {
           var encrypted = CryptoJS.AES.encrypt(seed.value, pass_phrase.value);       
@@ -3315,6 +3348,7 @@ function display_history(page){
       });
 
       change_network.addEventListener("click", function(event) {
+        console.log("change_network click detected");
         change_network_func();
         set_default_colors();
         asset.value = clone(default_asset_code.value);
