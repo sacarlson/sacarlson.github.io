@@ -109,7 +109,6 @@
       var effect_fromstream_flag = false;
       var manageOfferTransaction_flag = false;
       home_domain.value = "funtracker.site";
-      //sound_src.value = "sound/coin-drop-3.mp3";
       var reset_defaults = false;
       memo_mode.value  = "memo.text";
       memo.value = "";
@@ -2177,7 +2176,7 @@
           network.value ="live_default";
           top_image_url.value = "logo.png";
           top_page_title.value = "Funtracker.site Wallet";
-          sound_src.value = "sound/coin-drop-3.mp3";
+          sound_src.value = "sound/coin-drop-3.ogg";
           background_img.value = "";
           background_color.value = "#888";
           text_color.value = "#000";
@@ -2210,7 +2209,7 @@
           dec_round.value = obj.dec_round;
           force_enable_change_key.value = obj.force_enable_change_key;
         } else {
-          sound_src.value = "sound/coin-drop-3.mp3";
+          sound_src.value = "sound/coin-drop-3.ogg";
           default_asset_code.value = "FUNT";
           tasset.value = default_asset_code.value;
           default_issuer.value = "GBUYUAI75XXWDZEKLY66CFYKQPET5JR4EENXZBUZ3YXZ7DS56Z4OKOFU";
