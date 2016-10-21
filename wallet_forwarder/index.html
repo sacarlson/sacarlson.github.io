@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Auto Wallet Forwarder</title>
+  <meta charset="utf-8">
+  
+  <meta name="description" content=" User sets up the Stellar.org wallet to auto forward all json transactions to ">
+
+  <link rel="stylesheet" href="./w3.css">
+ 
+<style type="text/css">
+		
+.dropbtn {
+    background-color: #4CAF50;
+    color: black;
+    padding: 16px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+}
+
+.dropbtn:hover, .dropbtn:focus {
+    background-color: #3e8e41;
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    overflow: auto;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 10;
+}
+
+.dropdown-content a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown a:hover {background-color: #f1f1f1}
+
+.show {display:block;}
+
+
+.box {
+  margin: auto;
+  width: 100%;
+  height: auto;
+  margin: 30px;
+}
+
+div.img {
+    border: 1px solid #ccc;
+}
+
+div.img:hover {
+    border: 1px solid #777;
+}
+
+div.img img {
+    width: 100%;
+    height: auto;
+}
+
+div.desc {
+    padding: 15px;
+    text-align: center;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.responsive {
+    padding: 0 6px;
+    float: left;
+    width: 24.99999%;
+}
+
+@media only screen and (max-width: 700px){
+    .responsive {
+        width: 49.99999%;
+        margin: 6px 0;
+    }
+}
+
+@media only screen and (max-width: 500px){
+    .responsive {
+        width: 100%;
+    }
+}
+
+ a {
+  font-size: calc(1vw + 1vh + 1vmin);
+ }
+
+ .center {
+    margin: auto;
+    width: 60%;
+    padding: 20px;
+ }
+
+	</style>
+
+ 
+ 
+  
+   
+</head>
+<body>
+
+<div class="w3-row" >
+  <div class="w3-teal w3-container w3-half">
+    <select name="aa" onchange="set_url(this.value)"> 
+     <option value="">Select Wallet URL</option>
+     <option value="http://sacarlson.github.io/my_wallet/">http://sacarlson.github.io/my_wallet/</option>
+     <option value="https://wallet.funtracker.site">https://wallet.funtracker.site</option>
+     <option value="https://www.ecliptic.co/">https://www.ecliptic.co/</option>
+     <option value="custom">Custom</option>
+    </select>
+   
+  
+  <h1><span id="site_hostname"></span> Auto Wallet Redirector</h1>
+  </div>
+  <div class="w3-teal w3-container w3-half ">
+     <div class="w3-container w3-teal">
+       <form  class="w3-container center ">
+         <input type="hidden" name="time" id="time" value="none">
+         
+         <label>Custom Wallet URL Entry</label>
+         <input id="custom" type="text" name="custom" class="w3-input w3-text-black">              
+       </form>
+       <h2> Now Set To: <span id="url_forward"></span></h2>
+     </div>    
+  </div>
+</div>
+
+</body>
+<script>
+    "use strict";
+   
+    // Initialize everything when the window finishes loading
+    //window.addEventListener("load", function(event) {
+      var forward_url_saved = localStorage.getItem("forward_url");
+      var url_forward = document.getElementById("url_forward");
+      var custom = document.getElementById("custom");
+      var set = window.location.href.match(/\?set=(.*)/);      
+      var json_param = window.location.href.match(/\?json=(.*)/);
+      
+      if (json_param != null) {
+        //escape(str)
+        console.log("json_param detected");
+        console.log(json_param);
+        json_param = unescape(json_param[1]);
+        var params = JSON.parse(json_param);
+        console.log(params);
+        var forward_to = forward_url_saved + "?json=" + json_param
+        console.log("forward_to");
+        console.log(forward_to);
+        window.location.href = forward_to;
+      }
+
+      if (set !== null) {
+        console.log("set detected");
+        console.log(set);
+        console.log(set[1]);
+        if (set[1] == "true") {
+         console.log("set to true");
+        }
+      }else {
+        if (forward_url_saved.length > 5){
+          window.location.href = forward_url_saved;
+        }
+      }
+       
+
+    document.getElementById("site_hostname").innerHTML= get_site_hostname();
+
+    url_forward.innerHTML = forward_url_saved;
+
+    function get_site_hostname() {
+      var a = document.createElement('a');
+      a.href = window.location.href;
+      console.log("site hostname");
+      console.log(a['hostname']);
+      return a['hostname'];
+    }
+
+    
+   
+
+    //});
+
+
+    function set_url(value){
+      console.log("value");
+      console.log(value);
+      console.log(custom.value);
+      if (value == "custom"){
+        value = custom.value;
+      }
+      localStorage.setItem("forward_url", value);
+      url_forward.innerHTML = value;
+    } 
+
+    function dropDown() {
+      document.getElementById("myDropdown").classList.toggle("show");
+    }
+  </script>
+</html>
