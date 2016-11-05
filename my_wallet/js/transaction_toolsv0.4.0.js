@@ -109,6 +109,7 @@
       var effect_fromstream_flag = false;
       var manageOfferTransaction_flag = false;
       home_domain.value = "funtracker.site";
+      //sound_src.value = "sound/coin-drop-3.mp3";
       var reset_defaults = false;
       memo_mode.value  = "memo.text";
       memo.value = "";
@@ -259,7 +260,7 @@
         }
 
         if (typeof params["selling_price"] != "undefined") {
-          selling_price_R.value = params["selling_price"];
+          selling_price.value = params["selling_price"];
         } 
 
         if (typeof params["buying_asset_code"] != "undefined") {
@@ -1806,9 +1807,10 @@
 
       function manageOfferOperation() {
            console.log("manageOfferOperation");
-            console.log("selling_priceR: " + selling_price_R.value);
-            console.log("selling_price: " + fix7dec(1.0 / selling_price_R.value));
-            selling_price.textContent = fix7dec(1.0 / selling_price_R.value);
+            selling_price_R.textContent = fix7dec(1.0 / selling_price.value);
+            console.log("selling_price_R: " + selling_price_R.textContent);
+            console.log("selling_price: " + fix7dec(selling_price.value));
+            
             var opts = {};
             if (selling_asset_code.value == "XLM") {
               console.log("sell native");
@@ -1829,8 +1831,8 @@
               opts.buying = new StellarSdk.Asset(buying_asset_code.value, buying_asset_issuer.value);
             }
             opts.amount = selling_amount.value;
-            //opts.price = selling_price.value;
-            opts.price = selling_price.textContent;
+            opts.price = selling_price.value;
+            //opts.price = selling_price.textContent;
             if (cancel_offer_flag) {
               console.log("cancel_offer_flag true");
               opts.offerId = offerid.value;
@@ -2176,7 +2178,7 @@
           network.value ="live_default";
           top_image_url.value = "logo.png";
           top_page_title.value = "Funtracker.site Wallet";
-          sound_src.value = "sound/coin-drop-3.ogg";
+          sound_src.value = "sound/coin-drop-3.mp3";
           background_img.value = "";
           background_color.value = "#888";
           text_color.value = "#000";
@@ -2209,7 +2211,7 @@
           dec_round.value = obj.dec_round;
           force_enable_change_key.value = obj.force_enable_change_key;
         } else {
-          sound_src.value = "sound/coin-drop-3.ogg";
+          sound_src.value = "sound/coin-drop-3.mp3";
           default_asset_code.value = "FUNT";
           tasset.value = default_asset_code.value;
           default_issuer.value = "GBUYUAI75XXWDZEKLY66CFYKQPET5JR4EENXZBUZ3YXZ7DS56Z4OKOFU";
@@ -2723,7 +2725,8 @@ function display_history(page){
            ar[2] = "";
          } else {        
            ar[1] = offer_obj.records[i].selling.asset_code;
-           ar[2] = offer_obj.records[i].selling.asset_issuer.substring(0, 5)+"...";  
+           //ar[2] = offer_obj.records[i].selling.asset_issuer.substring(0, 5)+"...";
+           ar[2] = offer_obj.records[i].selling.asset_issuer;  
          }                
          ar[3] = deci_round(offer_obj.records[i].amount);
          ar[4] = deci_round(offer_obj.records[i].price); 
@@ -2734,7 +2737,8 @@ function display_history(page){
            ar[7] = "";
          } else {     
            ar[6] = offer_obj.records[i].buying.asset_code;
-           ar[7] = offer_obj.records[i].buying.asset_issuer.substring(0, 5)+"...";
+           //ar[7] = offer_obj.records[i].buying.asset_issuer.substring(0, 5)+"...";
+           ar[7] = offer_obj.records[i].buying.asset_issuer;
          }
          ar[8] = '<img src="../images/delete.png" onclick="confirm_delete_offer(this)" /> ';
          //console.log("ar[7]: " );
@@ -2876,24 +2880,32 @@ function display_history(page){
 
     function better_bid_ask_function(bid_ask) {
 // orderbook_buy_asset, orderbook_buy_issuer, orderbook_sell_asset, orderbook_sell_issuer
-//selling_asset_code.value, selling_asset_issuer.value, buying_asset_code.value, buying_asset_issuer.value, selling_amount.value, selling_price.value
-      selling_asset_code.value = orderbook_sell_asset.value;
-      console.log("sell code:");
-      console.log(selling_asset_code.value);
-      selling_asset_issuer.value = orderbook_sell_issuer.value;
-      buying_asset_code.value = orderbook_buy_asset.value;
-      buying_asset_issuer.value = orderbook_buy_issuer.value;
+//selling_asset_code.value, selling_asset_issuer.value, buying_asset_code.value, buying_asset_issuer.value, selling_amount.value, selling_price.value      
+      console.log("sell asset code:");
+      console.log(orderbook_sell_asset.value);
 
       if (bid_ask == "bid"){
-        selling_price.textContent = fix7dec(1.0 / (best_bid + (best_bid * (Number(better_bid_ask.value)/100))));
-        selling_price_R.value = fix7dec((best_bid + (best_bid * (Number(better_bid_ask.value)/100))));
-        console.log("selling_price: " + selling_price.textContent);
-        console.log("selling_priceR: " + selling_price_R.value);
+        //selling_price.textContent = fix7dec(1.0 / (best_bid + (best_bid * (Number(better_bid_ask.value)/100))));
+        //selling_price_R.value = fix7dec((best_bid + (best_bid * (Number(better_bid_ask.value)/100))));
+        console.log("best_bid: " + best_bid);
+        selling_price.value = fix7dec(1.0 / (best_bid + (best_bid * (Number(better_bid_ask.value)/100))));
+        selling_price_R.textContent = fix7dec((best_bid + (best_bid * (Number(better_bid_ask.value)/100))));
+        console.log("selling_price: " + selling_price.value);
+        console.log("selling_price_R: " + selling_price_R.textContent);
+        selling_asset_code.value = orderbook_buy_asset.value;      
+        selling_asset_issuer.value = orderbook_buy_issuer.value;
+        buying_asset_code.value = orderbook_sell_asset.value;
+        buying_asset_issuer.value = orderbook_sell_issuer.value;
       } else {
-        selling_price.textContent = fix7dec(1.0 / (best_ask + (best_ask * (Number(better_bid_ask.value)/100))));
-        selling_price_R.value = fix7dec((best_ask + (best_ask * (Number(better_bid_ask.value)/100))));
-        console.log("selling_price: " + selling_price.textContent);
-        console.log("selling_priceR: " + selling_price_R.value);
+        console.log("best_ask " + best_ask);
+        selling_price.value = fix7dec((best_ask + (best_ask * (Number(better_bid_ask.value)/100))));
+        selling_price_R.textContent = fix7dec(1.0 / (best_ask + (best_ask * (Number(better_bid_ask.value)/100))));
+        console.log("selling_price: " + selling_price.value);
+        console.log("selling_price_R: " + selling_price_R.textContent);
+        selling_asset_code.value = orderbook_sell_asset.value;      
+        selling_asset_issuer.value = orderbook_sell_issuer.value;
+        buying_asset_code.value = orderbook_buy_asset.value;
+        buying_asset_issuer.value = orderbook_buy_issuer.value;
       }
       //location.href = "#create_offer";
     }
