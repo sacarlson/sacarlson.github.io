@@ -1,0 +1,31 @@
+How to install my_wallet locally on your android phone:
+
+I found a cool app on android that allows your android phone to become a web server
+with this you can have a secure static copy of my_wallet installed on your own android phone
+that can be used to serve your phones browser or any computer system that is on the same wifi system that
+your phone connects to at that time or even on on wan if your setup port forwarding on your network.
+
+To install first install Paw on your android phone: https://play.google.com/store/apps/details?id=de.fun2code.android.pawserver&hl=en
+
+Then clone a copy of my_wallet from github: https://github.com/sacarlson/sacarlson.github.io/tree/master/my_wallet
+onto your computer that will later be used to interface to your android phone to copy the files to it.
+
+hookup your computer to your android with usb or other method to move files to your android phone.  I found wifi file transfer app
+works for this also if usb file transfer is not an option.
+
+locate the directory /paw/html  on one of your sdcard0 or sdcard1 with the android phone
+
+Rename the file /paw/html/index.xhtml to index2.xhtml to disable the default web app within Paw
+
+Copy all the files from the my_wallet directory accept screen_shoots and wallet_screenshoots to your phones sd card at:
+/paw/html.  Make sure to keep the relitive position of the subdirs /js and others within my_wallet in the same location with the same files in them.
+
+optionaly you might also want to now delete my_wallet index.html and rename index_embeded.html to index.html that has all javascripts offline (no CDN)
+within the phone and has all javascripts setup with integrity check for added security.
+
+now you can start up the Paw application on your android phone.  it will display the ip address and port that now points to my_wallet
+
+You can now bring up a browser on the phone or on any computer on that local network to bring up your private copy of my_wallet.  
+
+example when I start Paw it displays 192.168.1.10:8080  so I can enter http://192.168.1.10:8080 on my computer that is on the same wifi network
+to bring up my_wallet web app.

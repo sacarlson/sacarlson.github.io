@@ -20,7 +20,8 @@
       var socket;
 
       status.textContent = "Not Connected";
-      url.value = "ws://zipperhead.ddns.net:9494";
+      //url.value = "ws://zipperhead.ddns.net:9494";
+      url.value = "ws://b.funtracker.site:9494";
       close.disabled = true;
       send.disabled = true;
       make_witness.disabled = true;
@@ -116,6 +117,7 @@ ____________________________________________________________<br />
   Raw JSON example input selection:<select name="text" id="text" >
   <option>'{"action":"version"}'</option>
   <option>'{"action":"core_status"}'</option>
+  <option>'{"action":"get_ticker","mode":"2","asset_code":"THB","base_asset_code":"USD","timestamp_end":"32"}'</option>
   <option>'{"action":"create_keys"}'</option>
   <option>'{"action":"get_pool_members", "inf_dest":"GBL7AE2HGRNQSPWV56ZFLILXNT52QWSMOQGDBBXYOP7XKMQTCKVMX2ZL", "total_inflation": "18000000"}'</option>
   <option>'{"action":"get_pool_members", "inf_dest":"GBAD6S2LUEOVK33HNX7NZ7J3B4VOUQXDYOGYV6NNWEYQAPLWAR2KYRUB", "total_inflation": "18000000"}'</option>
