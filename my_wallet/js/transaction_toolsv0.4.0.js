@@ -87,7 +87,8 @@
       var auto_allow_trust = document.getElementById("auto_allow_trust");
       var dec_round = document.getElementById("dec_round");
       var force_enable_change_key = document.getElementById("force_enable_change_key");
-
+      var qr_export_mode = document.getElementById("qr_export_mode");
+      var qr_export_mode_span = document.getElementById("qr_export_mode_span");
       
       var asset_obj = new StellarSdk.Asset.native();
       var socket;
@@ -494,10 +495,15 @@
 	   }	
 	   //qrcode.makeCode(seed.value);
        //update_key();
-       //qrcode.makeCode(export_to_centaurus());
-       qrcode.makeCode(seed.value);
+       if (qr_export_mode.value == "Centaurus") {
+         qrcode.makeCode(export_to_centaurus());
+         qr_export_mode_span.textContent = "Centaurus";
+       }else{
+         qrcode.makeCode(seed.value);
+         qr_export_mode_span.textContent = "Raw";
+       }
        //console.log("qrcode account: " + account.value);
-       qrcode2.makeCode(account.value);        
+       qrcode2.makeCode(account.value);      
      } 
 
           function email_funds_now (mode) {
@@ -2175,7 +2181,7 @@
           default_issuer.value = "GBUYUAI75XXWDZEKLY66CFYKQPET5JR4EENXZBUZ3YXZ7DS56Z4OKOFU";
           buying_asset_issuer.value = default_issuer.value;
           selling_asset_issuer.value = default_issuer.value;          
-          network.value ="live_default";
+          network.value ="testnet_default";
           top_image_url.value = "logo.png";
           top_page_title.value = "Funtracker.site Wallet";
           sound_src.value = "sound/coin-drop-3.mp3";
@@ -2200,7 +2206,7 @@
         url.value = obj.url;
         port.value = obj.port;
         secure.value = obj.secure;         
-        if (typeof obj.force_enable_change_key != "undefined" && reset_defaults != true){
+        if (typeof obj.qr_export_mode != "undefined" && reset_defaults != true){
           sound_src.value = obj.sound_src;
           default_asset_code.value = obj.default_asset_code;
           default_issuer.value = obj.default_issuer;
@@ -2210,6 +2216,7 @@
           auto_allow_trust.checked = false;
           dec_round.value = obj.dec_round;
           force_enable_change_key.value = obj.force_enable_change_key;
+          qr_export_mode.value = obj.qr_export_mode;
         } else {
           sound_src.value = "sound/coin-drop-3.mp3";
           default_asset_code.value = "FUNT";
@@ -2223,7 +2230,8 @@
           auto_trust.value = "6";
           auto_allow_trust.checked = false;
           dec_round.value = 4;
-          force_enable_change_key.value = "false";     
+          force_enable_change_key.value = "false"; 
+          qr_export_mode.value = "Raw";    
           save_default_settings(); 
         }       
         if (typeof obj.top_image_url != "undefined" && obj.top_image_url.length > 3) {
@@ -2285,6 +2293,7 @@
         obj.sound_src = sound_src.value;
         obj.dec_round = dec_round.value;
         obj.force_enable_change_key = force_enable_change_key.value;
+        obj.qr_export_mode = qr_export_mode.value;
         var string = JSON.stringify(obj);
         localStorage.setItem("def_settings", string);
       }
@@ -3365,6 +3374,7 @@ function display_history(page){
         asset.value = clone(default_asset_code.value);
         issuer.value = clone(default_issuer.value);
         tissuer.value = clone(default_issuer.value);
+        makeCode();
         if (default_asset_code.value != "native"){
           tasset.value = default_asset_code.value;
         } else {

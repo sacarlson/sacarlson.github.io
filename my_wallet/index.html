@@ -103,7 +103,7 @@
   <h2>Receive Funds</h2>
   <p>Info to provide a sender that will be sending funds to you </p>
   <h3>AccountId: <span id="account_disp2"></span></h3>
-  <div id="qrcode2" style="width:200px; height:200px; margin-top:15px;"></div> 
+  <div id="qrcode2" style="width:300px; height:300px; margin-top:20px; margin-left: 20px;"></div><br /> 
   <p>Public addressId QR-code Compatible with Centaurus: </p><br />
 </div>
 
@@ -197,8 +197,8 @@
     <input id="encrypt_seed" type="button" value="encrypt_seed" /><br />  
     <h5>AccountId:</h5>
     <input id="account" class="form-control" size="60" /><br />
-    <h5> Raw secret seed QRcode </h5>
-    <div id="qrcode" style="width:200px; height:200px; margin-top:15px;"></div> 
+    <h5> Secret seed QRcode <span id="qr_export_mode_span"></span></h5>
+    <div id="qrcode" style="width:300px; height:300px; margin-top:20px; margin-bottom: 30px; margin-left: 30px;"></div> 
   </div>
   
 </div>
@@ -237,6 +237,10 @@
 <select name="secure" id="secure" value='true'>
   <option>true</option>
   <option>false</option>
+</select><br />
+QR-code export mode: <select name="QR_export_mode" id="qr_export_mode" value='Raw'>
+  <option>Raw</option>
+  <option>Centaurus</option>
 </select><br />
  Default Decimal Round: <input id="dec_round" size="5" value="5" /><br />
  Default Asset_code: <input id="default_asset_code" size="16" value="FUNT" /><br />
@@ -298,17 +302,19 @@
 
    <div id="merge" class="tab-pane fade in" >
       <h2>Merge Accounts</h2>
-      <p>Merge all this accounts Lumen assets into a target accountId, must have no other asset trustlines</p> 
+      <p>Merge all this accounts Lumen assets into a target accountId, must have no other asset trustlines unless Secret Key provided</p> 
       <div class="col-sm-6">
         <div class="form-group"> 
           <input id="merge_accounts" type="button" value="merge_accounts" /><br />
-          <label for="merge_dest">  Merge Destination AddressID:</label>
+          <label for="merge_dest">  Merge Destination AddressID:</label>         
           <div class="input-group">
              <input  type="text" class="form-control" id="merge_dest"  value = "" />
              <span class="input-group-btn">
                <button type="button" class="btn btn-info" id="fed_lookup_merge_dest" >Fed_Lookup</button>
              </span>
           </div>
+          <label for="merge_dest_key">  Merge Destination Secret Key (optional):</label>
+          <input  type="text" class="form-control" id="merge_dest_key"  value = "" />
         </div>
       </div>            
    </div>
