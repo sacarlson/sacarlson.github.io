@@ -39,6 +39,7 @@
       var open = document.getElementById("open");
       var close = document.getElementById("close");
       var merge_accounts = document.getElementById("merge_accounts");
+      var merge_all_assets = document.getElementById("merge_all_assets");
       var status = document.getElementById("status");
       var account_disp = document.getElementById("account_disp");
       var account_disp2 = document.getElementById("account_disp2");
@@ -364,7 +365,8 @@
       //alarm.play();     
         
       // lets try to start 50 sec timer as the horizon connect time out seems to be set at 60 sec
-      var myVar = setInterval(myTimer, (Math.round(50 * 1000)));
+      //  temp disable myTimer to see if it's really needed anymore with sdk 0.6.1
+      //var myVar = setInterval(myTimer, (Math.round(50 * 1000)));
 
       function myTimer() { 
         console.log("timer click detected, do an attachToPaymentsStream('now'); to prevent time out");
@@ -444,7 +446,7 @@
         }
       }
 
-      function add_trust_array(array_trustlines,limit){
+      function add_trust_array2(array_trustlines,limit){
         // example array_trustlines:
         // [{code:"USD",issuer:"GBUY..."},{code:"THB",issuer:"GBUY..."}]
         var array_opps = [];
@@ -461,6 +463,274 @@
         }
      }
 
+     function add_trust_array(array_trustlines,limit){
+        // adds array_trustlines to present active account
+        // example array_trustlines:
+        // [{code:"USD",issuer:"GBUY..."},{code:"THB",issuer:"GBUY..."}]        
+        var array_opps = add_trust_array_get_opps(array_trustlines,limit,account_obj_global.balances,1)
+        if (array_opps.length > 0){
+          createTransaction_array(array_opps);
+        }
+     }
+
+     function add_trust_to_merge(callback){
+       console.log("add_trust_to_merge");
+       var array_opps = add_trust_array_get_opps(account_obj_global.balances,"",chain_store["account_info"].balances,2)
+       console.log("array_opps");
+       console.log(array_opps);
+       if (array_opps.length > 0){
+          console.log("call create_tx");
+          //create_tx_opp_array(array_opps,callback);
+          var merge_keypair = StellarSdk.Keypair.fromSeed(merge_dest_key.value);
+          createTransaction_array_for_keypair(array_opps,merge_keypair,callback);
+        }else{
+          console.log("array_opps.length zero, all needed trustlines present, nothing done");
+          callback();
+        }      
+     }
+
+     function remove_all_trustlines(callback){
+       // remove all trustlines from active account, note all trustlines must have zero balance before running this
+       console.log("start remove_all_trustlines");
+       var array_opps = [];
+       for (var i = 0; i < account_obj_global.balances.length; i++) {
+         if (account_obj_global.balances[i]["asset_type"] != "native"){
+           array_opps[i] = addTrustlineOperation(account_obj_global.balances[i]["asset_code"], account_obj_global.balances[i]["asset_issuer"], "0"); 
+         }
+       }
+       if (array_opps.length > 0){
+         console.log("trustlines detected will remove with array_opps");
+         create_tx_opp_array(array_opps,callback);
+       }else{
+         console.log("no trustlines detected, nothing done");
+         callback();
+       }
+     }
+
+     
+
+     function add_trust_array_get_opps(array_trustlines,limit,dest_balances,mode){
+        // mode = 2 if array_trustlines is in format from server.acounts(), mode 1 is used for data from stellar.toml file
+        // dest_balances are an array list of assets from destination account
+        // example format mode 1 array_trustlines to be added to destination account:
+        // [{code:"USD",issuer:"GBUY..."},{code:"THB",issuer:"GBUY..."}]
+        var array_opps = [];
+        for (var i = 0; i < array_trustlines.length; i++) {
+          if (mode == 2){
+            array_trustlines[i]["code"] = array_trustlines[i]["asset_code"];
+            array_trustlines[i]["issuer"] = array_trustlines[i]["asset_issuer"];
+          }
+          if (check_trust_exists2(array_trustlines[i]["code"], array_trustlines[i]["issuer"] , Number(auto_trust.value) ,dest_balances) == false){
+            console.log("trustline : " + array_trustlines[i] + " doen't exist so we will add opp to add: " + array_trustlines[i]["code"]);
+            array_opps[i] = addTrustlineOperation(array_trustlines[i]["code"], array_trustlines[i]["issuer"], limit);                       
+          }
+        }
+        console.log("array_opps");
+        console.log(array_opps);        
+        return array_opps;        
+     }
+
+     function move_all_assets(callback){
+        // move all non native assets from active account to merge_dest.value account
+        console.log("start move_all_assets");
+        var to_account_local = merge_dest.value;
+        console.log("to_account: " + to_account_local);
+        var opp_array = [];
+        var asset_obj;
+        for (var i = 0; i < account_obj_global.balances.length; i++) {
+          if (account_obj_global.balances[i]["asset_type"] != "native"){
+             asset_obj = new StellarSdk.Asset(account_obj_global.balances[i]["asset_code"], account_obj_global.balances[i]["asset_issuer"]);
+             opp_array[i] = StellarSdk.Operation.payment({
+               destination: to_account_local,
+               amount: fix7dec(account_obj_global.balances[i]["balance"]),
+               asset: asset_obj
+             });
+          }
+        }
+        console.log("opp_array: ");
+        console.log(opp_array);
+        create_tx_opp_array(opp_array,callback);
+     }
+
+     function merge_native(callback){
+       // merger all native assets from active account to merge_dest.value account
+       var opp = accountMergeOperation();
+       create_tx(opp,callback);
+     }
+
+     function update_bal_callback(callback){
+        bal_disp.textContent = 0;
+        clear_all_tables();         
+        server.accounts()
+          .accountId(account.value)          
+          .call()
+          .then(function (accountResult) {           
+            update_balances_set(accountResult);
+            enable_change_key();
+            callback();                    
+          })
+          .catch(function (err) {
+            console.log("got error in get_account_info");
+            enable_change_key();
+            console.error(err);           
+            callback();          
+          })
+     }
+
+     var chain_store = {};
+     //chain_store["account_info"] = "";
+     function merge_all_assets_Tx(){      
+       console.log("start merge_all_assets_Tx");
+       // setup chain of callback functions       
+       var cc = new ccbuild.CallChain();
+       cc.add(get_merge_account_info);
+       //cc.add(check_result);
+       cc.add(create_account_if_zero);
+       cc.add(get_merge_account_info);
+       cc.add(add_trust_to_merge);
+       cc.add(move_all_assets);
+       cc.add(remove_all_trustlines);
+       cc.add(merge_native);
+       cc.add(update_bal_callback);
+       cc.add(noop);
+       cc.execute();
+     }
+     
+     function check_result(callback){
+       console.log("check_result chain_store:");
+       console.log(chain_store);
+       callback();
+     }
+
+     function create_account_if_zero(callback){
+       // create or add to account in merge_dest_key.value if no native balance seen in chain_store["accountInfo"].balances"]
+       // with start native balance for what is needed to hold present active account
+       console.log("start create_acccount_if_zero");
+       var clone_keypair = StellarSdk.Keypair.fromSeed(merge_dest_key.value);
+       var start_bal = ((account_obj_global.balances.length - 1) * 10) + 20.001;
+       console.log(chain_store);
+       if (chain_store["account_info"] == 404) {
+         console.log("no account present so create one");         
+         console.log("start_bal needed is: " + start_bal);         
+         var opp = StellarSdk.Operation.createAccount({
+                   destination: clone_keypair.accountId(),
+                   startingBalance: fix7dec(start_bal)
+                 });
+         create_tx(opp,callback);
+       }else{
+         console.log("account already exist, check to see if has native balance needed");
+         var nativebal_merge = find_bal(chain_store["account_info"].balances,"native");
+         var native_bal_active = find_bal(account_obj_global.balances,"native");
+         console.log("nativebal: " + nativebal_merge);
+         var send = start_bal - nativebal_merge ;
+         var asset_obj = new StellarSdk.Asset.native();
+         if ( send > 0 ) {
+           console.log("need to send native: " + send);
+           var opp = StellarSdk.Operation.payment({
+               destination: clone_keypair.accountId(),
+               amount: fix7dec(send),
+               asset: asset_obj
+             });
+           create_tx(opp,callback);
+         }else{
+           console.log("merge account exists and holds needed amount of native, nothing need be done");
+           callback();
+         }
+       }
+     }
+
+     function create_tx(opp,callback){
+       console.log("create_tx");
+       var opp_array = [];
+       opp_array[0] = opp;
+       createTransaction_array_for_keypair(opp_array,key,callback);
+     }
+
+     function create_tx_opp_array(opp_array,callback){
+       console.log("start create_tx_opp_array");
+       createTransaction_array_for_keypair(opp_array,key,callback);
+     }
+
+    
+
+     function find_bal(balances,asset_code){
+       // return balance for asset code in balances array that is returned from horizon
+       // use XLM or native if looking for native balance
+       var bal = 0;
+       for (var i = 0; i < balances.length; i++) {
+         if (asset_code == "XLM" || asset_code == "native"){
+           if (balances[i].asset_type == "native"){
+             bal = balances[i].balance;
+             break;
+           }else{
+             if (balances[i].asset_code == asset_code) {
+               bal = balances[i].balance;
+               break;
+             }
+           }
+         }
+       }
+       return bal;
+     }
+     
+
+     function noop(callback){
+       // performs almost no action to signal end callback chain without error (no callback done)
+       console.log("started noop");       
+     }
+     
+     function get_merge_account_info(callback){
+        // return 0 on error, if exists put results in chain_store
+        var clone_keypair = StellarSdk.Keypair.fromSeed(merge_dest_key.value);
+        server.accounts()
+             .accountId(clone_keypair.accountId())
+             .call()
+             .then(function (accountInfo) {
+               console.log("accountInfo.balances: ");
+               console.log(accountInfo.balances);
+               console.log("acount_obj_global.balances");
+               console.log(account_obj_global.balances);
+               chain_store["account_info"] = accountInfo;
+               callback();
+             })
+             .catch(function(err) {
+               console.log("account info fetch error: " );
+               console.log(err);
+               console.log(err.data.status);
+               chain_store["account_info"] = 0;
+               if (err.data.status == 404){
+                 chain_store["account_info"] = 404;
+               };               
+               callback();
+             });
+         console.log("exit get_merge_accoun_info");          
+     }
+
+     var ccbuild = ccbuild || {};
+     ccbuild.CallChain = function () {
+       var cs = [];
+       this.add = function (call) {
+         cs.push(call);
+       };
+       this.execute = function () {
+         var wrap = function (call, callback) {
+            return function () {
+                call(callback);
+            };
+         };
+         for (var i = cs.length-1; i > -1; i--) {
+            cs[i] = 
+                wrap(
+                    cs[i], 
+                    i < cs.length - 1 
+                        ? cs[i + 1] 
+                        : null);
+         }
+         cs[0]();
+       };
+     };
+
+
      function check_trust_exists2(asset_code, issuer, max_count, balances){
            //example check_trust_exists("FUNT","GBYX...",3, balances);
            // will return true if asset_code already exists or if max_count number of trustlines already exist
@@ -469,13 +739,16 @@
            // balances = [{asset_code:"USD",issuer:"GBUYU..."},{asset_code:"THB",issuer:"GBUYU..."}]
            console.log("trustlines count: " + balances.length);
            if (balances.length >= max_count){
+              console.log("return true due to balances.length >= max_count value: " + max_count);
               return true;
            }
+           console.log("asset_code: " + asset_code);
+           console.log("issuer: " + issuer);
            console.log("balances");
            console.log(balances);
            for (var i = 0; i < balances.length; i++) {
              if (balances[i].asset_code == asset_code || balances[i].code == asset_code){
-               if (balances[i].issuer == issuer){
+               if (balances[i].issuer == issuer || balances[i].asset_issuer == issuer ){
                  return true;
                }
              }
@@ -717,7 +990,8 @@
           }
 
          function check_trust_exists(asset_code, max_count, displayEffect){
-           //example check_trust_exists("FUNT", displayEffect);
+           // not sure we need two of these, why not just use check_trust_exists2(), only takes out issuer on this one
+           //example check_trust_exists("FUNT",2, displayEffect);
            // will return true if asset_code already exists or if max_count number of trustlines already exist
            // this allows setting max_count = 0 to disable adding trustlines
            var balances = displayEffect.balances;
@@ -757,6 +1031,7 @@
               console.log("fromStream true");            
               effect_fromstream_flag = true;
               play_alarm_sound();
+              enable_change_key();
             } else {
               insertEffect(effect, fromStream)
                 .then(function (displayEffect) {
@@ -1271,14 +1546,14 @@
       }
        
       function get_account_info(account,callback) {
-        console.log("account: " + account);
+        console.log("get_account_info account: " + account);
         resetAccount();
         if (server_mode === "mss_server") {
           socket_open_flag = true;
         }else {
           console.log("get_account_info horizon mode");
           server.accounts()
-          .accountId(account)
+          .accountId(account)          
           .call()
           .then(function (accountResult) {
             callback(accountResult);                    
@@ -1428,7 +1703,7 @@
           var operation = accountMergeOperation();
           console.log("operation created ok");
           createTransaction(key,operation);
-        }
+        }      
 
       function setOptionsTransaction() {
           console.log("setOptionsTransaction");        
@@ -1558,7 +1833,7 @@
         return tx.toEnvelope().toXDR().toString("base64");
       }
 
-      function createTransaction_array(array_of_operations) {
+      function createTransaction_array2(array_of_operations) {
          tx_status.textContent = "Processing";
          update_key();
          server.loadAccount(key.accountId())
@@ -1572,6 +1847,57 @@
              console.log("horizon mode sending tx");                               
              server.submitTransaction(transaction).then(function(result) {              
                tx_status.textContent = "Completed OK";
+             }).catch(function(e) {
+               console.log("submitTransaction error");
+               console.log(e);
+               tx_status.textContent = "Transaction failed";
+               if (e.extras.result_codes.transaction == "tx_bad_auth"){
+                  tx_status.textContent = "Transaction error: tx_bad_auth";
+               } else {           
+                 tx_status.textContent = "Transaction error: " + e.extras.result_codes.operations[0];
+               } 
+             });                      
+          })
+          .then(function (transactionResult) {
+            console.log("tx_result");
+            console.log(transactionResult);
+            if (typeof transactionResult == "undefined") {
+              console.log("tx res undefined");
+            }            
+          })
+          .catch(function (err) {
+            console.log(err);
+            tx_status.textContent = "Transaction Error: " + err; 
+          });
+       }
+
+       function createTransaction_array(array_of_operations) {
+         update_key();
+         createTransaction_array_for_keypair(array_of_operations,key,"no_op");        
+       }
+
+      function createTransaction_array_for_keypair(array_of_operations,keypair,post_callback) {
+         console.log("start createTransaction_array_for_keypair");
+         console.log("account: " + keypair.accountId());
+         if (array_of_operations.length == 0){
+           console.log("operations array length is zero, nothing to do so return");
+           return;
+         }
+         tx_status.textContent = "Processing";
+         server.loadAccount(keypair.accountId())
+          .then(function (account) {
+             transaction = new StellarSdk.TransactionBuilder(account)            
+             array_of_operations.forEach(function (item) {
+               transaction.addOperation(item);
+             });
+             transaction = transaction.build();
+             transaction.sign(keypair); 
+             console.log("horizon mode sending tx");                               
+             server.submitTransaction(transaction).then(function(result) {              
+               tx_status.textContent = "Completed OK";
+               if (post_callback != "no_op"){
+                 post_callback("");
+               }
              }).catch(function(e) {
                console.log("submitTransaction error");
                console.log(e);
@@ -2920,6 +3246,7 @@ function display_history(page){
     }
 
     function disable_change_key(){
+      console.log("start disable_change_key");
       if (force_enable_change_key.value == "true"){
         console.log("force_enable_change_key set true, will disable disable_change_key()");
         enable_change_key();
@@ -2932,6 +3259,7 @@ function display_history(page){
     }
 
     function enable_change_key(){
+      console.log("start enable_change_key");
       swap_seed_dest.disabled = false;
       select_seed.disabled = false;
       restore.disabled = false;
@@ -3112,6 +3440,8 @@ function display_history(page){
           var temp_key = StellarSdk.Keypair.fromSeed(dest_seed.value);
           destination.value = temp_key.accountId();
           paths_destination_addressID.value = destination.value;
+          merge_dest_key.value = dest_seed.value;
+          merge_dest.value = destination.value;
         }
         update_balances();
         if (seed.value.length == 56){
@@ -3354,6 +3684,10 @@ function display_history(page){
 
       merge_accounts.addEventListener("click", function(event) {
         accountMergeTransaction();
+      }); 
+
+      merge_all_assets.addEventListener("click", function(event) {
+        merge_all_assets_Tx();
       });      
 
       // Close the connection when the Disconnect button is clicked
