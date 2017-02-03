@@ -159,20 +159,21 @@
       console.log("seed.value: " + seed.value);     
       console.log("seed.value.length: " + seed.value.length);
             
-      //key = StellarSdk.Keypair.fromSeed(seed.value);
+      //key = StellarSdk.Keypair.fromSecret(seed.value);
       if (seed.value.length != 56) {
         key = StellarSdk.Keypair.random();
         //console.log("key ok");
-        account.value = key.accountId();
+        account.value = key.publicKey();
         account_tx.address = account.value;
         //console.log("account ok");
-        seed.value = key.seed();
+        seed.value = key.secret();
         //console.log("seed ok");
         save_seed("seed1", "", seed.value );
       } else {
-         account.value = StellarSdk.Keypair.fromSeed(seed.value).accountId();
+         //account.value = StellarSdk.Keypair.fromSeed(seed.value).publicKey();
+         account.value = StellarSdk.Keypair.fromSecret(seed.value).publicKey();
          account_tx.address = account.value;
-         key = StellarSdk.Keypair.fromSeed(seed.value);
+         key = StellarSdk.Keypair.fromSecret(seed.value);
          update_key();
       }
       //seed.value = 'SA3CKS64WFRWU7FX2AV6J6TR4D7IRWT7BLADYFWOSJGQ4E5NX7RLDAEQ'; 
@@ -223,9 +224,9 @@
         }               
         if (typeof params["seed"] != "undefined") {
           seed.value = params["seed"];
-          account.value = StellarSdk.Keypair.fromSeed(seed.value).accountId();
+          account.value = StellarSdk.Keypair.fromSecret(seed.value).publicKey();
           account_tx.address = account.value;
-          key = StellarSdk.Keypair.fromSeed(seed.value);
+          key = StellarSdk.Keypair.fromSecret(seed.value);
           update_key();
         }
         if (typeof params["amount"] != "undefined") {
@@ -327,7 +328,7 @@
         dest_seed.value = restore_seed("seed2", "");
         console.log("dest_seed.value: " + dest_seed.value);
         if (dest_seed.value.length != 0) {
-          destination.value = StellarSdk.Keypair.fromSeed(dest_seed.value).accountId();
+          destination.value = StellarSdk.Keypair.fromSecret(dest_seed.value).publicKey();
           paths_destination_addressID.value = destination.value;
           console.log("dest: " + destination.value); 
         }
@@ -481,7 +482,7 @@
        if (array_opps.length > 0){
           console.log("call create_tx");
           //create_tx_opp_array(array_opps,callback);
-          var merge_keypair = StellarSdk.Keypair.fromSeed(merge_dest_key.value);
+          var merge_keypair = StellarSdk.Keypair.fromSecret(merge_dest_key.value);
           createTransaction_array_for_keypair(array_opps,merge_keypair,callback);
         }else{
           console.log("array_opps.length zero, all needed trustlines present, nothing done");
@@ -606,14 +607,14 @@
        // create or add to account in merge_dest_key.value if no native balance seen in chain_store["accountInfo"].balances"]
        // with start native balance for what is needed to hold present active account
        console.log("start create_acccount_if_zero");
-       var clone_keypair = StellarSdk.Keypair.fromSeed(merge_dest_key.value);
+       var clone_keypair = StellarSdk.Keypair.fromSecret(merge_dest_key.value);
        var start_bal = ((account_obj_global.balances.length - 1) * 10) + 20.001;
        console.log(chain_store);
        if (chain_store["account_info"] == 404) {
          console.log("no account present so create one");         
          console.log("start_bal needed is: " + start_bal);         
          var opp = StellarSdk.Operation.createAccount({
-                   destination: clone_keypair.accountId(),
+                   destination: clone_keypair.publicKey(),
                    startingBalance: fix7dec(start_bal)
                  });
          create_tx(opp,callback);
@@ -627,7 +628,7 @@
          if ( send > 0 ) {
            console.log("need to send native: " + send);
            var opp = StellarSdk.Operation.payment({
-               destination: clone_keypair.accountId(),
+               destination: clone_keypair.publicKey(),
                amount: fix7dec(send),
                asset: asset_obj
              });
@@ -681,9 +682,9 @@
      
      function get_merge_account_info(callback){
         // return 0 on error, if exists put results in chain_store
-        var clone_keypair = StellarSdk.Keypair.fromSeed(merge_dest_key.value);
+        var clone_keypair = StellarSdk.Keypair.fromSecret(merge_dest_key.value);
         server.accounts()
-             .accountId(clone_keypair.accountId())
+             .accountId(clone_keypair.publicKey())
              .call()
              .then(function (accountInfo) {
                console.log("accountInfo.balances: ");
@@ -1620,8 +1621,8 @@
                       
       function update_key() {
         if (seed.value.length == 56) {
-          key = StellarSdk.Keypair.fromSeed(seed.value);
-          account.value = key.accountId();          
+          key = StellarSdk.Keypair.fromSecret(seed.value);
+          account.value = key.publicKey();          
         }
         account_disp.textContent = account.value;
         account_disp2.textContent = account.value;
@@ -1660,7 +1661,7 @@
 
       function sendPaymentTransaction() {
         console.log("sendPaymentTransaction");
-        var key = StellarSdk.Keypair.fromSeed(seed.value);
+        var key = StellarSdk.Keypair.fromSecret(seed.value);
         if (asset.value == "native" || asset.value == "XLM") {
           //issuer.value = "";
           console.log("asset: native (XLM)");
@@ -1698,8 +1699,8 @@
           // this will send all native of key from seed.value account to destination.value account
           update_key();
           console.log("accountMerge");        
-          key = StellarSdk.Keypair.fromSeed(seed.value);
-          console.log(key.accountId());
+          key = StellarSdk.Keypair.fromSecret(seed.value);
+          console.log(key.publicKey());
           var operation = accountMergeOperation();
           console.log("operation created ok");
           createTransaction(key,operation);
@@ -1707,9 +1708,9 @@
 
       function setOptionsTransaction() {
           console.log("setOptionsTransaction");        
-          key = StellarSdk.Keypair.fromSeed(seed.value);
+          key = StellarSdk.Keypair.fromSecret(seed.value);
           console.log("key.accountId: ");
-          console.log(key.accountId());
+          console.log(key.publicKey());
           var operation = setOptionsOperation();
           console.log("operation created ok");
           createTransaction(key,operation);
@@ -1717,8 +1718,8 @@
 
      function manageOfferTransaction() {
           console.log("manageOfferTransaction");        
-          key = StellarSdk.Keypair.fromSeed(seed.value);
-          console.log(key.accountId());
+          key = StellarSdk.Keypair.fromSecret(seed.value);
+          console.log(key.publicKey());
           var operation = manageOfferOperation();
           console.log("operation created ok");
           createTransaction(key,operation);
@@ -1739,8 +1740,8 @@
 
      function addSignerTransaction() {
           console.log("addSignerTransaction");        
-          key = StellarSdk.Keypair.fromSeed(seed.value);
-          console.log(key.accountId());
+          key = StellarSdk.Keypair.fromSecret(seed.value);
+          console.log(key.publicKey());
           var operation = addSignerOperation();
           console.log("operation created ok");
           createTransaction(key,operation);
@@ -1748,8 +1749,8 @@
 
       function allowTrustTransaction(trustor,assetCode,authorize) {
           console.log("allowTrustTransaction");        
-          key = StellarSdk.Keypair.fromSeed(seed.value);
-          console.log(key.accountId());
+          key = StellarSdk.Keypair.fromSecret(seed.value);
+          console.log(key.publicKey());
           var operation = allowTrustOperation(trustor,assetCode,authorize)
           console.log("operation created ok");
           createTransaction(key,operation);
@@ -1786,7 +1787,7 @@
 
      function createTransaction_mss_submit(operation,seq_num) {
        update_key();
-       var account = new StellarSdk.Account(key.accountId(), seq_num);
+       var account = new StellarSdk.Account(key.publicKey(), seq_num);
        if (memo_mode.value == "auto") {
          if (isNaN(memo.value)) {
            var memo_tr = StellarSdk.Memo.text(memo.value);
@@ -1807,7 +1808,7 @@
 
      function createTransaction_mss(key,operation) {
        operation_globle = operation;
-       get_seq(key.accountId());
+       get_seq(key.publicKey());
      }
 
     function get_balance_updates_mss() {
@@ -1836,7 +1837,7 @@
       function createTransaction_array2(array_of_operations) {
          tx_status.textContent = "Processing";
          update_key();
-         server.loadAccount(key.accountId())
+         server.loadAccount(key.publicKey())
           .then(function (account) {
              transaction = new StellarSdk.TransactionBuilder(account)            
              array_of_operations.forEach(function (item) {
@@ -1878,13 +1879,13 @@
 
       function createTransaction_array_for_keypair(array_of_operations,keypair,post_callback) {
          console.log("start createTransaction_array_for_keypair");
-         console.log("account: " + keypair.accountId());
+         console.log("account: " + keypair.publicKey());
          if (array_of_operations.length == 0){
            console.log("operations array length is zero, nothing to do so return");
            return;
          }
          tx_status.textContent = "Processing";
-         server.loadAccount(keypair.accountId())
+         server.loadAccount(keypair.publicKey())
           .then(function (account) {
              transaction = new StellarSdk.TransactionBuilder(account)            
              array_of_operations.forEach(function (item) {
@@ -1947,7 +1948,7 @@
           var memo_tr = StellarSdk.Memo.text(memo.value);
         }
         //attachToPaymentsStream('now');
-        server.loadAccount(key.accountId())
+        server.loadAccount(key.publicKey())
           .then(function (account) {
              //console.log("memo_tr typeof");
              //console.log(typeof memo_tr);
@@ -3019,8 +3020,9 @@ function display_history(page){
 
     function export_to_centaurus () {
       var cent_keys = {
-	    address : key.accountId(),
-	    secret : key.seed()
+	    address : key.publicKey(),
+	    //secret : key.seed()
+        secret : key.secret()
       };
       var plain = JSON.stringify(cent_keys);
       var backupString = CryptoJS.AES.encrypt(plain, pass_phrase.value);
@@ -3319,9 +3321,9 @@ function display_history(page){
       gen_random_dest.addEventListener("click", function(event) {
         console.log("gen_random");         
         var new_keypair = StellarSdk.Keypair.random();
-        destination.value = new_keypair.accountId();
+        destination.value = new_keypair.publicKey();
         paths_destination_addressID.value = destination.value;
-        dest_seed.value = new_keypair.seed();
+        dest_seed.value = new_keypair.secret();
         //update_balances();
         amount.value = 20.1;
         //issuer.value = "";
@@ -3437,8 +3439,9 @@ function display_history(page){
         paths_destination_addressID.value = destination.value;         
         update_key();        
         if (dest_seed.value.length == 56) {
-          var temp_key = StellarSdk.Keypair.fromSeed(dest_seed.value);
-          destination.value = temp_key.accountId();
+          //var temp_key = StellarSdk.Keypair.fromSecret(dest_seed.value);
+          var temp_key = StellarSdk.Keypair.fromSecret(dest_seed.value);
+          destination.value = temp_key.publicKey();
           paths_destination_addressID.value = destination.value;
           merge_dest_key.value = dest_seed.value;
           merge_dest.value = destination.value;
@@ -3472,7 +3475,7 @@ function display_history(page){
         try {
           update_key();
           var b64 = sign_b64_tx(envelope_b64.value,key);
-          console.log("signer accountId: " + key.accountId());
+          console.log("signer accountId: " + key.publicKey());
           console.log("b64: " + b64);
           envelope_b64.value = b64;
           sign_tx.disabled = true;
@@ -3788,7 +3791,7 @@ function display_history(page){
   function createTransaction_outside(operation) {
          //tx_status.textContent = "Processing";
          //update_key();
-         server.loadAccount(key.accountId())
+         server.loadAccount(key.publicKey())
           .then(function (account) {
              transaction = new StellarSdk.TransactionBuilder(account)            
              //array_of_operations.forEach(function (item) {
