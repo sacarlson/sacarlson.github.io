@@ -850,6 +850,8 @@
                  memo.value = federationRecord.memo;
                  if (federationRecord.memo_type == "id"){
                    memo_mode.value = "memo.id";
+                 } else if (federationRecord.memo_type == "hash"){
+                   memo_mode.value = "memo.hash";
                  }else{
                    memo_mode.value = "memo.text";                
                  }
@@ -1943,6 +1945,8 @@
         } else if (memo_mode.value == "memo.id") {
           console.log("manual memo.id");
           var memo_tr = StellarSdk.Memo.id(memo.value);
+        } else if (memo_mode.value == "memo.hash") {
+          var memo_tr = StellarSdk.Memo.hash(memo.value);
         } else {
           console.log("manual memo.text");
           var memo_tr = StellarSdk.Memo.text(memo.value);
