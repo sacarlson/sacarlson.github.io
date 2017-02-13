@@ -9,7 +9,6 @@
     // Initialize everything when the window finishes loading
     window.addEventListener("load", function(event) {
       //StellarSdk.Network.useTestNetwork();
-      
       var network_testnet = document.getElementById("network_testnet");
       //var message = document.getElementById("message");
       var account = document.getElementById("account");
@@ -90,7 +89,14 @@
       var force_enable_change_key = document.getElementById("force_enable_change_key");
       var qr_export_mode = document.getElementById("qr_export_mode");
       var qr_export_mode_span = document.getElementById("qr_export_mode_span");
-      
+      var add_signer_type = document.getElementById("add_signer_type");
+      var signer_type = document.getElementById("signer_type");
+      var signer_key = document.getElementById("signer_key");
+      var secret_key = document.getElementById("secret_key");
+      var secret_key_hex = document.getElementById("secret_key_hex");
+      var passphrase = document.getElementById("passphrase");
+      var public_key_coded = document.getElementById("public_key_coded");
+
       var asset_obj = new StellarSdk.Asset.native();
       var socket;
       var socket_open_flag = false;
@@ -115,6 +121,7 @@
       var reset_defaults = false;
       memo_mode.value  = "memo.text";
       memo.value = "";
+      //secret_key.textContent = "test 1 2 3";
 
       auto_trust.value = 1;      
 
@@ -2051,15 +2058,17 @@
                  });                                     
                }
 
-     function addSignerOperation() {
+      
+
+      function addSignerOperation() {
+                 console.log("start addSignerOperation");
                  console.log(signer.value);
                  console.log(Number(weight.value));
-                 return StellarSdk.Operation.setOptions({
-                   signer: {
-                     address: signer.value,
-                     weight: Number(weight.value)
-                   }
-                 });
+                 var opts = {};
+                 opts.signer = {};
+                 opts.signer[add_signer_type.value] = signer.value;
+                 opts.signer.weight = Number(weight.value);
+                 return StellarSdk.Operation.setOptions(opts);                 
                }
 
       function addTrustlineOperation(asset_type2, address, limit) {
@@ -3272,6 +3281,42 @@ function display_history(page){
       change_network.disabled = false; 
     }
     
+function bin2hex (s) {
+  // From: http://phpjs.org/functions
+  // +   original by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
+  // +   bugfixed by: Onno Marsman
+  // +   bugfixed by: Linuxworld
+  // +   improved by: ntoniazzi (http://phpjs.org/functions/bin2hex:361#comment_177616)
+  // *     example 1: bin2hex('Kev');
+  // *     returns 1: '4b6576'
+  // *     example 2: bin2hex(String.fromCharCode(0x00));
+  // *     returns 2: '00'
+
+  var i, l, o = "", n;
+
+  s += "";
+
+  for (i = 0, l = s.length; i < l; i++) {
+    n = s.charCodeAt(i).toString(16)
+    o += n.length < 2 ? "0" + n : n;
+  }
+
+  return o;
+}
+
+  function toHexString(arr) {
+    console.log("tohexstring");
+    var s = '';
+    var e = '';
+    for (var i = 0; i < arr.length; i++) {
+      e = arr[i].toString(16);
+      if (e.length == 1){
+        e = "0" + e;
+      }
+      s += e;
+    };
+    return s
+  }
 
    //triger the event of readSingleFile when file-input browse button is clicked and a file selected
      //this event reads the data from a local disk file and restores it's contents to the LocalStorage
@@ -3294,7 +3339,76 @@ function display_history(page){
         }
       }
 
-      
+      gen_random.addEventListener("click", function(event) {
+        console.log("gen_random");
+        var keypair = StellarSdk.Keypair.random();
+        fill_key_info(keypair); 
+      });
+
+      function fill_key_info(keypair){
+        console.log("fill_key_info");
+        var unencodedBuffer = keypair.rawPublicKey();
+        var unencodedBuffer_secret = keypair.rawSecretKey();
+        var unencoded_publickey = unencodedBuffer.toString();
+        var seed = keypair._secretSeed;
+        var publickey = keypair._publicKey;
+        var publickey_hex = toHexString(unencodedBuffer);
+        key = keypair;
+        sign_tx.disabled = false;
+        signer_key.value = keypair.secret();
+        seed.value = keypair.secret();
+        secret_key.textContent = keypair.secret();
+        console.log("keypair");
+        console.log(keypair);
+        console.log(publickey.length);
+        console.log(unencoded_publickey.length);
+        console.log("unencodedBuffer");
+        console.log(unencodedBuffer);
+        console.log("unecnoded_publickey");
+        console.log(unencoded_publickey);
+        console.log("seed hex");
+        console.log(bin2hex(seed));
+        
+        console.log("unencoded_publickey hex");
+        console.log(bin2hex(unencoded_publickey));
+        console.log("add_signer_type.value");
+        console.log(add_signer_type.value);
+        secret_key_hex.textContent = bin2hex(seed);
+        var encoded_key;
+        if (add_signer_type.value == "preAuthTx"){
+          encoded_key = StellarSdk.StrKey.encodePreAuthTx(seed);
+          encoded_publickey = StellarSdk.StrKey.encodePreAuthTx(unencodedBuffer);
+          console.log("preauthtx_key");
+          console.log(encoded_key);
+          signer.value = publickey_hex;
+          public_key_coded.textContent = encoded_publickey;     
+        }        
+        if (add_signer_type.value == "sha256Hash"){
+          encoded_key = StellarSdk.StrKey.encodeSha256Hash(seed);
+          var encoded_publickey = StellarSdk.StrKey.encodeSha256Hash(unencodedBuffer);
+          console.log("encoded_publickey");
+          console.log(encoded_publickey);
+          console.log("hashx_key");
+          console.log(encoded_key);
+          public_key_coded.textContent = encoded_publickey;
+          signer.value = publickey_hex;
+        }
+        if (add_signer_type.value == "ed25519PublicKey"){
+          encoded_key = StellarSdk.StrKey.encodeEd25519SecretSeed(seed);
+          console.log("ed25519secret_key");
+          console.log(encoded_key);
+          signer.value = keypair.publicKey();
+          signer_key.value = encoded_key;          
+        }
+      }
+
+      gen_passphrase_key.addEventListener("click", function(event) {
+        var seed = StellarSdk.hash(passphrase.value);
+        console.log("seed.length");
+        console.log(seed.length);
+        var keypair = StellarSdk.Keypair.fromRawSeed(seed);
+        fill_key_info(keypair);       
+      });
 
       better_ask_button.addEventListener("click", function(event) {
         //check_orderbook("ask");
@@ -3477,7 +3591,11 @@ function display_history(page){
 
       sign_tx.addEventListener("click", function(event) {
         try {
-          update_key();
+          if (signer_key.value.length > 0){
+            key = StellarSdk.Keypair.fromSecret(signer_key.value);
+          } else {
+            update_key();
+          }
           var b64 = sign_b64_tx(envelope_b64.value,key);
           console.log("signer accountId: " + key.publicKey());
           console.log("b64: " + b64);
@@ -3526,6 +3644,8 @@ function display_history(page){
         }
       });
 
+  // rule #1 don't repeat code FIX ME!! (duplicate fed_lookup...)
+  // rule #2 if it works don't fix it?
       fed_lookup.addEventListener("click", function(event) {
         send_fed_to = "dest";
         try {

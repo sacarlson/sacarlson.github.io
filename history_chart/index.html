@@ -21,7 +21,9 @@
     var e = 0;
 
     var socket;
+    var wallet_url = "https://wallet.funtracker.site/";
     var url = "ws://b.funtracker.site:9494";
+    //var url = "ws://www.funtracker.site:9494";
     var action = '{"action":"get_ticker_list"}';
     
       //http://www.funtracker.site/chart/index.html?json=%7b%22asset_code%22:%22THB%22,%22base_code%22:%22USD%22,%22url_ws%22:%22ws://b.funtracker.site:9494%22%7d
@@ -43,12 +45,13 @@
         socket.addEventListener("message", function(event) {
            var data = JSON.parse(event.data);
            console.log("data");
-           console.log(data);
+           console.log(data);    
            var link;
            var link_start = '<a href="./chart.html?json=%7b%22asset_code%22:%22';
            var link_mid = '%22,%22base_code%22:%22';
            var link_end = '%22%7d">Chart_link</a>';
            var array_table = [];
+           var testnet_issuer = "GBEK5BFCXBYPZ5JAP2XUWM637PYBQNTL5Y2MVZYV2NBRH6OYS4HCWTWO";
            if (data.action == "get_ticker_list"){
               console.log("get_ticker_list detected");
                 //console.log(key, data.asset_pairs[key]);
@@ -59,11 +62,22 @@
                 array_table[1] = data.asset_pairs[key][5];
                 array_table[2] = data.asset_pairs[key][4];
                 array_table[3] = link;
-                array_table[4] = data.asset_pairs[key][0];
-                array_table[5] = data.asset_pairs[key][1].substring(0, 5) + "...";
-                array_table[6] = data.asset_pairs[key][2];
-                array_table[7] = data.asset_pairs[key][3].substring(0, 5) + "...";
-                insRow(array_table,"table");
+                array_table[4] = make_wallet_trade_link(data.asset_pairs[key],wallet_url);
+                array_table[5] = data.asset_pairs[key][0];
+                if (data.asset_pairs[key][1] === null){
+                  array_table[6] = "...";
+                }else{
+                  array_table[6] = data.asset_pairs[key][1].substring(0, 5) + "...";
+                }
+                array_table[7] = data.asset_pairs[key][2];
+                if (data.asset_pairs[key][3] === null) {
+                  array_table[8] = "...";
+                }else{
+                  array_table[8] = data.asset_pairs[key][3].substring(0, 5) + "...";
+                }
+                if (data.asset_pairs[key][1] != testnet_issuer && data.asset_pairs[key][3] != testnet_issuer) {
+                  insRow(array_table,"table");
+                }
               }
            }
         });
@@ -78,6 +92,20 @@
           console.log("socket close");
         });
       }
+
+     function make_wallet_trade_link(data,_wallet_url){
+       //https://sacarlson.github.io/my_wallet/?json=%7B%22selling_asset_code%22:%22USD%22,%22selling_asset_issuer%22:%22GBEK5BFCXBYPZ5JAP2XUWM637PYBQNTL5Y2MVZYV2NBRH6OYS4HCWTWO%22,%22selling_price%22:%221.34%22,%22buying_asset_code%22:%22FUNT%22,%22buing_asset_issuer%22:%22GBEK5BFCXBYPZ5JAP2XUWM637PYBQNTL5Y2MVZYV2NBRH6OYS4HCWTWO%22,%22selling_amount%22:%221.123%22%7D      
+       var bid_price = data[5];
+       var ask_price = data[4];
+       var asset_code = data[0];
+       var asset_issuer = data[1];
+       var asset_base_code = data[2];
+       var asset_base_issuer = data[3];
+       var trade_link = '<a href="' + _wallet_url + "?json=%7b%22selling_asset_code%22:%22"+asset_base_code+"%22,%22selling_asset_issuer%22:%22"+asset_base_issuer;
+       trade_link = trade_link + "%22,%22selling_price%22:%22"+ask_price+"%22,%22buying_asset_code%22:%22"+asset_code+"%22,%22buying_asset_issuer%22:%22"
+       trade_link = trade_link + asset_issuer+'%22%7d">Buy_'+asset_code+'</a>';
+       return trade_link;
+     }
 
      function color_text(to_color) {
         console.log("change_color_text" + to_color);
@@ -156,9 +184,10 @@
 		<thead>
 			<tr>
 				<th><h3>Asset Pair</h3></th>
-                                <th><h3>Bid Price</h3></th>
-                                <th><h3>Ask Price</h3></th>
-                                <th><h3>History Chart</h3></th>
+                <th><h3>Bid Price</h3></th>
+                <th><h3>Ask Price</h3></th>
+                <th><h3>History Chart</h3></th>
+                <th><h3>Buy Link</h3></th>
 				<th><h3>Asset Code</h3></th>
 				<th><h3>Asset Issuer</h3></th>
 				<th><h3>Asset Base</h3></th>

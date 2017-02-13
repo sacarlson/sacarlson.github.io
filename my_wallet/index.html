@@ -10,13 +10,18 @@
   <script src="https://code.jquery.com/jquery-2.2.1.min.js" integrity="sha384-8C+3bW/ArbXinsJduAjm9O7WNnuOcO+Bok/VScRYikawtvz4ZPrpXtGfKIewM9dK" crossorigin="anonymous"></script>
   <script src="js/qrcode.js" integrity="sha384-hYj7cf8JCFyDuU90YJY9/TgSVpAtbrqW6oQliv63kjRTr4oyOTeITwmTfSI+UC0a" crossorigin="anonymous"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
-  <script src="js/aes.js" integrity="sha384-YkYpnhy3j3+zc3fQvzlbh4WGwDgt+06gsGsaApwM1O3IKIsKJk61C0Lr6YvbovUV" crossorigin="anonymous"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/components/core.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/aes.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/sha256.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/components/enc-base64.js"></script>
+ 
+
  <script src="js/toml-browser.js"></script>
   <script src="js/stellar-sdk.js"></script>
   <script src="js/transaction_toolsv0.4.0.js"></script> 
   <script src="js/tablesort.js"></script>
   <script src="js/tablesort.number.js"></script>
-   
+  
 </head>
 <body>
   <div class="panel panel-primary">
@@ -193,7 +198,7 @@
     <h5>Encrypt/Decrypt Seed pass phrase:</h5>
     <input id="pass_phrase" class="form-control" size="60" /><br />
     <h5>Secret Seed:</h5>  
-    <input id="seed" class="form-control"  />  
+    <input id="seed" type="text" value="" class="form-control"  />  
     <input id="decrypt_seed" type="button" value="decrypt_seed" />
     <input id="encrypt_seed" type="button" value="encrypt_seed" /><br />  
     <h5>AccountId:</h5>
@@ -291,7 +296,9 @@ QR-code export mode: <select name="QR_export_mode" id="qr_export_mode" value='Ra
       <p>Sign a multi sig base64 tx envelope</p> 
       <input id="sign_tx" type="button" value="sign_tx" />
       <input id="email_tx" type="button" value="email_tx" />
-      <input id="send_tx" type="button" value="submit_tx" /><br />    
+      <input id="send_tx" type="button" value="submit_tx" /><br />
+      <label for="signer_key">  Signer Secret key:</label>  
+      <input  type="text" class="form-control" id="signer_key"  value = "" />   
       <div class="form-group">
        <label for="comment">TX Envelope Base64:</label>
        <textarea class="form-control" rows="6" id="envelope_b64"></textarea>
@@ -328,14 +335,30 @@ QR-code export mode: <select name="QR_export_mode" id="qr_export_mode" value='Ra
     <div class="col-sm-6">
      <div class="form-group">
        
-        <input id="add_signer" type="button" value="add_signer" /><br />
+        <input id="add_signer" type="button" value="Add_Signer" />
+        <input id="gen_passphrase_key" type="button" value="Gen_Passphrase_Key" />
+        <input id="gen_random" type="button" value="Gen_random" />
+        <select name="signer_type" id="add_signer_type" value='ed25519PublicKey'>
+          <option>ed25519PublicKey</option>
+          <option>sha256Hash</option>
+          <option>preAuthTx</option>
+        </select><br />
+        <label for="passphrase">  PassPhrase for hash(x):</label>
+        <input type="text"  class="form-control" id="passphrase" /> 
         <label for="signer">  Signer:</label> 
+        
         <div class="input-group">
           <input type="text"  class="form-control" id="signer" />
           <span class="input-group-btn">
            <button type="button" class="btn btn-info" id="fed_lookup_signer" >Fed_Lookup</button>
           </span>
         </div>
+        <h5> PublicKey Coded: </h5>
+        <h5><span id="public_key_coded"></span>  </h5>
+        <h5> Secret Coded: </h5>
+        <h5><span id="secret_key"></span> </h5>
+        <h5> Secret Hex: </h5>
+        <h5><span id="secret_key_hex"></span> </h5>
         <label for="weight">  Weight:</label><br />
         <input  id="weight" size="3" value = "1" /><br /><br />
         <label for="inflation_dest">  Inflation Destination:</label>
