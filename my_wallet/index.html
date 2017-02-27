@@ -244,6 +244,8 @@
   <option>true</option>
   <option>false</option>
 </select><br />
+Remote My_wallet Signer URL: <input id="my_wallet_signer_url" size="30" /><br />
+Remote Stellar laboratory Signer URL: <input id="lab_signer_url" size="30" /><br />
 QR-code export mode: <select name="QR_export_mode" id="qr_export_mode" value='Raw'>
   <option>Raw</option>
   <option>Centaurus</option>
@@ -297,14 +299,17 @@ QR-code export mode: <select name="QR_export_mode" id="qr_export_mode" value='Ra
       <input id="sign_tx" type="button" value="sign_tx" />
       <input id="email_tx" type="button" value="email_tx" />
       <input id="send_tx" type="button" value="submit_tx" /><br />
+      <ul>
+         <li> <span id="my_signer_span"></span> </li>
+         <li> <span id="lab_signer_span"></span> </li>
+         <li> <span id="lab_env_viewer_span"></span> </li>
+      </ul>
       <label for="signer_key">  Signer Secret key:</label>  
       <input  type="text" class="form-control" id="signer_key"  value = "" />   
       <div class="form-group">
        <label for="comment">TX Envelope Base64:</label>
        <textarea class="form-control" rows="6" id="envelope_b64"></textarea>
-      </div>
-       
-                  
+      </div>                  
    </div>
 
 

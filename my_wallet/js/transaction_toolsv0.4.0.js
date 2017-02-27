@@ -94,8 +94,13 @@
       var signer_key = document.getElementById("signer_key");
       var secret_key = document.getElementById("secret_key");
       var secret_key_hex = document.getElementById("secret_key_hex");
-      var passphrase = document.getElementById("passphrase");
+      var passphrase = document.getElementById("passphrase");      
       var public_key_coded = document.getElementById("public_key_coded");
+      var lab_signer_span = document.getElementById("lab_signer_span");
+      var lab_env_viewer_span = document.getElementById("lab_env_viewer_span");
+      var my_signer_span = document.getElementById("my_signer_span");
+      var my_wallet_signer_url = document.getElementById("my_wallet_signer_url");
+      var lab_signer_url = document.getElementById("lab_signer_url");
 
       var asset_obj = new StellarSdk.Asset.native();
       var socket;
@@ -143,7 +148,7 @@
       //bal_disp.textContent = "test";
       //reset_horizon_server(); 
       seed.value = restore_seed("seed1", "");
-  
+      signer_key.value = seed.value;
       var qrcode = new QRCode(document.getElementById("qrcode"), {
 	    width : 300,
 	    height : 300
@@ -174,6 +179,7 @@
         account_tx.address = account.value;
         //console.log("account ok");
         seed.value = key.secret();
+        signer_key.value = seed.value;
         //console.log("seed ok");
         save_seed("seed1", "", seed.value );
       } else {
@@ -221,7 +227,8 @@
         }
         if (typeof params["env_b64"] != "undefined") {
           console.log("env_b64 param detected");
-          envelope_b64.value = params["env_b64"];
+          //envelope_b64.value = params["env_b64"];
+          fill_envelope_b64(params["env_b64"]);
           account.value = new StellarSdk.Transaction(envelope_b64.value).operations[0].destination;
           account_tx.address = account.value;
           console.log(new StellarSdk.Transaction(envelope_b64.value).operations[0].asset);
@@ -231,6 +238,7 @@
         }               
         if (typeof params["seed"] != "undefined") {
           seed.value = params["seed"];
+          signer_key.value = seed.value;
           account.value = StellarSdk.Keypair.fromSecret(seed.value).publicKey();
           account_tx.address = account.value;
           key = StellarSdk.Keypair.fromSecret(seed.value);
@@ -381,6 +389,71 @@
         attachToPaymentsStream('now');
         get_offers();
       }
+
+      function fill_envelope_b64(b64_tx_env){
+        console.log("fill_envelope");
+        console.log(b64_tx_env);
+        envelope_b64.value = b64_tx_env;
+        //var my_signer = gen_my_wallet_signer_link(b64_tx_env)
+        //var lab_signer = gen_lab_env_signer_link(b64_tx_env);
+        //var lab_env_viewer = gen_lab_env_viewer_link(b64_tx_env);
+        lab_env_viewer_span.innerHTML = '<a href="' + gen_lab_env_viewer_link(b64_tx_env) + '" target="_blank">View Transaction Details </a>';
+        lab_signer_span.innerHTML = '<a href="' + gen_lab_env_signer_link(b64_tx_env) + '" target="_blank">Send Tx to Stellar lab to sign</a>';
+        my_signer_span.innerHTML = '<a href="' + gen_my_wallet_signer_link(b64_tx_env) + '" target="_blank">Send Tx to remote my_wallet to sign</a>';
+      }
+
+    function gen_my_wallet_signer_link(b64_tx_env){
+      // example output to my_signer_link
+      //"https://wallet.funtracker.site/?json=%7B%22env_b64%22:%22AAAAAACiljUs+IgW9r0pX8M/tQAOZ0ZvSfYAvdaqe43XQcJ9AAAAZAAJZF4AAAAkAAAAAAAAAAAAAAABAAAAAAAAAAMAAAABVVNEAAAAAACJmyhA7VY2xW3cXxSyOXX3nxuiOI0mlOTFbs3dyWDl7wAAAAAAAAAAAJiWgAAAAgkAAAABAAAAAAAAAAAAAAAAAAAAAA==%22%7D"app.js:51788:3
+      var signer_url = my_wallet_signer_url.value;
+      var pre_env = '/?json=%7B%22env_b64%22:%22';
+      var post_env = '%22%7D';
+      var signer_link =  signer_url + pre_env + b64_tx_env + post_env;
+      console.log("my_signer_link");
+      console.log(signer_link);
+      return signer_link;
+    }
+
+  function check_net_type(){
+    var pub = "Public Global Stellar Network ; September 2015"
+    var tes = "Test SDF Network ; September 2015"
+    if (net_passphrase.value == pub){
+      return "live";
+    } else if (net_passphrase.value == tes){
+      return "test";
+    } else {
+      return "unknown";
+    }
+  }
+
+  function gen_lab_env_signer_link(b64_tx_env){
+    // example output to lab_viewer_link.  b64_tx_env is a base64 encoded string of tx envelope
+    //https://www.stellar.org/laboratory/#txsigner?xdr=AAAAAACiljUs%2BIgW9r0pX8M%2FtQAOZ0ZvSfYAvdaqe43XQcJ9AAAAZAAJZF4AAAAHAAAAAAAAAAAAAAABAAAAAAAAAAMAAAABVVNEAAAAAACJmyhA7VY2xW3cXxSyOXX3nxuiOI0mlOTFbs3dyWDl7wAAAAAAAAAAAJiWgAAAAgkAAAABAAAAAAAAAAAAAAAAAAAAAA%3D%3D&network=test
+    var signer_url = lab_signer_url.value;
+    var pre_env = "/#txsigner?xdr=";
+    var post_env = "&network=" + check_net_type();
+    var b64_post_encode = b64_tx_env.replace(/\=/g,"%3D");
+    b64_post_encode = b64_post_encode.replace(/\//g,"%2F");
+    b64_post_encode = b64_post_encode.replace(/\+/g,"%2B");    
+    var signer_link = signer_url + pre_env + b64_post_encode + post_env;
+    console.log("lab_env_signer_link");
+    console.log(signer_link);
+    return signer_link;
+  }
+
+  function gen_lab_env_viewer_link(b64_tx_env){
+    // "https://www.stellar.org/laboratory/#xdr-viewer?input=AAAAAACiljUs%2BIgW9r0pX8M%2FtQAOZ0ZvSfYAvdaqe43XQcJ9AAAAZAAJZF4AAAAkAAAAAAAAAAAAAAABAAAAAAAAAAMAAAABVVNEAAAAAACJmyhA7VY2xW3cXxSyOXX3nxuiOI0mlOTFbs3dyWDl7wAAAAAAAAAAAJiWgAAAAgkAAAABAAAAAAAAAAAAAAAAAAAAAA%3D%3D&type=TransactionEnvelope&network=test"
+    var viewer_url = lab_signer_url.value;
+    var pre_env = "/#xdr-viewer?input=";
+    var post_env = "&type=TransactionEnvelope&network=" + check_net_type();
+    var b64_post_encode = b64_tx_env.replace(/\=/g,"%3D");
+    b64_post_encode = b64_post_encode.replace(/\//g,"%2F");
+    b64_post_encode = b64_post_encode.replace(/\+/g,"%2B");        
+    var lab_viewer_link = viewer_url + pre_env + b64_post_encode + post_env;
+    console.log("lab_env_viewer_link");
+    console.log(lab_viewer_link);
+    return lab_viewer_link;
+  }
 
       function to_trade_page() {
         document.getElementById('top_ul').getElementsByTagName('li')[0].className = "";
@@ -1769,7 +1842,8 @@
      function submitTransaction_mss(transaction) {
        console.log("start submitTransaction_mss");
        var b64 = transaction.toEnvelope().toXDR().toString("base64");
-       envelope_b64.value = b64;
+       //envelope_b64.value = b64;
+       fill_envelope_b64(b64);
        if (email_flag) {
          email_funds_now("email_funds");
          email_flag = false;
@@ -2002,7 +2076,8 @@
             }
             //console.log(transactionResult);
             //console.log(transaction.toEnvelope().toXDR().toString("base64"));
-            envelope_b64.value = transaction.toEnvelope().toXDR().toString("base64");
+            //envelope_b64.value = transaction.toEnvelope().toXDR().toString("base64");
+            fill_envelope_b64(transaction.toEnvelope().toXDR().toString("base64"));
             if ( email_flag ) {
               console.log("horizon mode email_flag detected");  
               email_funds_now ("email_funds");
@@ -2499,8 +2574,12 @@
         }         
         if (typeof(Storage) !== "undefined") {
           // Retrieve
-          var encrypted = localStorage.getItem(seed_nick.value);
+          var encrypted = localStorage.getItem(seed_nick.value);        
           seed.value = CryptoJS.AES.decrypt(encrypted, pass_phrase.value).toString(CryptoJS.enc.Utf8);
+          if (pass_phrase.value.length == 0){
+            save_seed("seed1", "", seed.value);
+            signer_key.value = seed.value;
+          }
           save.disabled = false;
           update_seed_select()
           update_key();
@@ -2517,7 +2596,7 @@
         if (def_settings_json == null || reset_defaults) {
           // default setting for a users first time run on this browser          
           console.log("type null, restore nothing");
-          default_asset_code.value = "FUNT";
+          default_asset_code.value = "XLM";
           default_issuer.value = "GBUYUAI75XXWDZEKLY66CFYKQPET5JR4EENXZBUZ3YXZ7DS56Z4OKOFU";
           buying_asset_issuer.value = default_issuer.value;
           selling_asset_issuer.value = default_issuer.value;          
@@ -2531,11 +2610,14 @@
           auto_trust.value = "6";
           change_network_func();
           set_default_colors();
-          save_default_settings();
-          reset_defaults = false;
           auto_allow_trust.checked = false;
           dec_round.value = 4;
-          force_enable_change_key.value = "false"; 
+          force_enable_change_key.value = "false";
+          my_wallet_signer_url.value = "https://wallet.funtracker.site"; 
+          lab_signer_url.value = "https://www.stellar.org/laboratory";
+          save_default_settings();
+
+          reset_defaults = false;         
           return;
         }
         var obj = JSON.parse(def_settings_json);
@@ -2546,7 +2628,7 @@
         url.value = obj.url;
         port.value = obj.port;
         secure.value = obj.secure;         
-        if (typeof obj.qr_export_mode != "undefined" && reset_defaults != true){
+        if (typeof obj.version != "undefined" && obj.version > 1.0 && reset_defaults != true){
           sound_src.value = obj.sound_src;
           default_asset_code.value = obj.default_asset_code;
           default_issuer.value = obj.default_issuer;
@@ -2557,9 +2639,11 @@
           dec_round.value = obj.dec_round;
           force_enable_change_key.value = obj.force_enable_change_key;
           qr_export_mode.value = obj.qr_export_mode;
+          my_wallet_signer_url.value = obj.my_wallet_signer_url; 
+          lab_signer_url.value = obj.lab_signer_url;
         } else {
           sound_src.value = "sound/coin-drop-3.mp3";
-          default_asset_code.value = "FUNT";
+          default_asset_code.value = "XLM";
           tasset.value = default_asset_code.value;
           default_issuer.value = "GBUYUAI75XXWDZEKLY66CFYKQPET5JR4EENXZBUZ3YXZ7DS56Z4OKOFU";
           buying_asset_issuer.value = default_issuer.value;
@@ -2571,7 +2655,9 @@
           auto_allow_trust.checked = false;
           dec_round.value = 4;
           force_enable_change_key.value = "false"; 
-          qr_export_mode.value = "Raw";    
+          qr_export_mode.value = "Raw";
+          my_wallet_signer_url.value = "https://wallet.funtracker.site"; 
+          lab_signer_url.value = "https://www.stellar.org/laboratory";    
           save_default_settings(); 
         }       
         if (typeof obj.top_image_url != "undefined" && obj.top_image_url.length > 3) {
@@ -2634,6 +2720,9 @@
         obj.dec_round = dec_round.value;
         obj.force_enable_change_key = force_enable_change_key.value;
         obj.qr_export_mode = qr_export_mode.value;
+        obj.my_wallet_signer_url = my_wallet_signer_url.value; 
+        obj.lab_signer_url = lab_signer_url.value;
+        obj.version = 1.01;    
         var string = JSON.stringify(obj);
         localStorage.setItem("def_settings", string);
       }
@@ -3550,6 +3639,7 @@ function bin2hex (s) {
         var seed_swap = seed.value;
         var accountId_swap = account.value
         seed.value = dest_seed.value;
+        signer_key.value = seed.value;
         dest_seed.value = seed_swap;
         account.value = destination.value;
         account_tx.address = account.value;
@@ -3580,13 +3670,15 @@ function bin2hex (s) {
         console.log("length temp: " + temp.length);
         if (temp.length > 0) {
           seed.value = temp;
+          signer_key.value = seed.value;
         } else {
           alert("bad pass phrase for decrypt_seed");
         }
       });
 
       encrypt_seed.addEventListener("click", function(event) {
-        seed.value = CryptoJS.AES.encrypt(seed.value, pass_phrase.value);  
+        seed.value = CryptoJS.AES.encrypt(seed.value, pass_phrase.value);
+        signer_key.value = "";  
       });
 
       sign_tx.addEventListener("click", function(event) {
@@ -3599,7 +3691,8 @@ function bin2hex (s) {
           var b64 = sign_b64_tx(envelope_b64.value,key);
           console.log("signer accountId: " + key.publicKey());
           console.log("b64: " + b64);
-          envelope_b64.value = b64;
+          //envelope_b64.value = b64;
+          fill_envelope_b64(b64);
           sign_tx.disabled = true;
         } catch(err) {
           alert("sign_tx error: " + err);
@@ -3798,6 +3891,7 @@ function bin2hex (s) {
 
       restore.addEventListener("click", function(event) {
         seed.value = restore_seed(seed_nick.value, pass_phrase.value);
+        signer_key.value = seed.value;
         update_seed_select();
         update_key();
         update_balances();

@@ -1,7 +1,9 @@
 #  my_wallet Features
 
 * Send funds of any asset type to another accountId.
-* Create Random accountId destination accounts 
+* Create Random accountId keypair destination accounts and signers
+* Create hash(x) keypair using value of x and add as signers
+* Create hash(tx) keypair using value of tx and add as signers
 * Create new account option checkbox to fund unfunded accounts
 * Receive funds of any type from another AccountId with QRcode support.
 * Federation support to use names instead of long accountID numbers for sending funds.
@@ -22,12 +24,16 @@
      * Change Network Passphrase for private/custom networks. 
      * Change from Horizon to Mss-server supported API format.
      * Change pages default top right image url to any custom user image (100 by 100 pixal image) that is saved in browsers local storage
-     * Change pages top Title instead of "Scotty's Wallet" to any user defined title.
+     * Change pages top Title instead of "Funtracker.site Wallet" to any user defined title.
      * Change pages background color or replace with background image (animated background supported).
      * Change pages font text color to best match user defined replacement background.
   * Add Trustlines to AccountId
+  * Recieve base64 tx envelope transactions from other my_wallet URLs to be signed via URL link params
   * Sign base64 tx envelope transaction and mail to next signer or submit to Net.
-  * Merge accountId with another targeted accountId.
+  * Forward signing of a tx envelope to remote my_wallet or stellar.org laboratory signer
+  * View tx envelope details before signing tx (links to stellar.org laboratory tx envelope viewer)
+  * Set default URL values of remote my_wallet signer and stellar.org laboratory signer. 
+  * Merge all assets of accountId with another targeted accountId.
   * Change AccountId advanced settings
      * Add or remove signers from accountId
      * Change/set signer and master signer weights.
