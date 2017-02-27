@@ -101,6 +101,7 @@
       var my_signer_span = document.getElementById("my_signer_span");
       var my_wallet_signer_url = document.getElementById("my_wallet_signer_url");
       var lab_signer_url = document.getElementById("lab_signer_url");
+      var regen_keypair = document.getElementById("regen_keypair");
 
       var asset_obj = new StellarSdk.Asset.native();
       var socket;
@@ -1705,10 +1706,15 @@
         if (seed.value.length == 56) {
           key = StellarSdk.Keypair.fromSecret(seed.value);
           account.value = key.publicKey();          
+        }else if (account.value.length == 56){
+          console.log("update_key has no secret, creating key fromPublicKey");
+          //key =  StellarSdk.Keypair.fromAccountId(account.value);
+          key = StellarSdk.Keypair.fromPublicKey(account.value);
         }
         account_disp.textContent = account.value;
         account_disp2.textContent = account.value;
         account_tx.address = account.value;
+        tx_status.textContent = "keypair updated";
         makeCode();
       }
       
@@ -1743,7 +1749,7 @@
 
       function sendPaymentTransaction() {
         console.log("sendPaymentTransaction");
-        var key = StellarSdk.Keypair.fromSecret(seed.value);
+        //var key = StellarSdk.Keypair.fromSecret(seed.value);
         if (asset.value == "native" || asset.value == "XLM") {
           //issuer.value = "";
           console.log("asset: native (XLM)");
@@ -1781,7 +1787,7 @@
           // this will send all native of key from seed.value account to destination.value account
           update_key();
           console.log("accountMerge");        
-          key = StellarSdk.Keypair.fromSecret(seed.value);
+          //key = StellarSdk.Keypair.fromSecret(seed.value);
           console.log(key.publicKey());
           var operation = accountMergeOperation();
           console.log("operation created ok");
@@ -1790,7 +1796,7 @@
 
       function setOptionsTransaction() {
           console.log("setOptionsTransaction");        
-          key = StellarSdk.Keypair.fromSecret(seed.value);
+          //key = StellarSdk.Keypair.fromSecret(seed.value);
           console.log("key.accountId: ");
           console.log(key.publicKey());
           var operation = setOptionsOperation();
@@ -1800,7 +1806,7 @@
 
      function manageOfferTransaction() {
           console.log("manageOfferTransaction");        
-          key = StellarSdk.Keypair.fromSecret(seed.value);
+          //key = StellarSdk.Keypair.fromSecret(seed.value);
           console.log(key.publicKey());
           var operation = manageOfferOperation();
           console.log("operation created ok");
@@ -1822,7 +1828,7 @@
 
      function addSignerTransaction() {
           console.log("addSignerTransaction");        
-          key = StellarSdk.Keypair.fromSecret(seed.value);
+          //key = StellarSdk.Keypair.fromSecret(seed.value);
           console.log(key.publicKey());
           var operation = addSignerOperation();
           console.log("operation created ok");
@@ -1831,7 +1837,7 @@
 
       function allowTrustTransaction(trustor,assetCode,authorize) {
           console.log("allowTrustTransaction");        
-          key = StellarSdk.Keypair.fromSecret(seed.value);
+          //key = StellarSdk.Keypair.fromSecret(seed.value);
           console.log(key.publicKey());
           var operation = allowTrustOperation(trustor,assetCode,authorize)
           console.log("operation created ok");
@@ -2013,8 +2019,8 @@
       }
 
       function createTransaction_horizon(key,operation) {
-        tx_status.textContent = "Processing";
         update_key();
+        tx_status.textContent = "Processing";        
         if (memo_mode.value == "auto") {
           if (isNaN(memo.value)|| memo.value.length == 0) {
             console.log("auto memo.text");
@@ -2040,8 +2046,18 @@
              transaction = new StellarSdk.TransactionBuilder(account,{fee:100, memo: memo_tr})            
             .addOperation(operation)                      
             .build();
-            transaction.sign(key);
-           if ( email_flag != true ) { 
+            var key_has_secret = true;
+            try { 
+              key.secret();
+            } catch(err){
+              console.log("key had no secret: " + err);
+              key_has_secret = false
+              sign_tx.disabled = true;
+            }
+            if (key_has_secret){
+              transaction.sign(key);
+            }
+           if ( email_flag != true && key_has_secret ) { 
              console.log("horizon mode sending tx");                               
              server.submitTransaction(transaction).then(function(result) {
                //console.log("tx2_result: ");
@@ -2078,6 +2094,12 @@
             //console.log(transaction.toEnvelope().toXDR().toString("base64"));
             //envelope_b64.value = transaction.toEnvelope().toXDR().toString("base64");
             fill_envelope_b64(transaction.toEnvelope().toXDR().toString("base64"));
+            try { 
+              key.secret();
+            } catch(err){
+              tx_status.textContent = "tx created but not sent (no secret)";
+            }
+            
             if ( email_flag ) {
               console.log("horizon mode email_flag detected");  
               email_funds_now ("email_funds");
@@ -3946,6 +3968,13 @@ function bin2hex (s) {
         reset_defaults = true;
         restore_default_settings();
       }); 
+
+      regen_keypair_button.addEventListener("click", function(event) {
+        update_key();
+        update_balances();
+        sign_tx.disabled = false;
+      }); 
+
 
 
   });
