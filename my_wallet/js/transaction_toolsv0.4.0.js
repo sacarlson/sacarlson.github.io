@@ -1864,9 +1864,34 @@
        socket.send(action);
      }
 
+          
      function submitTransaction_horizon_b64(b64_string){
-       var tx = new StellarSdk.Transaction(b64_string);
-       server.submitTransaction(tx);
+       tx_status.textContent = "tx submited";
+       var transaction = new StellarSdk.Transaction(b64_string);
+          server.submitTransaction(transaction).then(function(result) {              
+               tx_status.textContent = "Completed OK";
+             }).catch(function(e) {
+               console.log("submitTransaction error");
+               console.log(e);
+               tx_status.textContent = "Transaction failed";
+               if (e.extras.result_codes.transaction == "tx_bad_auth"){
+                  tx_status.textContent = "Transaction error: tx_bad_auth";
+               } else {           
+                 tx_status.textContent = "Transaction error: " + e.extras.result_codes.operations[0];
+               }                      
+          })
+          .then(function (transactionResult) {
+            console.log("tx_result");
+            console.log(transactionResult);
+            if (typeof transactionResult == "undefined") {
+              console.log("tx res undefined");
+              //tx_status.textContent = "tx res undefined";
+            }            
+          })
+          .catch(function (err) {
+            console.log(err);
+            tx_status.textContent = "Transaction Error: " + err; 
+          });
      }
 
      function get_seq(address) {
@@ -1923,43 +1948,7 @@
         return tx.toEnvelope().toXDR().toString("base64");
       }
 
-      function createTransaction_array2(array_of_operations) {
-         tx_status.textContent = "Processing";
-         update_key();
-         server.loadAccount(key.publicKey())
-          .then(function (account) {
-             transaction = new StellarSdk.TransactionBuilder(account)            
-             array_of_operations.forEach(function (item) {
-               transaction.addOperation(item);
-             });
-             transaction = transaction.build();
-             transaction.sign(key); 
-             console.log("horizon mode sending tx");                               
-             server.submitTransaction(transaction).then(function(result) {              
-               tx_status.textContent = "Completed OK";
-             }).catch(function(e) {
-               console.log("submitTransaction error");
-               console.log(e);
-               tx_status.textContent = "Transaction failed";
-               if (e.extras.result_codes.transaction == "tx_bad_auth"){
-                  tx_status.textContent = "Transaction error: tx_bad_auth";
-               } else {           
-                 tx_status.textContent = "Transaction error: " + e.extras.result_codes.operations[0];
-               } 
-             });                      
-          })
-          .then(function (transactionResult) {
-            console.log("tx_result");
-            console.log(transactionResult);
-            if (typeof transactionResult == "undefined") {
-              console.log("tx res undefined");
-            }            
-          })
-          .catch(function (err) {
-            console.log(err);
-            tx_status.textContent = "Transaction Error: " + err; 
-          });
-       }
+      
 
        function createTransaction_array(array_of_operations) {
          update_key();
@@ -3447,6 +3436,7 @@ function bin2hex (s) {
         if (chosenoption.value!="nothing"){
           console.log("selected value: " + chosenoption.value);
           restore_seed_option(chosenoption.value);
+          sign_tx.disabled = false;
         }
       }
 
@@ -3917,7 +3907,7 @@ function bin2hex (s) {
         update_seed_select();
         update_key();
         update_balances();
-        
+        sign_tx.disabled = false;
       });
 
        // Create a new connection when the Connect button is clicked
