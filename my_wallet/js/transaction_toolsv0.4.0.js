@@ -102,6 +102,8 @@
       var my_wallet_signer_url = document.getElementById("my_wallet_signer_url");
       var lab_signer_url = document.getElementById("lab_signer_url");
       var regen_keypair = document.getElementById("regen_keypair");
+      var multisig_url = document.getElementById("multisig_url");
+      var send_tx_status = document.getElementById("send_tx_status");
 
       var asset_obj = new StellarSdk.Asset.native();
       var socket;
@@ -222,6 +224,14 @@
         console.log(params);
         console.log(params["accountID"]);
         //console.log(params["env_b64"]);
+        if (typeof params["tx_tag"] != "undefined") {
+          console.log("tx_tag detected");
+          console.log(params["tx_tag"]);
+          console.log("url_callback");
+          console.log(params["callback"]);
+          get_remote_tx(params["callback"],params["tx_tag"]);
+          multisig_url.value = params["callback"];
+        }
         if (typeof params["accountID"] != "undefined") {
           account.value = params["accountID"];
           account_tx.address = account.value;
@@ -479,15 +489,66 @@
         }
       }
 
-      function setup_xml () {
+      function setup_xml(callback) {
        var xmlhttp_ = new XMLHttpRequest();
        xmlhttp_.onreadystatechange = function() {
          if (this.readyState == 4 && this.status == 200) {
            //var data = JSON.parse(this.responseText);
-           xml_response(this.responseText);
+           callback(this.responseText);
          }
        };
        return xmlhttp_
+     }
+
+     function obj2parms(obj){
+       var str = "";
+       for (var key in obj) {
+         if (str != "") {
+           str += "&";
+         }
+         str += key + "=" + encodeURIComponent(obj[key]);
+       }
+       return str;
+     }
+
+
+     function get_remote_tx(xml_url,txTag){
+       console.log("started get_remote_tx");
+       console.log("xml_url");
+       var client = setup_xml(xml_response_get_remote_tx)
+       client.open("GET", xml_url + '/gettx/' + txTag, true); 
+       client.send();
+     }
+
+     var remote_txData;
+
+     function xml_response_get_remote_tx(data){
+        console.log("xml_response get_remote_tx: ");
+        console.log(data);
+        remote_txData = JSON.parse(data);
+        console.log(remote_txData);
+        console.log(remote_txData.content.tx.tx_xdr);
+        //envelope_b64.value = d.content.tx.tx_xdr;
+        fill_envelope_b64(remote_txData.content.tx.tx_xdr); 
+     }
+
+     function sign_remote_tx(xml_url, txData) {
+       //txData starts as an obj with {tx_id:2,signer:GCEZ.., tx_xdr:AAAAA..}
+       //tx_id=2&signer=GCEZWKCA5VLDNRLN3RPRJMRZOX3Z6G5CHCGSNFHEYVXM3XOJMDS674JZ&tx_xdr=AAAAAICnn2od%2FfNM3E6rGaCdB4zdpwodRz7bT1CKLlf0ll%2FhAAAAZAALDIQAAAACAAAAAAAAAAAAAAABAAAAAAAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAA9mdW50cmFja2VyLnNpdGUAAAAAAAAAAAAAAAAG9JZf4QAAAECvNZh6LLcq41BoGoqPMj7aB7KAL6vpxDS4Ljwb43Kh2KCj52V58WMUxRcbGzpLGeyFiZmVGSxEhgE6rf1IbmoLyWDl7wAAAEB4TAuUAgkpjGX6g9zBCeSY9HsTmkJVloFpFvQ0qA5EAmbGmipy69O%2FFUQinvjaHIu3P6WQC5SND%2Bs3QXXFCm0KyWDl7wAAAEB4TAuUAgkpjGX6g9zBCeSY9HsTmkJVloFpFvQ0qA5EAmbGmipy69O%2FFUQinvjaHIu3P6WQC5SND%2Bs3QXXFCm0KyWDl7wAAAEB4TAuUAgkpjGX6g9zBCeSY9HsTmkJVloFpFvQ0qA5EAmbGmipy69O%2FFUQinvjaHIu3P6WQC5SND%2Bs3QXXFCm0KyWDl7wAAAEB4TAuUAgkpjGX6g9zBCeSY9HsTmkJVloFpFvQ0qA5EAmbGmipy69O%2FFUQinvjaHIu3P6WQC5SND%2Bs3QXXFCm0KyWDl7wAAAEB4TAuUAgkpjGX6g9zBCeSY9HsTmkJVloFpFvQ0qA5EAmbGmipy69O%2FFUQinvjaHIu3P6WQC5SND%2Bs3QXXFCm0K 
+       console.log("sign_remote_tx txData:");
+       console.log(obj2parms(txData));     
+       var client = setup_xml(xml_response_sign_remote);
+       client.open("POST", xml_url+'/signtx/', true); 
+       client.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+       client.send(obj2parms(txData));
+     }
+
+     function xml_response_sign_remote(data) {
+        console.log("xml_response sign_remote: ");
+        console.log(data);
+        console.log(typeof data);
+        var result = JSON.parse(data);
+        send_tx_status.textContent = result.content.message;      
      }
 
 
@@ -503,7 +564,7 @@
                //account_obj_global = accountInfo;
                if (accountInfo.home_domain.length > 0){
                  xmlurl = "https://www." + accountInfo.home_domain + "/.well-known/stellar.toml";
-                 var xmlhttp = setup_xml()
+                 var xmlhttp = setup_xml(xml_response_add_trust);
                  xmlhttp.open("GET", xmlurl, true);
                  xmlhttp.send();
                }else {
@@ -512,7 +573,7 @@
              });                            
       }
 
-      function xml_response(data) {
+      function xml_response_add_trust(data) {
         console.log("xml_response: ");
         console.log(data);
         var obj = toml.parse(data);
@@ -522,7 +583,7 @@
         if (obj.CURRENCIES.length >0){
           console.log("now account_obj_global: ");
           console.log(account_obj_global);
-          add_trust_array(obj.CURRENCIES,tlimit.value)
+          add_trust_array(obj.CURRENCIES,tlimit.value);
         }else{
           console.log("no assets to add to trust found");
         }
@@ -557,7 +618,7 @@
 
      function add_trust_to_merge(callback){
        console.log("add_trust_to_merge");
-       var array_opps = add_trust_array_get_opps(account_obj_global.balances,"",chain_store["account_info"].balances,2)
+       var array_opps = add_trust_array_get_opps(account_obj_global.balances,"",chain_store["account_info"].balances,2);
        console.log("array_opps");
        console.log(array_opps);
        if (array_opps.length > 0){
@@ -3439,6 +3500,16 @@ function bin2hex (s) {
           sign_tx.disabled = false;
         }
       }
+
+      send_tx_multisig.addEventListener("click", function(event) {
+         console.log("send_tx_multisig click detected");
+         var tx_sign_obj = {};
+         tx_sign_obj.tx_id = remote_txData.content.tx.id;
+         tx_sign_obj.signer = key.publicKey();
+         tx_sign_obj.tx_xdr = envelope_b64.value;
+         console.log(tx_sign_obj);
+         sign_remote_tx(multisig_url.value, tx_sign_obj);
+      });
 
       gen_random.addEventListener("click", function(event) {
         console.log("gen_random");

@@ -300,6 +300,9 @@ QR-code export mode: <select name="QR_export_mode" id="qr_export_mode" value='Ra
       <input id="sign_tx" type="button" value="sign_tx" />
       <input id="email_tx" type="button" value="email_tx" />
       <input id="send_tx" type="button" value="submit_tx" /><br />
+      <input id="send_tx_multisig" type="button" value="send_tx_multisig" /> <span id="send_tx_status" ></span> <br />
+      <label for="multisig_url">  Multisig callback Server URL:</label>  
+      <input  type="text" class="form-control" id="multisig_url"  value = "http://localhost:8888" />  
       <ul>
          <li> <span id="my_signer_span"></span> </li>
          <li> <span id="lab_signer_span"></span> </li>
