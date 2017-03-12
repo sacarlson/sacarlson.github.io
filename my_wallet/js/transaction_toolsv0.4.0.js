@@ -544,6 +544,7 @@
      function xml_response_get_remote_tx(data){
         console.log("xml_response get_remote_tx: ");
         console.log(data);
+        data = decodeURI(data);
         remote_txData = JSON.parse(data);
         console.log(remote_txData);
         console.log(remote_txData.content.tx.tx_xdr);
