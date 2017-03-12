@@ -543,11 +543,17 @@
 
      function xml_response_get_remote_tx(data){
         console.log("xml_response get_remote_tx: ");
+//Object { destination: "GDUPQLNDVSUKJ4XKQQDITC7RFYCJTROCR6A…", amount: "204.9900", asset: "USD", issuer: "GCEZWKCA5VLDNRLN3RPRJMRZOX3Z6G5CHCG…", memo: "32" }
         console.log(data);
         data = decodeURI(data);
         remote_txData = JSON.parse(data);
         console.log(remote_txData);
         console.log(remote_txData.content.tx.tx_xdr);
+        amount.value = remote_txData.amount;
+        destination.value = remote_txData.destination;
+        asset.value = remote_txData.asset;
+        issuer.value = remote_txData.issuer;
+        memo.value = remote_txData.memo;
         //envelope_b64.value = d.content.tx.tx_xdr;
         fill_envelope_b64(remote_txData.content.tx.tx_xdr); 
      }
