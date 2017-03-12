@@ -229,8 +229,16 @@
           console.log(params["tx_tag"]);
           console.log("url_callback");
           console.log(params["callback"]);
-          get_remote_tx(params["callback"],params["tx_tag"]);
-          multisig_url.value = params["callback"];
+          if (typeof params["ver"] != "undefined") {
+            if (params["ver"] == "2.0") {
+              get_remote_tx_v2(params["callback"],params["tx_tag"]);
+            } else {
+              console.log("nothing yet");
+            }
+          } else {
+            get_remote_tx(params["callback"],params["tx_tag"]);
+            multisig_url.value = params["callback"];
+          }
         }
         if (typeof params["accountID"] != "undefined") {
           account.value = params["accountID"];
@@ -513,12 +521,23 @@
 
 
      function get_remote_tx(xml_url,txTag){
+       // version 1.0
        console.log("started get_remote_tx");
        console.log("xml_url");
        var client = setup_xml(xml_response_get_remote_tx)
        client.open("GET", xml_url + '/gettx/' + txTag, true); 
        client.send();
      }
+
+     function get_remote_tx_v2(xml_url,txTag){
+       // version 2.0
+       console.log("started get_remote_tx");
+       console.log("xml_url");
+       var client = setup_xml(xml_response_get_remote_tx)
+       client.open("GET", xml_url + 'tx_tag=' + txTag, true); 
+       client.send();
+     }
+
 
      var remote_txData;
 
