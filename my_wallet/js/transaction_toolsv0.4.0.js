@@ -231,14 +231,17 @@
           console.log(params["callback"]);
           if (typeof params["ver"] != "undefined") {
             if (params["ver"] == "2.0") {
-              get_remote_tx_v2(params["callback"],params["tx_tag"]);
-            } else {
-              console.log("nothing yet");
+              get_remote_tx_v2(params["callback"],params["tx_tag"],params["ver"]);
+            } else if (params["ver"] == "2.1"){
+              get_remote_tx_v2(params["callback"],params["tx_tag"],params["ver"]);
             }
           } else {
             get_remote_tx(params["callback"],params["tx_tag"]);
             multisig_url.value = params["callback"];
           }
+        }
+        if (typeof params["stellar"] != "undefined"){
+          stargazer_payment_convert(params);
         }
         if (typeof params["accountID"] != "undefined") {
           account.value = params["accountID"];
@@ -529,13 +532,40 @@
        client.send();
      }
 
-     function get_remote_tx_v2(xml_url,txTag){
+     function get_remote_tx_v2(xml_url,txTag,version){
        // version 2.0
        console.log("started get_remote_tx");
        console.log("xml_url");
        var client = setup_xml(xml_response_get_remote_tx)
-       client.open("GET", xml_url + 'tx_tag=' + txTag, true); 
+       client.open("GET", xml_url + 'tx_tag=' + txTag + "&ver=" + version, true); 
        client.send();
+     }
+
+     function stargazer_payment_convert(data){
+        amount.value = data.stellar.payment.amount;
+        destination.value = data.stellar.payment.destination;
+        asset.value = data.stellar.payment.asset.code;
+        issuer.value = data.stellar.payment.asset.issuer;
+        memo.value = data.stellar.payment.memo.value;
+        memo_mode.value = data.stellar.payment.memo.type;
+        
+        // check if testnet
+        if (data.stellar.payment.network == "cee0302d"){
+          network.value = "testnet";
+          change_network_func();
+        }
+        // check if Live net
+        if (data.stellar.payment.network == "7ac33997"){
+          network.value = "live"
+          change_network_func();
+        }
+        if (memo_mode.value == "text"){
+          memo_mode.value = "memo.text";
+        }else if (memo_mode.value == "id"){
+          memo_mode.value = "memo.text";
+        }else if (memo_mode.value == "hash"){
+          memo_mode.value = "memo.hash";
+        }
      }
 
 
@@ -547,15 +577,20 @@
         console.log(data);
         data = decodeURI(data);
         remote_txData = JSON.parse(data);
-        console.log(remote_txData);       
+        console.log(remote_txData);
+        if (typeof remote_txData.content != "undefined") {
+          console.log(remote_txData.content.tx.tx_xdr);
+          fill_envelope_b64(remote_txData.content.tx.tx_xdr); 
+        }
+        if (typeof remote_txData.stellar != "undefined") {
+          stargazer_payment_convert(remote_txData);
+          return;
+        }      
         amount.value = remote_txData.amount;
         destination.value = remote_txData.destination;
         asset.value = remote_txData.asset;
-        issuer.value = remote_txData.issuer;
         memo.value = remote_txData.memo;
-        //envelope_b64.value = d.content.tx.tx_xdr;
-        console.log(remote_txData.content.tx.tx_xdr);
-        fill_envelope_b64(remote_txData.content.tx.tx_xdr); 
+        issuer.value = remote_txData.issuer;               
      }
 
      function sign_remote_tx(xml_url, txData) {
