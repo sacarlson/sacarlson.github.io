@@ -232,7 +232,7 @@
           if (typeof params["ver"] != "undefined") {
             if (params["ver"] == "2.0") {
               get_remote_tx_v2(params["callback"],params["tx_tag"],params["ver"]);
-            } else if (params["ver"] == "2.1"){
+            } else if (params["ver"] >= 2.1){
               get_remote_tx_v2(params["callback"],params["tx_tag"],params["ver"]);
             }
           } else {
@@ -527,16 +527,19 @@
        // version 1.0
        console.log("started get_remote_tx");
        console.log("xml_url");
-       var client = setup_xml(xml_response_get_remote_tx)
+       var client = setup_xml(xml_response_get_remote_tx);
        client.open("GET", xml_url + '/gettx/' + txTag, true); 
        client.send();
      }
 
      function get_remote_tx_v2(xml_url,txTag,version){
-       // version 2.0
+       // version <= 2.0
+       // xml_url = http://b.funtracker.site/store/?route=extension/payment/stellar_net/get_tx&
+       // send:
+       //http://b.funtracker.site/store/?route=extension/payment/stellar_net/get_tx&ver=3.0&tx_tag=70
        console.log("started get_remote_tx");
        console.log("xml_url");
-       var client = setup_xml(xml_response_get_remote_tx)
+       var client = setup_xml(xml_response_get_remote_tx);
        client.open("GET", xml_url + 'tx_tag=' + txTag + "&ver=" + version, true); 
        client.send();
      }
@@ -573,25 +576,176 @@
 
      function xml_response_get_remote_tx(data){
         console.log("xml_response get_remote_tx: ");
+        // versions > 2.0
 //Object { destination: "GDUPQLNDVSUKJ4XKQQDITC7RFYCJTROCR6A…", amount: "204.9900", asset: "USD", issuer: "GCEZWKCA5VLDNRLN3RPRJMRZOX3Z6G5CHCG…", memo: "32" }
+       // versions <= 2.0 we use stargazer transaction format and or branches of it with added escrow at V3.0 and above
+       //{"stellar":{"payment":{"destination":"GDUPQLNDVSUKJ4XKQQDITC7RFYCJTROCR6AMUBAMPGBIZXQU4UTAGX7C","network":"cee0302d","amount":"106.0000","asset":{"code":"USD","issuer":"GCEZWKCA5VLDNRLN3RPRJMRZOX3Z6G5CHCGSNFHEYVXM3XOJMDS674JZ"},"memo":{"type":"text","value":"19"},"order_status":"Processed","escrow":{"publicId":"GAVUFP3ZYPZUI2WBSFAGRMDWUWK2UDCPD4ODIIADOILQKB4GI3APVGIF","email":"funtracker.site.bank@gmail.com","expire_ts":1491268194,"expire_dt":"2017-04-04","fee":275,"callback":"http:\/\/b.funtracker.site\/store\/?route=extension\/payment\/stellar_net\/submit_escrow&"}},"version":"3.0"}}
+
         console.log(data);
+        if (data == "escrow_submit_accepted"){
+          // responce back from OpenCart escrow submit as good
+          tx_status.textContent = "Escrow Submit Accpeted";
+          return;
+        }
         data = decodeURI(data);
         remote_txData = JSON.parse(data);
+        console.log("remote_txData");
         console.log(remote_txData);
         if (typeof remote_txData.content != "undefined") {
+          // multisig app format return
           console.log(remote_txData.content.tx.tx_xdr);
           fill_envelope_b64(remote_txData.content.tx.tx_xdr); 
         }
         if (typeof remote_txData.stellar != "undefined") {
+          // stargazer app format return
+          console.log("stellar stargazer format detected");
+          if (remote_txData.stellar.payment.order_status != null){
+            console.log("order_status: " , remote_txData.stellar.payment.order_status);
+            tx_status.textContent = "Order Status: " + remote_txData.stellar.payment.order_status;
+            return;
+          }
           stargazer_payment_convert(remote_txData);
+           // we should get this from the store: remote_txData.payment.escrow.callback
+          if (typeof remote_txData.stellar.version != "undefined"){
+            // version is added when data from OpenCart plugin return format starting at V3.0 escrow 
+            console.log("version number detected: ",remote_txData.stellar.version); 
+            if (remote_txData.stellar.version = "3.0"){
+              console.log("remote_txData version 3.0 detected, will perform escrow setup");
+              if (remote_txData.stellar.payment.escrow.status != "0"){
+                console.log("order_status: " , remote_txData.stellar.payment.escrow.status);
+                if (remote_txData.stellar.payment.escrow.status == "1"){
+                  tx_status.textContent = "Escrow Status Proccessing "
+                  destination.value = "";
+                  amount.value = "";
+                }else if (remote_txData.stellar.payment.escrow.status == "2"){
+                  tx_status.textContent = "Escrow Status Proccessed "
+                  destination.value = "";
+                  amount.value = "";
+                }else{
+                  tx_status.textContent = "Escrow Status failed error: " + remote_txData.stellar.payment.escrow.status;
+                  destination.value = "";
+                  amount.value = "";
+                }
+                return;
+              }
+              escrow_setup();
+            }
+          }
+          
           return;
-        }      
-        amount.value = remote_txData.amount;
-        destination.value = remote_txData.destination;
-        asset.value = remote_txData.asset;
-        memo.value = remote_txData.memo;
-        issuer.value = remote_txData.issuer;               
+        }
+        if (typeof remote_txData.destination != "undefined"){
+          //my_wallet format return      
+          amount.value = remote_txData.amount;
+          destination.value = remote_txData.destination;
+          asset.value = remote_txData.asset;
+          memo.value = remote_txData.memo;
+          issuer.value = remote_txData.issuer;
+        }               
      }
+
+     function escrow_setup(){
+       // this will create a new random account, set it up as an escrow account. all data needed to set it up is in global remote_txData
+       //remote_txData: {"stellar":{"payment":{"destination":"GDUPQLNDVSUKJ4XKQQDITC7RFYCJTROCR6AMUBAMPGBIZXQU4UTAGX7C","network":"cee0302d","amount":"85.0000","asset":{"code":"USD","issuer":"GCEZWKCA5VLDNRLN3RPRJMRZOX3Z6G5CHCGSNFHEYVXM3XOJMDS674JZ"},"memo":{"type":"text","value":"70"},"order_status":null,"escrow":{"publicId":"GAVUFP3ZYPZUI2WBSFAGRMDWUWK2UDCPD4ODIIADOILQKB4GI3APVGIF","email":"funtracker.site.bank@gmail.com","expire_ts":1491268569,"expire_dt":"2017-04-04","fee":222.5,"callback":"http:\/\/b.funtracker.site\/store\/?route=extension\/payment\/stellar_net\/submit_escrow&"}},"version":"3.0"}}
+
+       console.log("start escrow_setup");
+       console.log(remote_txData);
+       var keypair_escrow = StellarSdk.Keypair.random();
+       save_seed("escrow_"+remote_txData.stellar.payment.memo.value, "", keypair_escrow.secret() );
+       remote_txData.keypair_escrow = keypair_escrow;
+       // status will be changed to "Escrow Setup Mode" to show user that we are preparing for escrow tx
+       tx_status.textContent = "Escrow Setup not funded?";
+       var tx_array = [];
+ 
+       tx_array.push(StellarSdk.Operation.createAccount({
+                   destination: keypair_escrow.publicKey(),
+                   startingBalance: fix7dec(61)
+                 }));
+
+       var asset_obj;
+       if (remote_txData.stellar.payment.asset.code == "XLM"){
+         asset_obj = new StellarSdk.Asset.native();
+       } else{
+         asset_obj = new StellarSdk.Asset(remote_txData.stellar.payment.asset.code, remote_txData.stellar.payment.asset.issuer);
+         tx_array.push(StellarSdk.Operation.changeTrust({asset: asset_obj,source:keypair_escrow.publicKey()}));
+       }
+       remote_txData.escrow_asset = asset_obj;
+
+       var opts = {};
+       opts.signer = {};
+       // provide the store destination a signers slot on the escrow_publicId account
+       opts.signer.ed25519PublicKey = remote_txData.stellar.payment.destination;
+       opts.signer.weight = 1;
+       console.log("opp setoption source: ",keypair_escrow.publicKey()); 
+       opts.source = keypair_escrow.publicKey();
+       tx_array.push(StellarSdk.Operation.setOptions(opts)); 
+       //tx_array.push(StellarSdk.Operation.setOptions(clone(opts))); // not sure I'm going to need to do this or not
+
+       // this is your present active accounts publicKey address that will also be used as source of funds (you are the customer)
+       // I guess I won't need this unless I can figure out how to set keypair_escrow master signer weight to zero
+       // so without this we will have to find a way to store and track the keypair_escrow key data in key storage
+       //opts.signer.ed25519PublicKey = key.publicKey();
+       //opts.signer.weight = 1;
+       //opts.source = remote_txData.stellar.payment.escrow.publicId;
+       //tx_array.push(StellarSdk.Operation.setOptions(opts)); 
+
+       // escrows signers slot in the event of a problem with the transaction bettween store and you the customer
+       opts.signer.ed25519PublicKey = remote_txData.stellar.payment.escrow.publicId;
+       opts.signer.weight = 1;
+       opts.source = keypair_escrow.publicKey();
+       tx_array.push(StellarSdk.Operation.setOptions(opts));
+
+       opts = {};
+       // setting masterWeight to zero here is optional if we don't add your key.publicKey as a signer
+       // The manner I have now choosen requires 10 XLM more balance due to one added signer, but simplifies the need to store and
+       // track the escrow accounts secret key.  All the XLM funds left are returned to the buyer after escrow so makes little difference
+       // oh but this masterWeight 0 might not work as I still need it to sign this transaction, so for now we will comment it out to leave it at 1
+       //opts.masterWeight = 0;
+       opts.lowThreshold = 2;
+       opts.medThreshold = 2;
+       opts.highThreshold = 2;
+       opts.source = keypair_escrow.publicKey();
+       tx_array.push(StellarSdk.Operation.setOptions(opts));
+
+       // no source provided so funds comes from your key.PublicKey() account
+       tx_array.push(StellarSdk.Operation.payment({
+          destination: keypair_escrow.publicKey(),
+          amount: fix7dec(remote_txData.stellar.payment.amount),
+          asset: asset_obj
+       }));
+
+       //asset_obj = StellarSdk.Asset.native();
+       // this is the fee payment to the escrow.publicId paid in native XLM from you the buyer
+       // we skip this if no fee's from this escrow service provider
+       if (remote_txData.stellar.payment.escrow.fee > 0){
+         tx_array.push(StellarSdk.Operation.payment({
+            destination: remote_txData.stellar.payment.escrow.publicId,
+            amount: fix7dec(remote_txData.stellar.payment.escrow.fee),
+            asset: StellarSdk.Asset.native()
+         }));
+       }
+//var memo_tr = StellarSdk.Memo.text(memo.value);
+//var transaction = new StellarSdk.TransactionBuilder(account,{memo: memo_tr}) 
+
+       server.loadAccount(key.publicKey())
+          .then(function (account) { 
+             var memo_tr = StellarSdk.Memo.text(params["tx_tag"]);           
+             transaction = new StellarSdk.TransactionBuilder(account,{memo: memo_tr});
+             console.log("es setup tx: ", transaction);
+             tx_array.forEach(function (item) {
+               transaction.addOperation(item);
+             });
+             transaction = transaction.build();
+             transaction.sign(key);
+             transaction.sign(keypair_escrow);
+             console.log("es signed tx: " , transaction);
+             tx_status.textContent = "Escrow Submition Ready"; 
+             fill_envelope_b64(transaction.toEnvelope().toXDR().toString("base64"));
+          });
+       
+     }
+
+     
 
      function sign_remote_tx(xml_url, txData) {
        //txData starts as an obj with {tx_id:2,signer:GCEZ.., tx_xdr:AAAAA..}
@@ -3687,14 +3841,100 @@ function bin2hex (s) {
         //save_seed("seed1", "", seed.value );
         save_seed("seed2", "", dest_seed.value );
       });
-            
+
+      function send_escrow_to_callback(){
+        //this sends the generated timed escrow transaction and other needed info to the escrow callback
+        //b64_timed_tx_env: the signed time based transaction that becomes valid at escrow_expire time 
+        //escrow_holding_publicId: GKDS...
+        //tx_tag: the stores transaction id that this payment is attached to.
+        //escrow_expire_timestamp: time that escrow transaction becomes valid to transact for store to collect funds
+        //
+        // remote_txData: {"stellar":{"payment":{"stellar":{"payment":{"destination":"GDUPQLNDVSUKJ4XKQQDITC7RFYCJTROCR6AMUBAMPGBIZXQU4UTAGX7C","network":"cee0302d","amount":"85.0000","asset":{"code":"USD","issuer":"GCEZWKCA5VLDNRLN3RPRJMRZOX3Z6G5CHCGSNFHEYVXM3XOJMDS674JZ"},"memo":{"type":"text","value":"1"},"escrow":{"publicId":"GAVUFP3ZYPZUI2WBSFAGRMDWUWK2UDCPD4ODIIADOILQKB4GI3APVGIF","email":"funtracker.site.bank@gmail.com","expire_ts":1491262504,"expire_dt":"2017-04-03","fee":222.5,"callback":"http:\/\/b.funtracker.site\/store\/?route=extension\/payment\/stellar_net\/submit_escrow&"}},"version":"2.1"}}
+        console.log("send_escrow_to_callback");
+        console.log(remote_txData.stellar.payment.escrow.callback);
+        var client = setup_xml(xml_response_get_remote_tx);
+        var ss = remote_txData.stellar.payment.escrow.callback + 'tx_tag=' + params['tx_tag'] + "&b64_tx=" + envelope_b64.value + "&exp=" + remote_txData.stellar.payment.escrow.expire_ts + "&escPID=" + remote_txData.keypair_escrow.publicKey();
+        console.log("sending: ");
+        console.log(ss);
+        client.open("GET", ss, true); 
+        client.send();
+      }
+        
+      function submit_escrow(){
+         //this generates the timed escrow payment transaction, then sends it to the stores escrow callback
+         transaction = new StellarSdk.Transaction(envelope_b64.value);
+            tx_status.textContent = "Escrow Tx Funding ";
+            server.submitTransaction(transaction).then(function(result) {              
+               tx_status.textContent = "Escrow Funding Completed OK";
+               var tx_array = [];
+               // this transaction needs to have added time to valid added for both these opps
+               tx_array.push(StellarSdk.Operation.payment({
+                 destination: remote_txData.stellar.payment.destination,
+                 amount: fix7dec(remote_txData.stellar.payment.amount),
+                 asset: remote_txData.escrow_asset
+               }));
+
+               tx_array.push(StellarSdk.Operation.accountMerge({
+                 destination: key.publicKey()
+               })); 
+
+               server.loadAccount(remote_txData.keypair_escrow.publicKey())
+                .then(function (account) {
+                  var timebounds = {
+                    minTime: remote_txData.stellar.payment.escrow.expire_ts.toString(),
+                    maxTime: "0"
+                  };
+                  var memo_tr = StellarSdk.Memo.text(params["tx_tag"]);
+                  transaction = new StellarSdk.TransactionBuilder(account,{timebounds, memo: memo_tr});         
+                  tx_array.forEach(function (item) {
+                    transaction.addOperation(item);
+                  });
+                  transaction = transaction.build();
+                  transaction.sign(remote_txData.keypair_escrow); 
+                  fill_envelope_b64(transaction.toEnvelope().toXDR().toString("base64"));
+                  // at this point we can send envelope_b64.value to store with the other info it needs
+                  tx_status.textContent = "Escrow Submited to callback";
+                  send_escrow_to_callback();
+               });
+             }).catch(function(e) {
+               console.log("submitTransaction error");
+               console.log(e);
+               tx_status.textContent = "Transaction failed";
+               if (e.extras.result_codes.transaction == "tx_bad_auth"){
+                  tx_status.textContent = "Transaction error: tx_bad_auth";
+               } else {           
+                 tx_status.textContent = "Transaction error: " + e.extras.result_codes.operations[0];
+               }                      
+          })
+          .then(function (transactionResult) {
+            console.log("tx_result");
+            console.log(transactionResult);
+            if (typeof transactionResult == "undefined") {
+              console.log("tx res undefined");
+              //tx_status.textContent = "tx res undefined";
+            }            
+          })
+          .catch(function (err) {
+            console.log(err);
+            tx_status.textContent = "Transaction Error: " + err; 
+          });
+      }
+          
       send_payment.addEventListener("click", function(event) {
         console.log("send_payment clicked");
-        try {                      
-          sendPaymentTransaction();
-        } catch(err) {
-          alert("send_payment error: " + err);
-        }       
+        if (tx_status.textContent == "Escrow Submition Ready"){
+          submit_escrow();
+        }else if (tx_status.textContent.substring(0, 5) == "Escrow"){
+           tx_status.textContent = "Escrow not ready";
+           return;
+        }else{
+          // this is what we normally do when we send transactions
+          try {                      
+            sendPaymentTransaction();
+          } catch(err) {
+            alert("send_payment error: " + err);
+          } 
+        }      
       });
 
       add_trustline.addEventListener("click", function(event) {
