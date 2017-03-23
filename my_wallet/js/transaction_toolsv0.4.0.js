@@ -2642,8 +2642,8 @@
         top_page_title_span.innerHTML = '<h1>' + top_page_title.value + '</h1>';
         bal_disp.textContent = 0; 
         console.log("mode: " + network.value);
-        var pub = "Public Global Stellar Network ; September 2015"
-        var tes = "Test SDF Network ; September 2015"        
+        var pub = "Public Global Stellar Network ; September 2015";
+        var tes = "Test SDF Network ; September 2015";        
         if(network.value === "testnet" ) {
           server_mode = "horizon";
           close.disabled = true;
@@ -3850,10 +3850,12 @@ function bin2hex (s) {
         //escrow_expire_timestamp: time that escrow transaction becomes valid to transact for store to collect funds
         //
         // remote_txData: {"stellar":{"payment":{"stellar":{"payment":{"destination":"GDUPQLNDVSUKJ4XKQQDITC7RFYCJTROCR6AMUBAMPGBIZXQU4UTAGX7C","network":"cee0302d","amount":"85.0000","asset":{"code":"USD","issuer":"GCEZWKCA5VLDNRLN3RPRJMRZOX3Z6G5CHCGSNFHEYVXM3XOJMDS674JZ"},"memo":{"type":"text","value":"1"},"escrow":{"publicId":"GAVUFP3ZYPZUI2WBSFAGRMDWUWK2UDCPD4ODIIADOILQKB4GI3APVGIF","email":"funtracker.site.bank@gmail.com","expire_ts":1491262504,"expire_dt":"2017-04-03","fee":222.5,"callback":"http:\/\/b.funtracker.site\/store\/?route=extension\/payment\/stellar_net\/submit_escrow&"}},"version":"2.1"}}
+
         console.log("send_escrow_to_callback");
         console.log(remote_txData.stellar.payment.escrow.callback);
+        var b64 = encodeURIComponent(envelope_b64.value);
         var client = setup_xml(xml_response_get_remote_tx);
-        var ss = remote_txData.stellar.payment.escrow.callback + 'tx_tag=' + params['tx_tag'] + "&b64_tx=" + envelope_b64.value + "&exp=" + remote_txData.stellar.payment.escrow.expire_ts + "&escPID=" + remote_txData.keypair_escrow.publicKey();
+        var ss = remote_txData.stellar.payment.escrow.callback + 'tx_tag=' + params['tx_tag'] + "&b64_tx=" + b64 + "&exp=" + remote_txData.stellar.payment.escrow.expire_ts + "&escPID=" + remote_txData.keypair_escrow.publicKey();
         console.log("sending: ");
         console.log(ss);
         client.open("GET", ss, true); 
@@ -3867,19 +3869,26 @@ function bin2hex (s) {
             server.submitTransaction(transaction).then(function(result) {              
                tx_status.textContent = "Escrow Funding Completed OK";
                var tx_array = [];
-               // this transaction needs to have added time to valid added for both these opps
+               
+               // the vendor now gets the asset sent to his store account
                tx_array.push(StellarSdk.Operation.payment({
                  destination: remote_txData.stellar.payment.destination,
                  amount: fix7dec(remote_txData.stellar.payment.amount),
                  asset: remote_txData.escrow_asset
                }));
 
+               // remove trust in our added asset to allow accountMerge bellow
+               var asset3 = new StellarSdk.Asset(remote_txData.stellar.payment.asset.code, remote_txData.stellar.payment.asset.issuer);
+               tx_array.push(StellarSdk.Operation.changeTrust({asset: asset3,limit: "0"}));              
+
+               //send back what's left of the XLM back to the buyer who created the escrow (you).
                tx_array.push(StellarSdk.Operation.accountMerge({
                  destination: key.publicKey()
                })); 
 
                server.loadAccount(remote_txData.keypair_escrow.publicKey())
                 .then(function (account) {
+                  // this transaction won't be valid until escrow expire timestamp date and time
                   var timebounds = {
                     minTime: remote_txData.stellar.payment.escrow.expire_ts.toString(),
                     maxTime: "0"
@@ -3893,6 +3902,7 @@ function bin2hex (s) {
                   transaction.sign(remote_txData.keypair_escrow); 
                   fill_envelope_b64(transaction.toEnvelope().toXDR().toString("base64"));
                   // at this point we can send envelope_b64.value to store with the other info it needs
+                  // it won't be submited to the stellar net until it's time becomes valid
                   tx_status.textContent = "Escrow Submited to callback";
                   send_escrow_to_callback();
                });
