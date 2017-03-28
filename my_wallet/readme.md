@@ -1,6 +1,7 @@
 #  my_wallet Features
 
 * Send funds of any asset type to another accountId.
+* Send funds to pay web store purchases from URL link or qr-code with escrow support (see OpenCart Stellar Plugin for details)
 * Create Random accountId keypair destination accounts and signers
 * Create hash(x) keypair using value of x and add as signers
 * Create hash(tx) keypair using value of tx and add as signers
@@ -8,7 +9,7 @@
 * Receive funds of any type from another AccountId with QRcode support.
 * Federation support to use names instead of long accountID numbers for sending funds.
 * Auto generation of AccountId on new users that is saved in local browser storage.
-* Memo support for both number and text for sending fund transactions
+* Memo support for both number and text and hash for sending fund transactions
 * Table display page of list of presetly held assets (sortable).
 * Table display page of Transaction History (sortable) with realtime update.
 * Save encrypted secret key list in local browser storage .
@@ -33,7 +34,7 @@
   * Forward signing of a tx envelope to remote my_wallet or stellar.org laboratory signer
   * View tx envelope details before signing tx (links to stellar.org laboratory tx envelope viewer)
   * Set default URL values of remote my_wallet signer and stellar.org laboratory signer. 
-  * Merge all assets of accountId with another targeted accountId.
+  * Merge all assets of accountId with another targeted generated accountId.
   * Change AccountId advanced settings
      * Add or remove signers from accountId
      * Change/set signer and master signer weights.
