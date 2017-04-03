@@ -162,14 +162,10 @@
 	    height : 300
       });
  
-      //net_passphrase.value = "Test SDF Network ; September 2015";
-      //top_image_span.innerHTML = '<img src="scotty.png" class="img-circle" alt="Cinque Terre" width="100" height="100">';
-      //top_image_url.value = "scotty.png";
       restore_default_settings();
-      StellarSdk.Network.use(new StellarSdk.Network(net_passphrase.value));
-      active_network.textContent = net_passphrase.value ;
-      //top_image_span.innerHTML = '<img src="scotty.png" class="img-circle" alt="Cinque Terre" width="100" height="100">';
-      reset_horizon_server(); 
+      //StellarSdk.Network.use(new StellarSdk.Network(net_passphrase.value));
+      //active_network.textContent = net_passphrase.value ;
+      //reset_horizon_server(); 
 
       console.log("seed.value: " + seed.value);     
       console.log("seed.value.length: " + seed.value.length);
@@ -223,6 +219,16 @@
         var params = JSON.parse(json_param);
         console.log(params);
         console.log(params["accountID"]);
+        if (params["network"]=="test"){
+          net_passphrase.value = "Test SDF Network ; September 2015";
+        }
+        if (params["network"]=="live"){
+          net_passphrase.value = "Public Global Stellar Network ; September 2015";
+        }
+        StellarSdk.Network.use(new StellarSdk.Network(net_passphrase.value));
+        active_network.textContent = net_passphrase.value ;
+        //top_image_span.innerHTML = '<img src="scotty.png" class="img-circle" alt="Cinque Terre" width="100" height="100">';
+        reset_horizon_server(); 
         //console.log(params["env_b64"]);
         if (typeof params["tx_tag"] != "undefined") {
           console.log("tx_tag detected");
@@ -321,6 +327,10 @@
           }
         }
 
+      } else {       
+        StellarSdk.Network.use(new StellarSdk.Network(net_passphrase.value));
+        active_network.textContent = net_passphrase.value ;
+        reset_horizon_server(); 
       } 
       if (encrypted_seed != null) {
         //console.log(encrypted_seed[1]);
@@ -611,13 +621,13 @@
             console.log("version number detected: ",remote_txData.stellar.version); 
             if (remote_txData.stellar.version = "3.0"){
               console.log("remote_txData version 3.0 detected, will perform escrow setup");
-              if (remote_txData.stellar.payment.escrow.status != "0"){
+              if (remote_txData.stellar.payment.escrow.status != "10"){
                 console.log("order_status: " , remote_txData.stellar.payment.escrow.status);
-                if (remote_txData.stellar.payment.escrow.status == "1"){
+                if (remote_txData.stellar.payment.escrow.status == "0"){
                   tx_status.textContent = "Escrow Status Proccessing "
                   destination.value = "";
                   amount.value = "";
-                }else if (remote_txData.stellar.payment.escrow.status == "2"){
+                }else if (remote_txData.stellar.payment.escrow.status == "1"){
                   tx_status.textContent = "Escrow Status Proccessed "
                   destination.value = "";
                   amount.value = "";
