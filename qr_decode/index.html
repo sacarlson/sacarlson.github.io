@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>QCodeDecoder - Camera</title>
+     <link rel="stylesheet" href="../w3.css">
+  
+<style type="text/css">
+		
+.dropbtn {
+    background-color: #4CAF50;
+    color: white;
+    padding: 16px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+}
+
+.dropbtn:hover, .dropbtn:focus {
+    background-color: #3e8e41;
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    overflow: auto;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 10;
+}
+
+.dropdown-content a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown a:hover {background-color: #f1f1f1}
+
+.show {display:block;}
+
+
+.box { 
+  margin: auto;
+  width: 100%;
+  height: auto;
+  margin: 30px;
+}
+
+div.img {
+    border: 1px solid #ccc;
+}
+
+div.img:hover {
+    border: 1px solid #777;
+}
+
+div.img img {
+    width: 100%;
+    height: auto;
+}
+
+div.desc {
+    padding: 15px;
+    text-align: center;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.responsive {
+    padding: 0 6px;
+    float: left;
+    width: 24.99999%;
+}
+
+@media only screen and (max-width: 700px){
+    .responsive {
+        width: 49.99999%;
+        margin: 6px 0;
+    }
+}
+
+@media only screen and (max-width: 500px){
+    .responsive {
+        width: 100%;
+    }
+}
+
+.clearfix:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+ a {
+  font-size: calc(1vw + 1vh + 1vmin);
+ }
+
+ .center {
+    margin: auto;
+    width: 60%;
+    padding: 20px;
+ }
+
+	</style>
+
+  </head>
+  <body>
+<div class="w3-row" >  
+  <div class="w3-col s12 w3-teal ">
+    <div class="dropdown">
+    <button onclick="dropDown()" class="dropbtn">Menu</button>
+    <div id="myDropdown" class="dropdown-content" >            
+      <a href="../map.html">Map</a>
+      <a href="../send.html">Send Coords</a>
+      <a href="../config.html">Config</a>
+      <a href="../shoot/index.html">Shoot Pictures</a> 
+      <a href="../wiki/doku.php">Wiki</a> 
+    </div>
+  </div>
+  <h2> <span id="site_hostname"></span> </h2>
+  <h3> QR Code Reader V1.01 </h3>
+</div>
+
+<div class="w3-row" >
+ <div class="w3-col s12 w3-teal  w3-center"> 
+   <span id="link"></span>   
+ </div>
+</div>
+<div class="w3-row" >
+ <div class="w3-col s12 w3-teal  w3-center"> 
+  <video autoplay></video>
+  <button id="stop" >Stop</button>
+ </div>
+</div>
+  <script src="qcode-decoder.min.js"></script>
+  <script type="text/javascript">
+  
+    function dropDown() {
+      document.getElementById("myDropdown").classList.toggle("show");
+    }
+
+  (function () {
+    'use strict';
+   
+    var link_d = document.getElementById('link');
+
+    var qr = new QCodeDecoder();
+    if (!(qr.isCanvasSupported() && qr.hasGetUserMedia())) {
+      alert('Your browser doesn\'t match the required specs.');
+      throw new Error('Canvas and getUserMedia are required');
+    }
+    var video = document.querySelector('video');
+    var reset = document.querySelector('#reset');
+    var stop = document.querySelector('#stop');
+
+    var shutter = new Audio();
+    shutter.autoplay = false;
+    shutter.src = navigator.userAgent.match(/Firefox/) ? '../sound/shutter.ogg' : '../sound/shutter.mp3';
+
+
+    function resultHandler (err, result) {
+      if (err){
+        return console.log(err.message);
+      }
+      
+      //parse_url(result);
+      console.log("result");
+      console.log(result);
+      console.log("p0",result.charAt(0));
+      console.log("p1",result.charAt(1));
+      qr.stop();
+      shutter.play();
+      var link;
+      // https://wallet.funtracker.site/?json={%22seed%22:%22aaabbbccccddd%22}
+      console.log("post shutter");
+      if (result.length == 56) {
+        console.log(" result.charAt(0) = :" + result.charAt(0));
+        if (result.charAt(0) == "S"){
+          console.log("first letter S so it's a seed");
+          link = ' <a href="https://sacarlson.github.io/my_wallet/?json=%7B%22seed%22:%22' + result + '%227D">' + result + '</a> ';
+        } else {
+          console.log("first letter is not S so I assume it's G and i's a stellar public address");
+          link = ' <a href="https://sacarlson.github.io/my_wallet/?json=%7B%22accountID%22:%22' + result + '%227D">' + result + '</a> ';
+        }
+      } else if (result.charAt(0) == "%" && result.charAt(1) == 7){
+         console.log("link mode 2 pre-encoded encodeURI");
+         link = ' <a href="http://sacarlson.github.io/my_wallet/?json=' + result + '"> my_wallet link with: ' + result + ' </a> ';
+      } else if (result.charAt(0) == "{"){
+         console.log("link mode 3 data is json formated ");
+         var obj =  JSON.parse(result);
+         console.log("result obj");
+         console.log(obj);
+         if (obj.stellar){
+           console.log("result is stellar obj");
+           if (obj.stellar.account){
+             var network;
+             console.log("result is stellar account obj");
+             if (obj.stellar.account.network == "cee0302d"){
+               console.log("account type testnet");
+               network = "test";
+             }else{
+               console.log("account type Livenet");
+               network = "live";
+             }
+             var seed = obj.stellar.key;
+             var link = ' <a href="https://sacarlson.github.io/my_wallet/?json=%7B%22seed%22:%22' + seed + '%22,%22network%22:%22' + network +'%22%7D">' + seed + '</a> ';
+           }
+         }
+      } else {
+        console.log("link mode 3");      
+        link = ' <a href="' + result + '">' + result + '</a> ';
+      }
+
+      link_d.innerHTML = link;
+      qr = "";
+      //alert("link: " + link + "raw: " +result);
+    }
+    // prepare a canvas element that will receive
+    // the image to decode, sets the callback for
+    // the result and then prepares the
+    // videoElement to send its source to the
+    // decoder.
+    qr.decodeFromCamera(video, resultHandler);
+    // attach some event handlers to reset and
+    // stop whenever we want.
+    
+    stop.onclick = function () {
+      qr.stop();
+    };
+  })();
+  </script>
+</body>
+</html>
