@@ -1136,9 +1136,15 @@
 	   }	
 	   //qrcode.makeCode(seed.value);
        //update_key();
+       console.log("qr_export_mode.value: ", qr_export_mode.value);
        if (qr_export_mode.value == "Centaurus") {
+         console.log("centaurus mode");
          qrcode.makeCode(export_to_centaurus());
          qr_export_mode_span.textContent = "Centaurus";
+       }else if (qr_export_mode.value == "Stargazer"){
+          console.log("stargazer export mode");
+          qrcode.makeCode(export_to_stargazer());
+          qr_export_mode_span.textContent = "Stargazer";
        }else{
          qrcode.makeCode(seed.value);
          qr_export_mode_span.textContent = "Raw";
@@ -3417,7 +3423,7 @@ function display_history(page){
       return 0;        
     }
 
-    function export_to_centaurus () {
+    function export_to_centaurus() {
       var cent_keys = {
 	    address : key.publicKey(),
 	    //secret : key.seed()
@@ -3427,6 +3433,24 @@ function display_history(page){
       var backupString = CryptoJS.AES.encrypt(plain, pass_phrase.value);
       var body = 'centaurus:backup003' + backupString;
       console.log("export centaurus: " + body);
+      return body;
+    }
+
+
+   function export_to_stargazer() {
+      var star_key = {};
+      star_key.stellar = {};
+      star_key.stellar.account = {};
+      if (network.value === "live_default" ){        
+        star_key.stellar.account.network = "7ac33997";
+      }else{        
+        star_key.stellar.account.network = "cee0302d";
+      }
+      star_key.stellar.key = key.secret();
+	   
+      var body = JSON.stringify(star_key);
+     
+      console.log("export stargazer: " + body);
       return body;
     }
 
