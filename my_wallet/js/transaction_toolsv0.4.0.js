@@ -566,12 +566,12 @@
         
         // check if testnet
         if (data.stellar.payment.network == "cee0302d"){
-          network.value = "testnet";
+          network.value = "testnet_default";
           change_network_func();
         }
         // check if Live net
         if (data.stellar.payment.network == "7ac33997"){
-          network.value = "live"
+          network.value = "live_default";
           change_network_func();
         }
         if (memo_mode.value == "text"){
@@ -1418,6 +1418,7 @@
               console.log("fromStream true");            
               effect_fromstream_flag = true;
               play_alarm_sound();
+              update_balances();
               enable_change_key();
             } else {
               insertEffect(effect, fromStream)
