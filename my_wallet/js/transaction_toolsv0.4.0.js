@@ -221,9 +221,11 @@
         console.log(params["accountID"]);
         if (params["network"]=="test"){
           net_passphrase.value = "Test SDF Network ; September 2015";
+          url.value = "horizon-testnet.stellar.org";
         }
         if (params["network"]=="live"){
           net_passphrase.value = "Public Global Stellar Network ; September 2015";
+          url.value = "horizon-live.stellar.org";
         }
         StellarSdk.Network.use(new StellarSdk.Network(net_passphrase.value));
         active_network.textContent = net_passphrase.value ;
@@ -1189,8 +1191,12 @@
                if (index_at >= 0 && index_ast >= 0){
                  console.log("have both * and @ in lookup, so don't change");
                } else{
-                 console.log("only have * or @ in lookup, will change any @ to *");
-                 stellar_address = stellar_address.replace("@", "*");
+                 //console.log("only have * or @ in lookup, will change any @ to *");
+                 //stellar_address = stellar_address.replace("@", "*");
+                 if (stellar_address.includes("@")){
+                    console.log("only contains @ so add *funtracker.site to end");
+                    stellar_address = stellar_address + "*funtracker.site";
+                 }
                }
                if (send_fed_to == "dest") {
                   console.log("pre set dest: " + stellar_address);
@@ -1226,7 +1232,12 @@
                  } else if (federationRecord.memo_type == "hash"){
                    memo_mode.value = "memo.hash";
                  }else{
-                   memo_mode.value = "memo.text";                
+                   memo_mode.value = "memo.text";
+                   //var memo_array = memo.value.split(",");
+                   //if (memo_array.length > 1){
+                     //amount.value = memo_array[1];
+                     //asset.value = "XLM";
+                   //}                
                  }
                }
             })
