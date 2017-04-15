@@ -104,6 +104,7 @@
       var regen_keypair = document.getElementById("regen_keypair");
       var multisig_url = document.getElementById("multisig_url");
       var send_tx_status = document.getElementById("send_tx_status");
+      var merge_all_random = document.getElementById("merge_all_random");
 
       var asset_obj = new StellarSdk.Asset.native();
       var socket;
@@ -130,6 +131,31 @@
       memo_mode.value  = "memo.text";
       memo.value = "";
       //secret_key.textContent = "test 1 2 3";
+      var chain_store = {};
+
+      var ccbuild = ccbuild || {};
+        ccbuild.CallChain = function () {
+        var cs = [];
+        this.add = function (call) {
+          cs.push(call);
+        };
+        this.execute = function () {
+          var wrap = function (call, callback) {
+             return function () {
+                call(callback);
+             };
+          };
+          for (var i = cs.length-1; i > -1; i--) {
+            cs[i] = 
+                wrap(
+                    cs[i], 
+                    i < cs.length - 1 
+                        ? cs[i + 1] 
+                        : null);
+          }
+          cs[0]();
+        };
+      };
 
       auto_trust.value = 1;      
 
@@ -206,6 +232,7 @@
       var encrypted_seed = window.location.href.match(/\?seed=(.*)/);
       var accountID = window.location.href.match(/\?accountID=(.*)/);
       var json_param = window.location.href.match(/\?json=(.*)/);
+      var params = {};
       if (env_b64 !== null) {
         console.log(env_b64[1]);
       }
@@ -216,7 +243,7 @@
         json_param = unescape(json_param[1]);
         console.log("post unescape:");
         console.log(json_param);
-        var params = JSON.parse(json_param);
+        params = JSON.parse(json_param);
         console.log(params);
         console.log(params["accountID"]);
         if (params["network"]=="test"){
@@ -273,6 +300,7 @@
           account_tx.address = account.value;
           key = StellarSdk.Keypair.fromSecret(seed.value);
           update_key();
+          
         }
         if (typeof params["amount"] != "undefined") {
           amount.value = params["amount"];
@@ -842,10 +870,11 @@
           createTransaction_array(array_opps);
         }
      }
+     
 
      function add_trust_to_merge(callback){
        console.log("add_trust_to_merge");
-       var array_opps = add_trust_array_get_opps(account_obj_global.balances,"",chain_store["account_info"].balances,2);
+       var array_opps = add_trust_array_get_opps(account_obj_global.balances,"",chain_store["account_info"].balances,2);       
        console.log("array_opps");
        console.log(array_opps);
        if (array_opps.length > 0){
@@ -862,6 +891,11 @@
      function remove_all_trustlines(callback){
        // remove all trustlines from active account, note all trustlines must have zero balance before running this
        console.log("start remove_all_trustlines");
+       if (account_obj_global.balances.length == 1){
+         console.log("only native present no need to remove any assets");
+         callback();
+         return;
+       }
        var array_opps = [];
        for (var i = 0; i < account_obj_global.balances.length; i++) {
          if (account_obj_global.balances[i]["asset_type"] != "native"){
@@ -877,8 +911,7 @@
        }
      }
 
-     
-
+    
      function add_trust_array_get_opps(array_trustlines,limit,dest_balances,mode){
         // mode = 2 if array_trustlines is in format from server.acounts(), mode 1 is used for data from stellar.toml file
         // dest_balances are an array list of assets from destination account
@@ -919,10 +952,15 @@
         }
         console.log("opp_array: ");
         console.log(opp_array);
-        create_tx_opp_array(opp_array,callback);
+        if (opp_array.length > 0){
+          create_tx_opp_array(opp_array,callback);
+        }else{
+          callback();
+        }
      }
 
      function merge_native(callback){
+        console.log("merge_native");
        // merger all native assets from active account to merge_dest.value account
        var opp = accountMergeOperation();
        create_tx(opp,callback);
@@ -942,14 +980,15 @@
           .catch(function (err) {
             console.log("got error in get_account_info");
             enable_change_key();
-            console.error(err);           
+            console.error(err);         
             callback();          
           })
      }
 
-     var chain_store = {};
+     
      //chain_store["account_info"] = "";
-     function merge_all_assets_Tx(){      
+     // I think new version is better will later delete this one
+     function merge_all_assets_Tx2(){      
        console.log("start merge_all_assets_Tx");
        // setup chain of callback functions       
        var cc = new ccbuild.CallChain();
@@ -964,6 +1003,48 @@
        cc.add(update_bal_callback);
        cc.add(noop);
        cc.execute();
+     }
+
+     //function merge_all_assets_new_Tx(){ 
+     function merge_all_assets_Tx(){ 
+       // same as above but we create new random key that is saved to localstorage
+       // with nick GAXSZ_rec type nick format 
+       // to be used to rekey seeds sent via URL links  
+       // if chain_store.mode = "make_new_key" set we will create a new random accound 
+       // if chain_store.mode = "manually_set_key" set we will use value seen at merge_dest_key.value  
+       console.log("start merge_all_assets_Tx");
+       // setup chain of callback functions       
+       var cc = new ccbuild.CallChain();
+       if (chain_store.mode != "make_new_key"){
+         cc.add(get_merge_account_info);
+       }
+       cc.add(load_active_account);
+       cc.add(move_to_new_account);      
+       cc.add(swap_merge_active_keys);
+       cc.add(update_bal_callback);
+       cc.add(noop);
+       cc.execute();
+     }
+
+     function load_active_account(callback){
+       server.loadAccount(key.publicKey())
+        .then(function (account) { 
+          console.log("account");
+          console.log(account);
+          chain_store.account = account;
+          callback();   
+       });
+     }
+
+     function swap_merge_active_keys(callback){
+       console.log("swap_merge_active_keys");
+       var tmp_seed = merge_dest_key.value;
+       merge_dest_key.value = seed.value;
+       seed.value = tmp_seed;
+       save_seed("seed1", "", seed.value);
+       update_seed_select();
+       update_key();
+       callback();
      }
      
      function check_result(callback){
@@ -1007,6 +1088,130 @@
            callback();
          }
        }
+     }
+
+     function move_to_new_account(callback){
+       // create new account and save key to localstorage
+       // with start native balance for what is needed to hold present active account
+       console.log("start create__new_acccount");
+       //we know the account doesn't exist so mark it as code 404 for next step in chain
+       if (chain_store.mode == "make_new_key"){
+         chain_store["account_info"] = 404;
+         var new_keypair = StellarSdk.Keypair.random();
+       }else{
+         if (chain_store['account_info'] == 404){
+           var new_keypair = StellarSdk.Keypair.fromSecret(merge_dest_key.value);
+         }else{
+           alert("merge destination address must be an empty account, can't merge");
+           return;
+         }
+       }
+       var new_nick = new_keypair.publicKey().substring(0, 5) + "_rec";
+       merge_dest_key.value = new_keypair.secret();
+       merge_dest.value = new_keypair.publicKey();
+       save_seed(new_nick, "", new_keypair.secret());
+       //save_seed("seed1", "", new_keypair.secret());
+       var start_bal = ((account_obj_global.balances.length - 1) * 10) + 20.001;     
+       var tx_array = [];
+
+      
+       // create new_keypair account with min needed balance
+       tx_array.push(StellarSdk.Operation.createAccount({
+          destination: new_keypair.publicKey(),
+          startingBalance: fix7dec(start_bal)
+       }));
+
+       if (account_obj_global.balances.length > 1){
+         // add trust and send all of each asset to new_keypair
+         for (var i = 0; i < account_obj_global.balances.length; i++) {
+           if (account_obj_global.balances[i]["asset_type"] != "native"){
+             asset_obj = new StellarSdk.Asset(account_obj_global.balances[i]["asset_code"], account_obj_global.balances[i]["asset_issuer"]);
+             tx_array.push(StellarSdk.Operation.changeTrust({asset: asset_obj,source:new_keypair.publicKey()}));
+             tx_array.push(StellarSdk.Operation.payment({
+               destination: new_keypair.publicKey(),
+               amount: fix7dec(account_obj_global.balances[i]["balance"]),
+               asset: asset_obj
+             }));
+           }
+         }
+
+         // remove trust from active account
+         for (var i = 0; i < account_obj_global.balances.length; i++) {
+           if (account_obj_global.balances[i]["asset_type"] != "native"){
+              asset_obj = new StellarSdk.Asset(account_obj_global.balances[i]["asset_code"], account_obj_global.balances[i]["asset_issuer"]);
+              tx_array.push(StellarSdk.Operation.changeTrust({asset: asset_obj,limit: "0"}));             
+           }
+         }
+       }
+
+       // no other assets in active account so can merge native to new_keypair now
+       tx_array.push(accountMergeOperation());
+       
+
+       transaction = new StellarSdk.TransactionBuilder(chain_store.account)            
+       tx_array.forEach(function (item) {
+         transaction.addOperation(item);
+       });
+       transaction = transaction.build();
+       transaction.sign(key);
+       if (account_obj_global.balances.length > 1){
+         transaction.sign(new_keypair);
+       }       
+       fill_envelope_b64(transaction.toEnvelope().toXDR().toString("base64"));
+       chain_store.tx = transaction;
+       submit_tx(callback);
+     }
+
+     function submit_tx(callback){
+       tx_status.textContent = "tx submited";
+       //var transaction = new StellarSdk.Transaction(b64_string);
+       var transaction = chain_store.tx;
+          server.submitTransaction(transaction).then(function(result) {              
+               tx_status.textContent = "Completed OK";
+               callback();
+             }).catch(function(e) {
+               console.log("submitTransaction error");
+               console.log(e);
+               tx_status.textContent = "Transaction failed";
+               if (e.extras.result_codes.transaction == "tx_bad_auth"){
+                  tx_status.textContent = "Transaction error: tx_bad_auth";
+               } else {           
+                 tx_status.textContent = "Transaction error: " + e.extras.result_codes.operations[0];
+               }                      
+          })
+          .then(function (transactionResult) {
+            console.log("tx_result");
+            console.log(transactionResult);
+            if (typeof transactionResult == "undefined") {
+              console.log("tx res undefined");
+              //tx_status.textContent = "tx res undefined";
+            }            
+          })
+          .catch(function (err) {
+            console.log(err);
+            tx_status.textContent = "Transaction Error: " + err; 
+          });
+     }
+
+     function create_new_account(callback){
+       // create new account and save key to localstorage
+       // with start native balance for what is needed to hold present active account
+       console.log("start create__new_acccount");
+       //we know the account doesn't exist so mark it as code 404 for next step in chain
+       chain_store["account_info"] = 404;
+       var new_keypair = StellarSdk.Keypair.random();
+       var new_nick = new_keypair.publicKey().substring(0, 5) + "_rec";
+       merge_dest_key.value = new_keypair.secret();
+       merge_dest.value = new_keypair.publicKey();
+       save_seed(new_nick, "", new_keypair.secret());
+       //save_seed("seed1", "", new_keypair.secret());
+       var start_bal = ((account_obj_global.balances.length - 1) * 10) + 20.001;     
+       console.log("start_bal needed is: " + start_bal);         
+       var opp = StellarSdk.Operation.createAccount({
+                   destination: new_keypair.publicKey(),
+                   startingBalance: fix7dec(start_bal)
+                 });
+       create_tx(opp,callback);   
      }
 
      function create_tx(opp,callback){
@@ -1076,29 +1281,7 @@
          console.log("exit get_merge_accoun_info");          
      }
 
-     var ccbuild = ccbuild || {};
-     ccbuild.CallChain = function () {
-       var cs = [];
-       this.add = function (call) {
-         cs.push(call);
-       };
-       this.execute = function () {
-         var wrap = function (call, callback) {
-            return function () {
-                call(callback);
-            };
-         };
-         for (var i = cs.length-1; i > -1; i--) {
-            cs[i] = 
-                wrap(
-                    cs[i], 
-                    i < cs.length - 1 
-                        ? cs[i + 1] 
-                        : null);
-         }
-         cs[0]();
-       };
-     };
+     
 
 
      function check_trust_exists2(asset_code, issuer, max_count, balances){
@@ -1315,6 +1498,7 @@
             var futurePayments = server.effects().forAccount(account.value);
             if (opt_startFrom) {
                 console.log("opt_startFrom detected");
+                enable_change_key();
                 futurePayments = futurePayments.cursor(opt_startFrom);
             }
             if (paymentsEventSource) {
@@ -1330,6 +1514,7 @@
           function start_effects_stream(account_obj) {
             console.log("start_effects_stream");
             account_obj_global = clone(account_obj);
+            
             //console.log(account_obj);
             account_tx.address = account.value;
 	        server.effects()
@@ -1431,7 +1616,7 @@
                         //$rootScope.$broadcast('accountInfoLoaded');                       
                     }
                     else {
-                        enable_change_key();
+                        //enable_change_key();
                         //if (displayEffect.ef_type == "trade"){
                         if (displayEffect.type == "manage_offer"){
                           insert_trade_table(displayEffect);
@@ -1962,8 +2147,10 @@
 
       function update_balances_set(account_obj) {
         console.log("update_balances_set");
+        //account_obj_global = clone(account_obj);
+              
         clear_all_tables();
-        get_offers();  
+        //get_offers();  
         if (account_obj.account_id == account.value){
           //console.log("account_obj");
           //console.log(account_obj);
@@ -1973,6 +2160,16 @@
           balance.value = bal;
           if (bal > 0) {  
             //get_transactions_desc(account_obj);
+            account_obj_global = clone(account_obj);
+            if (typeof params["rekey"] != "undefined"){
+              if ((params["rekey"] == "1") && (typeof params["seed"] != "undefined")){
+                params["rekey"] = "2";
+                chain_store.mode = "make_new_key";
+                merge_all_assets_Tx();
+                return;
+              }
+            } 
+            get_offers();
             display_asset_table(account_obj);
             start_effects_stream(account_obj);
           }
@@ -2275,7 +2472,8 @@
              });
              transaction = transaction.build();
              transaction.sign(keypair); 
-             console.log("horizon mode sending tx");                               
+             console.log("sending tx"); 
+             fill_envelope_b64(transaction.toEnvelope().toXDR().toString("base64"));                              
              server.submitTransaction(transaction).then(function(result) {              
                tx_status.textContent = "Completed OK";
                if (post_callback != "no_op"){
@@ -2970,7 +3168,7 @@
           auto_allow_trust.checked = false;
           dec_round.value = 4;
           force_enable_change_key.value = "false"; 
-          qr_export_mode.value = "Raw";
+          qr_export_mode.value = "Stargazer";
           my_wallet_signer_url.value = "https://wallet.funtracker.site"; 
           lab_signer_url.value = "https://www.stellar.org/laboratory";    
           save_default_settings(); 
@@ -3762,6 +3960,18 @@ function bin2hex (s) {
         }
       }
 
+      qr_export_mode.onchange=function(){ //run some code when "onchange" event fires
+        var chosenoption=this.options[this.selectedIndex] //this refers to "selectmenu"
+        if (chosenoption.value!="nothing"){
+          console.log("selected value: " + chosenoption.value);
+          makeCode();
+          save_default_settings();
+          //console.log("value", qr_export_mode.value);
+          //restore_seed_option(chosenoption.value);
+          //sign_tx.disabled = false;
+        }
+      }
+
       send_tx_multisig.addEventListener("click", function(event) {
          console.log("send_tx_multisig click detected");
          var tx_sign_obj = {};
@@ -4348,8 +4558,16 @@ function bin2hex (s) {
       }); 
 
       merge_all_assets.addEventListener("click", function(event) {
+        chain_store.mode = "manually_set_key";
         merge_all_assets_Tx();
-      });      
+      });
+
+      merge_all_random.addEventListener("click", function(event) {
+        chain_store.mode = "make_new_key";
+        merge_all_assets_Tx();
+      });    
+
+    
 
       // Close the connection when the Disconnect button is clicked
       close.addEventListener("click", function(event) {

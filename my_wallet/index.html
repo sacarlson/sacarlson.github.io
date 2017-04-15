@@ -205,6 +205,11 @@
     <h5>AccountId:</h5>
     <input id="account" class="form-control" size="60" /><br />
     <h5> Secret seed QRcode <span id="qr_export_mode_span"></span></h5>
+    QR-code export mode select: <select name="QR_export_mode" id="qr_export_mode" value='Stargazer'>
+      <option>Raw</option>
+      <option>Centaurus</option>
+      <option>Stargazer</option>
+    </select><br />
     <div id="qrcode" style="width:300px; height:300px; margin-top:20px; margin-bottom: 30px; margin-left: 30px;"></div> 
   </div>
   
@@ -247,11 +252,7 @@
 </select><br />
 Remote My_wallet Signer URL: <input id="my_wallet_signer_url" size="30" /><br />
 Remote Stellar laboratory Signer URL: <input id="lab_signer_url" size="30" /><br />
-QR-code export mode: <select name="QR_export_mode" id="qr_export_mode" value='Raw'>
-  <option>Raw</option>
-  <option>Centaurus</option>
-  <option>Stargazer</option>
-</select><br />
+
  Default Decimal Round: <input id="dec_round" size="5" value="5" /><br />
  Default Asset_code: <input id="default_asset_code" size="16" value="FUNT" /><br />
  Default Issuer: <input id="default_issuer" size="65" value="GCCKAFGMZGJAP3CX2EDMNIOZF67SG7G7BZTP53N3YJF7V7QM7RKXICVB" /><br />
@@ -320,10 +321,10 @@ QR-code export mode: <select name="QR_export_mode" id="qr_export_mode" value='Ra
 
    <div id="merge" class="tab-pane fade in" >
       <h2>Merge Accounts</h2>
-      <p>Merge all this accounts Lumen assets into a target accountId, must have no other asset trustlines unless Secret Key provided</p> 
+      <p>Merge all this accounts Lumen assets into a target accountId, destination target account must be empty with no assets or XLM</p> 
       <div class="col-sm-6">
         <div class="form-group"> 
-          <input id="merge_accounts" type="button" value="merge_native" />  <input id="merge_all_assets" type="button" value="merge_all_assets" /><br />
+          <input id="merge_accounts" type="button" value="merge_native" />  <input id="merge_all_assets" type="button" value="merge_all_assets" /> <input id="merge_all_random" type="button" value="merge_all_new_random" /><br />
           <label for="merge_dest">  Merge Destination AddressID:</label>         
           <div class="input-group">
              <input  type="text" class="form-control" id="merge_dest"  value = "" />

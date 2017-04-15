@@ -15,10 +15,12 @@
 * Save encrypted secret key list in local browser storage .
 * Select and change from one key account to another from local browser storage keysets (multi account support).
 * Import/Export encrypted secret keysets to and from local file system.
-* Export secret keyset using QRcode to the Centaurus wallet android app.
+* Import/Export secret keyset using QRcode to the Centaurus or Stargazer android apps.
 * TX Status of transaction and detailed error conditions if any, displayed at top of screen. 
 * Balance of accountId in Lumens (XLM) at top of screen updated in realtime by stream link.
 * Generate, Send and recieve URL links to and from email or other sources to send transactions or to send prefunded accounts or links to submit request for funds from another account holder.
+* Optionaly auto re-key when new user clicks on funded URL wallet links sent by email or other (add ,"rekey":"1" to sent json) without rekey account seed remains the same. 
+* Supports recieve and send of new funtracker.site email federation forwarded payments with auto re-key with just email destination in destination
 * Advanced (section grouped tabs)
   * Change Network and page settings 
      * Change URL address and port pointing to private/custom Horizon servers.
