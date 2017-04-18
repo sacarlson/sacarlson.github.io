@@ -105,6 +105,7 @@
       var multisig_url = document.getElementById("multisig_url");
       var send_tx_status = document.getElementById("send_tx_status");
       var merge_all_random = document.getElementById("merge_all_random");
+      var fed_email = document.getElementById("fed_email");
 
       var asset_obj = new StellarSdk.Asset.native();
       var socket;
@@ -207,6 +208,7 @@
         signer_key.value = seed.value;
         //console.log("seed ok");
         save_seed("seed1", "", seed.value );
+        save_seed(account.value.substring(0, 5) + "_first", "", seed.value );
       } else {
          //account.value = StellarSdk.Keypair.fromSeed(seed.value).publicKey();
          account.value = StellarSdk.Keypair.fromSecret(seed.value).publicKey();
@@ -376,7 +378,7 @@
 
       //merge_accounts.disabled = true;
       //network.value ="testnet";
-      tx_status.textContent = "Idle";
+      tx_status.textContent = "Idle V1.2";
       status.textContent = "Not Connected";
       //url.value = "horizon-testnet.stellar.org";
       //port.value = "443";
@@ -580,8 +582,94 @@
        console.log("started get_remote_tx");
        console.log("xml_url");
        var client = setup_xml(xml_response_get_remote_tx);
-       client.open("GET", xml_url + 'tx_tag=' + txTag + "&ver=" + version, true); 
+       client.open("GET", xml_url + '/gettx/' + txTag + "&ver=" + version, true); 
        client.send();
+     }
+
+     function update_federation(xml_url,id,new_id,new_email){
+       //http://b.funtracker.site/fed2/challenge.php?id=GAEGE..&new_id=GBEWT...
+       // setup a change in federation, if lenth of new_id and new_email are both 0 '' then delete address from fed server
+       // can also change ether or both new_id and new_email
+       // xml_url address will be hard coded or stored in configs for now, but maybe later should use the stellar toml to find
+       // federation server root address to find hooks
+       // example xml_url in this case https://www.funtracker.site/fed2 
+       console.log("started update_federation");
+       if (xml_url.length == 0){
+         xml_url = 'https://www.funtracker.site/fed2';
+       }
+       console.log("xml_url");
+       var client = setup_xml(xml_response_get_challenge);
+       var get_url = xml_url + '/challenge.php?id=' + id;
+       if (new_id.length > 0){
+         console.log("here?");
+         get_url = get_url + '&new_id=' + new_id;
+       }
+       if (new_email.length > 0){
+         get_url = get_url + '&new_email=' + new_email;
+       }
+       console.log("get_url: ");
+       console.log(get_url);
+       client.open("GET", get_url, true); 
+       client.send();
+     }
+
+     function xml_response_get_challenge(data){
+       // result data returned from server for update_federation(xml_url,id,new_id,new_email)
+       // in stargazer format
+       //{
+       //	"stellar": {
+       //		"challenge": {
+       //			"id":		ACCOUNT_ID,
+       //			"message":	MESSAGE,
+       //			"url":		WEBHOOK_URL
+       //		}
+       //	}
+       //}
+       //
+       // expected return to webhook_url:
+       // https://www.funtracker.site/fed2/webhook.php?id=GCYZRAUECYEFRZS77F3P6Q57DXJCP6N2XNGXD7RMQN6XO6QFMVLW2XQ3&sig=ABCD&msg=JLSGAIVTHP
+       // WEBHOOK_URL = https://www.funtracker.site/fed2/webhook.php
+       // this then signs the message and sends  this sig back to webhook_url
+       // the webhook records the sig was good, then the processor at federation will perform changes to server db
+       console.log("start xml_response_get_challenge data:");
+       console.log(data);
+       var data_obj = JSON.parse(data);
+       console.log("data_obj: ", data_obj);
+       console.log("message: ", data_obj.stellar.challenge.message);
+       var merge_key = "none";
+       var sig = "none";
+       if (merge_dest_key.value.length == 56){
+         merge_key = StellarSdk.Keypair.fromSecret(merge_dest_key.value);
+       }
+       if (data_obj.stellar.challenge.id == key.publicKey()){
+         sig = encodeURIComponent(signMessage(key,data_obj.stellar.challenge.message));
+       }else if (data_obj.stellar.challenge.id == merge_key.publicKey()){
+         sig = encodeURIComponent(signMessage(merge_key,data_obj.stellar.challenge.message));
+       }else{
+         console.log("no key match for id merge_key or active key, return do nothing");
+         return;
+       }
+       
+       var client = setup_xml(xml_response_challenge_return);
+       var get_url = data_obj.stellar.challenge.url + '?id=' + data_obj.stellar.challenge.id + '&sig=' + sig + '&msg=' + data_obj.stellar.challenge.message;
+       console.log("get_url");
+       console.log(get_url);
+       client.open("GET", get_url, true); 
+       client.send();
+     }
+
+     function xml_response_challenge_return(data){
+       console.log("xml_response_challenge_return");      
+       console.log("data", data);
+       alert("federation update being proccessed");
+     }
+
+     function signMessage(_key,message){
+       //return signature signed by key of message in base64 format
+       console.log("publickey: ", _key.publicKey());
+       var hash = StellarSdk.hash(StellarSdk.hash(message));
+       console.log("sign hash: ", hash);
+	   return _key.sign(hash).toString('base64');
      }
 
      function stargazer_payment_convert(data){
@@ -1044,6 +1132,8 @@
        save_seed("seed1", "", seed.value);
        update_seed_select();
        update_key();
+       // update federation username to new publicId
+       update_federation("",chain_store['old_publickey'],chain_store['new_publickey'],"")
        callback();
      }
      
@@ -1110,6 +1200,10 @@
        merge_dest_key.value = new_keypair.secret();
        merge_dest.value = new_keypair.publicKey();
        save_seed(new_nick, "", new_keypair.secret());
+       chain_store['old_keypair'] = clone(key);
+       chain_store['new_keypair'] = new_keypair;
+       chain_store['new_publickey'] = new_keypair.publicKey();
+       chain_store['old_publickey'] = key.publicKey();
        //save_seed("seed1", "", new_keypair.secret());
        var start_bal = ((account_obj_global.balances.length - 1) * 10) + 20.001;     
        var tx_array = [];
@@ -4553,10 +4647,7 @@ function bin2hex (s) {
         create_socket();
       });
 
-      merge_accounts.addEventListener("click", function(event) {
-        accountMergeTransaction();
-      }); 
-
+      
       merge_all_assets.addEventListener("click", function(event) {
         chain_store.mode = "manually_set_key";
         merge_all_assets_Tx();
@@ -4597,6 +4688,7 @@ function bin2hex (s) {
       });
 
       test_sound.addEventListener("click", function(event) {
+        console.log("test_sound");
         play_alarm_sound();
       }); 
 
@@ -4606,11 +4698,27 @@ function bin2hex (s) {
       }); 
 
       regen_keypair_button.addEventListener("click", function(event) {
+        console.log("regen_keypair_button");
         update_key();
         update_balances();
         sign_tx.disabled = false;
       }); 
 
+      update_fed_email.addEventListener("click", function(event) {
+        console.log("update_fed_email clicked");
+        // if merge_dest_key is present we will update that fed email
+        // if not we update the present active accounts fed email
+        var xml_url = 'https://www.funtracker.site/fed2';
+        var challenge_publicId;
+        if (merge_dest_key.value.length == 56){
+          var challenge_publicId = StellarSdk.Keypair.fromSecret(merge_dest_key.value).publicKey();
+          merge_dest.value = challenge_publicId;
+        }else {
+          var challenge_publicId = key.publicKey();
+        }
+        console.log("challenge_publicId: ", challenge_publicId);        
+        update_federation(xml_url,challenge_publicId,"",fed_email.value);
+      }); 
 
 
   });

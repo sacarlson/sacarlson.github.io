@@ -321,10 +321,10 @@ Remote Stellar laboratory Signer URL: <input id="lab_signer_url" size="30" /><br
 
    <div id="merge" class="tab-pane fade in" >
       <h2>Merge Accounts</h2>
-      <p>Merge all this accounts Lumen assets into a target accountId, destination target account must be empty with no assets or XLM</p> 
+      <p>Merge all this accounts assets into a target accountId, destination target account must be empty with no assets or XLM. Update_fed_email will modify federation lookup for whatever is now seen in merge destination target public address, must also have secret key to update fed</p> 
       <div class="col-sm-6">
         <div class="form-group"> 
-          <input id="merge_accounts" type="button" value="merge_native" />  <input id="merge_all_assets" type="button" value="merge_all_assets" /> <input id="merge_all_random" type="button" value="merge_all_new_random" /><br />
+          <input id="merge_all_assets" type="button" value="Merge_all_assets" /> <input id="merge_all_random" type="button" value="Merge_all_to_new_random" /> <input id="update_fed_email" type="button" value="Update_Fed_Email" /><br />
           <label for="merge_dest">  Merge Destination AddressID:</label>         
           <div class="input-group">
              <input  type="text" class="form-control" id="merge_dest"  value = "" />
@@ -334,6 +334,8 @@ Remote Stellar laboratory Signer URL: <input id="lab_signer_url" size="30" /><br
           </div>
           <label for="merge_dest_key">  Merge Destination Secret Key (optional):</label>
           <input  type="text" class="form-control" id="merge_dest_key"  value = "" />
+          <label for="fed_email"> New Federation email address to apply to merge destination (optional)_:</label>
+          <input  type="text" class="form-control" id="fed_email"  value = "" />
         </div>
       </div>            
    </div>
