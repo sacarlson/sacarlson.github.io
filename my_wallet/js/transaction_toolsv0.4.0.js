@@ -1103,7 +1103,9 @@
        console.log("start merge_all_assets_Tx");
        // setup chain of callback functions       
        var cc = new ccbuild.CallChain();
-       if (chain_store.mode != "make_new_key"){
+       console.log("chain_store");
+       console.log(chain_store);
+       if (chain_store.mode == "manually_set_key"){
          cc.add(get_merge_account_info);
        }
        cc.add(load_active_account);
@@ -1115,6 +1117,8 @@
      }
 
      function load_active_account(callback){
+       console.log("load_active_account");
+       console.log(key.publicKey());
        server.loadAccount(key.publicKey())
         .then(function (account) { 
           console.log("account");
@@ -1183,7 +1187,7 @@
      function move_to_new_account(callback){
        // create new account and save key to localstorage
        // with start native balance for what is needed to hold present active account
-       console.log("start create__new_acccount");
+       console.log("start move_to_new_account");
        //we know the account doesn't exist so mark it as code 404 for next step in chain
        if (chain_store.mode == "make_new_key"){
          chain_store["account_info"] = 404;
@@ -1200,8 +1204,8 @@
        merge_dest_key.value = new_keypair.secret();
        merge_dest.value = new_keypair.publicKey();
        save_seed(new_nick, "", new_keypair.secret());
-       chain_store['old_keypair'] = clone(key);
-       chain_store['new_keypair'] = new_keypair;
+       //chain_store['old_keypair'] = key;
+       //chain_store['new_keypair'] = new_keypair;
        chain_store['new_publickey'] = new_keypair.publicKey();
        chain_store['old_publickey'] = key.publicKey();
        //save_seed("seed1", "", new_keypair.secret());
