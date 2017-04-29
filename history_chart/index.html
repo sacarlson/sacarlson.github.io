@@ -21,11 +21,15 @@
     var e = 0;
 
     var socket;
-    var wallet_url = "https://wallet.funtracker.site/";
-    var url = "ws://b.funtracker.site:9494";
-    //var url = "ws://www.funtracker.site:9494";
-    var action = '{"action":"get_ticker_list"}';
-    
+    var wallet_url = "https://www.funtracker.site/stellarterm/";
+    //var wallet_url = "https://wallet.funtracker.site/";
+    var url = "ws://funtracker.site:9494";
+    //var url = "ws://b.funtracker.site:9494";
+    //var action = '{"action":"get_ticker_list","max_last_record":"2.5"}';
+    // only list assets that order prices changed within the last 30 days
+    var action = '{"action":"get_ticker_list","max_last_record":"720"}';
+    var wallet_mode = "stellarterm";
+
       //http://www.funtracker.site/chart/index.html?json=%7b%22asset_code%22:%22THB%22,%22base_code%22:%22USD%22,%22url_ws%22:%22ws://b.funtracker.site:9494%22%7d
      create_socket();
 
@@ -93,7 +97,7 @@
         });
       }
 
-     function make_wallet_trade_link(data,_wallet_url){
+     function make_wallet_trade_link_my_wallet(data,_wallet_url){
        //https://sacarlson.github.io/my_wallet/?json=%7B%22selling_asset_code%22:%22USD%22,%22selling_asset_issuer%22:%22GBEK5BFCXBYPZ5JAP2XUWM637PYBQNTL5Y2MVZYV2NBRH6OYS4HCWTWO%22,%22selling_price%22:%221.34%22,%22buying_asset_code%22:%22FUNT%22,%22buing_asset_issuer%22:%22GBEK5BFCXBYPZ5JAP2XUWM637PYBQNTL5Y2MVZYV2NBRH6OYS4HCWTWO%22,%22selling_amount%22:%221.123%22%7D      
        var bid_price = data[5];
        var ask_price = data[4];
@@ -105,6 +109,28 @@
        trade_link = trade_link + "%22,%22selling_price%22:%22"+ask_price+"%22,%22buying_asset_code%22:%22"+asset_code+"%22,%22buying_asset_issuer%22:%22"
        trade_link = trade_link + asset_issuer+'%22%7d">Buy_'+asset_code+'</a>';
        return trade_link;
+     }
+
+     function make_wallet_trade_link(data,_wallet_url,wallet_mode){
+       // wallet_mode == "my_wallet" or "stellarterm"
+       if (wallet_mode == "my_wallet"){
+          return make_wallet_trade_link_my_wallet(data,_wallet_url)
+       } else {      
+
+         var asset_code = data[0];
+         var asset_issuer = data[1];
+         var asset_base_code = data[2];
+         var asset_base_issuer = data[3];
+         if (asset_code == "XLM"){
+            asset_issuer = "native";
+         }
+         if (asset_base_code == "XLM"){
+           asset_base_issuer = "native";
+         }
+         var trade_link = '<a href="' + _wallet_url+"#exchange/"+asset_base_code+"-"+asset_base_issuer+"/"+asset_code+"-"+asset_issuer+'">Buy_'+asset_code+"</a>";
+       
+         return trade_link;
+       }
      }
 
      function color_text(to_color) {

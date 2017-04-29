@@ -36,14 +36,15 @@
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-    <script src="https://code.highcharts.com/stock/highstock.js"></script>
-	<script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
+    <script src="./js/highstock.js"></script>
+	<script src="./js/exporting.js"></script>
 <script type="text/javascript">
 
   var socket;
-  var url = "ws://b.funtracker.site:9494";
-  var action = '{"action":"get_ticker","timestamp_end":"1474299960","mode":"2","asset_code":"THB","base_asset_code":"USD"}';
-  //var action = '{"action":"get_ticker","timestamp_end":"1474299960","mode":"2","asset_code":"USD","base_asset_code":"THB"}';
+  var url = "ws://funtracker.site:9494";
+  //var url = "ws://b.funtracker.site:9494";
+  //timestamp_end 32 will limit return to just over 1 month (32 days), more data than that will make page update too slow. 
+  var action = '{"action":"get_ticker","timestamp_end":"32","mode":"2","asset_code":"THB","base_asset_code":"USD"}';
 
   // mode 2 is array with 5 elements timestamp, ask,ask,ask,ask
   //{"action":"get_ticker","limit":"720","mode":"2"}';
