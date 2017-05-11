@@ -1416,7 +1416,11 @@
 	      alert("no account value detected for qrcode, bad pass phrase?");
 		  //account.focus();
 		 return;
-	   }	
+	   }
+       if (seed.value.length != 56){
+         console.log("no seed, skip makecode");
+         return;
+       }	
 	   //qrcode.makeCode(seed.value);
        //update_key();
        console.log("qr_export_mode.value: ", qr_export_mode.value);
