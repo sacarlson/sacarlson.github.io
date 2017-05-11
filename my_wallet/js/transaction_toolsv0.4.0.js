@@ -1443,15 +1443,24 @@
           function email_funds_now (mode) {
             var mail = "";
             if (mode != "email_tx"){
-        
-              if (dest_seed.value.length > 55){
-                mail = "mailto:" + email_address.value +"?subject= Stellar funds transmittal for all asset in AccountId: " + destination.value +   "&body=Click on the link bellow to collect all present funds in AccountId : " + destination.value + "   just click Link: https://wallet.funtracker.site/?json=%7B%22seed%22:%22" + dest_seed.value + "%22%7D   " +  ". From within the wallet you should see the balance of your new account";
+              console.log("dest_seed length: ", dest_seed.value.length);
+              if (dest_seed.value.length == 56){
+                if (net_passphrase.value == "Public Global Stellar Network ; September 2015"){
+                  mail = "mailto:" + email_address.value +"?subject= Stellar funds transmittal for all asset in AccountId: " + destination.value +   "&body=Click on the link bellow to collect all present funds in AccountId : " + destination.value + "   just click Link: https://sacarlson.github.io/my_wallet/?json=%7B%22seed%22:%22" + dest_seed.value + "%22,%22network%22:%22live%22%7D   " +  ". From within the wallet you should see the balance of your new account";
+                }else{
+                  mail = "mailto:" + email_address.value +"?subject= Stellar funds transmittal for all asset in AccountId: " + destination.value +   "&body=Click on the link bellow to collect all present funds in AccountId : " + destination.value + "   just click Link: https://sacarlson.github.io/my_wallet/?json=%7B%22seed%22:%22" + dest_seed.value + "%22,%22network%22:%22test%22%7D   " +  ". From within the wallet you should see the balance of your new account";
+                }
               } else {
-                mail = "mailto:" + email_address.value +"?subject= Stellar funds transmittal for: " + amount.value + " of asset: "+ asset.value + "&body=Click on the link bellow to collect the funds I have sent you for the amount of " + amount.value + " of asset type: "+ asset.value + " to the accountID " + destination.value + " secret seed if contained: " + dest_seed.value  + "  just click Link: https://wallet.funtracker.site/?json=%7B%22env_b64%22:%22" + envelope_b64.value + "%22%7D   " +  ". From within the wallet just hit send_tx button to transact the issued transaction and verify balance received.   Or if you prefer other methods of receiving the transaction the Stellar envelope base64: " + envelope_b64.value;
+                alert("no destination seed value so can't email funds");
+                return;
               }
 
             } else {
-           mail = "mailto:" + email_address.value +"?subject= Stellar TX transaction to be signed &body=Click on the link bellow to go to signing tool just click Link: https://wallet.funtracker.site/?json=%7B%22env_b64%22:%22" + envelope_b64.value + "%22%7D   . From within the wallet just hit sign_tx to sign and send_tx button to transact the issued transaction after fully signed.   Or if you prefer other methods of signing tx the Stellar envelope base64: " + envelope_b64.value;
+              if (net_passphrase.value == "Public Global Stellar Network ; September 2015"){
+                mail = "mailto:" + email_address.value +"?subject= Stellar TX transaction to be signed &body=Click on the link bellow to go to signing tool just click Link: https://wallet.funtracker.site/?json=%7B%22env_b64%22:%22" + envelope_b64.value + "%22,%22network%22:%22live%22%7D   . From within the wallet just hit sign_tx to sign and send_tx button to transact the issued transaction after fully signed.   Or if you prefer other methods of signing tx the Stellar envelope base64: " + envelope_b64.value;
+              }else{
+                 mail = "mailto:" + email_address.value +"?subject= Stellar TX transaction to be signed &body=Click on the link bellow to go to signing tool just click Link: https://wallet.funtracker.site/?json=%7B%22env_b64%22:%22" + envelope_b64.value + "%22,%22network%22:%22test%22%7D   . From within the wallet just hit sign_tx to sign and send_tx button to transact the issued transaction after fully signed.   Or if you prefer other methods of signing tx the Stellar envelope base64: " + envelope_b64.value;
+              }
             }
        
             console.log("mail content: ");
@@ -4467,15 +4476,12 @@ function bin2hex (s) {
         }
       });
 
+     
       email_funds.addEventListener("click", function(event) {
-        // this will generate a transaction to send funds to
-        // the destination accountID and seed will be included in the email of the body
-        // it will then generate a transaction and add it as a link to the wallet in the body of the email
-        // we will later make the transaction expire if demand exists
+        // this just emails the secret key seen in destination to email address
+        console.log("email_funds clicked");
         try {
-          email_flag = true;
-          sendPaymentTransaction();
-          sign_tx.disabled = false;
+          email_funds_now ("email_funds");
         } catch(err) {
           alert("email_funds error: " + err);
         }
@@ -4488,6 +4494,7 @@ function bin2hex (s) {
           alert("email_tx error: " + err);
         }
       });
+
 
   // rule #1 don't repeat code FIX ME!! (duplicate fed_lookup...)
   // rule #2 if it works don't fix it?
