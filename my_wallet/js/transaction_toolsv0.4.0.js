@@ -1469,7 +1469,7 @@
             window.open(encodeURI(mail));
           }
 
-          
+                    
           function federation_lookup(stellar_address) {
              //console.log("start sendto: " + send_fed_to);
              var index_at = stellar_address.indexOf("@");
@@ -1478,7 +1478,12 @@
              //console.log("index_at: " + index_at);
              //console.log("index_ast: " + index_ast);
              console.log("stellar_address length: " + stellar_address.length);
-             if (stellar_address.length != 56){
+             if (stellar_address.length == 56 && stellar_address.charAt(0) == 'G'){
+                console.log("address length == 56, pre set issuer: " + stellar_address);
+                console.log("reverse_federation_lookup: ");
+                reverse_federation_lookup(stellar_address); 
+                return;
+             } else {                             
                if (index_at == -1 && index_ast == -1){
                  stellar_address = stellar_address + "*funtracker.site";
                }
@@ -1498,11 +1503,6 @@
                } else {
                   console.log("pre set issuer: " + stellar_address);
                }
-             } else {
-                console.log("address length == 56, pre set issuer: " + stellar_address);
-                console.log("reverse_federation_lookup: ");
-                reverse_federation_lookup(stellar_address); 
-                return;
              }
 
              forward_federation_lookup(stellar_address);
@@ -4501,10 +4501,11 @@ function bin2hex (s) {
       fed_lookup.addEventListener("click", function(event) {
         send_fed_to = "dest";
         try {
-          console.log("destination.value.length: " + destination.value.length);
-          if (destination.value.length == 56) {
+          console.log("y destination.value.length: " + destination.value.length);
+          if ((destination.value.length == 56) && ( destination.value.charAt( 0 ) == 'G' )) {
             reverse_federation_lookup(destination.value);
           } else {
+            console.log("start federation_lookup");
             federation_lookup(destination.value);
           }
         } catch(err) {
@@ -4516,7 +4517,7 @@ function bin2hex (s) {
         send_fed_to = "issuer";
         try {
           console.log("issuer.value.length: " + issuer.value.length);
-          if (issuer.value.length == 56) {
+          if ((issuer.value.length == 56) && ( issuer.value.charAt( 0 ) == 'G' )) {
             reverse_federation_lookup(issuer.value);
           } else {
             federation_lookup(issuer.value);
