@@ -2835,6 +2835,19 @@
                  return StellarSdk.Operation.setOptions(opts);
                }
 
+      function inflation_operation(){
+         return StellarSdk.Operation.inflation();
+      }
+
+      function inflation_op_Transaction() {
+          console.log("inflation_op_tranasaction");        
+          //key = StellarSdk.Keypair.fromSecret(seed.value);
+          console.log(key.publicKey());
+          var operation = inflation_operation();
+          console.log("operation created ok");
+          createTransaction(key,operation);
+      }
+
       function activate_trustline(asset_code){
         try {       
           var operation = addTrustlineOperation(asset_code, tissuer.value, tlimit.value);
@@ -3821,7 +3834,7 @@ function display_history(page){
            //ar[7] = offer_obj.records[i].buying.asset_issuer.substring(0, 5)+"...";
            ar[7] = offer_obj.records[i].buying.asset_issuer;
          }
-         ar[8] = '<img src="../images/delete.png" onclick="confirm_delete_offer(this)" /> ';
+         ar[8] = '<img src="./images/delete.png" onclick="confirm_delete_offer(this)" /> ';
          //console.log("ar[7]: " );
          //console.log(ar[7]);
          insRow(ar,"table_offers");
@@ -4296,6 +4309,11 @@ function bin2hex (s) {
             tx_status.textContent = "Transaction Error: " + err; 
           });
       }
+
+      inflation_op_click.addEventListener("click", function(event) {
+         console.log("inflation_op_clicked");
+         inflation_op_Transaction();
+      });
           
       send_payment.addEventListener("click", function(event) {
         console.log("send_payment clicked");
