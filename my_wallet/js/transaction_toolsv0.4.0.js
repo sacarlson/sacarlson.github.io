@@ -2190,36 +2190,28 @@
          return Number(num).toFixed(dec_round.value)
       }  
 
-      function reset_horizon_server2() {
-        console.log("reset_horizon_server"); 
-        //console.log("secure: " + secure.value);
-        var tf = true;
-        if (secure.value == "false") { 
-          tf = false;
-        }  
-        server = new StellarSdk.Server({     
-          hostname: url.value,
-          port: Number(port.value),
-          secure: tf
-        });
-      }
+      
+    // new method used in sdk
+    //expect(() => new StellarSdk.Server('http://horizon-live.stellar.org:1337', {allowHttp: true})).to.not.throw();
 
        function reset_horizon_server() {
         console.log("reset_horizon_server"); 
         //console.log("secure: " + secure.value);
-        var tf = true;
-        var protocol;
+        var horizon_url = url.value;
+        if (port.value.length > 0){
+          horizon_url = horizon_url + ":" + port.value;
+        }
         if (secure.value == "false") { 
-          tf = false;
+          horizon_url = "http://"+horizon_url;
+          console.log("horizon_url: " + horizon_url);
+          server = new StellarSdk.Server(horizon_url,{allowHttp: true});                            
         } else {
-          protocol = "https"
-        }  
-        server = new StellarSdk.Server({     
-          hostname: url.value,
-          port: Number(port.value),
-          protocol: protocol,
-          secure: tf
-        });
+          horizon_url = "https://"+horizon_url;
+          console.log("horizon_url: " + horizon_url);
+          server = new StellarSdk.Server(horizon_url); 
+        }
+        console.log("server: ");
+        console.log(server);          
       }
 
       function clear_all_tables() {
