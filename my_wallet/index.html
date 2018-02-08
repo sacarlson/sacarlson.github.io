@@ -15,6 +15,7 @@
  <script src="js/crypto-js_3.1.2/aes.js"></script>
  <script src="js/crypto-js_3.1.2/sha256.js"></script>
  <script src="js/crypto-js_3.1.2/enc-base64.js"></script>
+ <script src="js/ledger2.0.5/stellar-ledger-api.min.js"></script>
  
 
  <script src="js/toml-browser.js"></script>
@@ -194,7 +195,9 @@
     <input id="restore" type="button" value="restore_seed" /> 
     <input id="delete_key" type="button" value="delete_seed_key" />  
     <input id="swap_seed_dest" type="button" value="swap_seed_dest" /><br />
-    <input id="regen_keypair_button" type="button" value="regen_keypair" /><br />
+    <input id="regen_keypair_button" type="button" value="regen_keypair" />
+    <input id="login_ledger_button" type="button" value="Login_Nano_ledger" />
+    <br />
     <h5>Seed Nick Name or public ID:</h5>
     <input id="seed_nick" class="form-control" size="60" value = "seed1" /><br /> 
     <h5>Encrypt/Decrypt Seed pass phrase:</h5>
@@ -302,8 +305,10 @@ Remote Stellar laboratory Signer URL: <input id="lab_signer_url" size="30" /><br
       <h2>Sign Tx</h2>
       <p>Sign a multi sig base64 tx envelope</p> 
       <input id="sign_tx" type="button" value="sign_tx" />
+      <input id="sign_tx_nano" type="button" value="sign_tx_nano" />
       <input id="email_tx" type="button" value="email_tx" />
-      <input id="send_tx" type="button" value="submit_tx" /><br />
+      <input id="send_tx" type="button" value="submit_tx" />      
+     <br />
       <input id="send_tx_multisig" type="button" value="send_tx_multisig" /> <span id="send_tx_status" ></span> <br />
       <label for="multisig_url">  Multisig callback Server URL:</label>  
       <input  type="text" class="form-control" id="multisig_url"  value = "http://localhost:8888" />  

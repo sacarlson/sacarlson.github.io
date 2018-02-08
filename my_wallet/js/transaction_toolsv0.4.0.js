@@ -3,6 +3,7 @@
 "use strict";
    
      var key;
+     //var sign_key;
      var server;
      var transaction;
 
@@ -177,7 +178,15 @@
     //var server_mode = "mss_server";
       //bal_disp.textContent = "test";
       //reset_horizon_server(); 
-      seed.value = restore_seed("seed1", "");
+      key = restore_seed("seed1", "");     
+      if (key != null){
+        console.log("key not null");
+        if (key._secretSeed){
+          seed.value = key.secret();
+        }
+        account.value = key.publicKey();
+      }
+
       signer_key.value = seed.value;
       var qrcode = new QRCode(document.getElementById("qrcode"), {
 	    width : 300,
@@ -198,7 +207,7 @@
       console.log("seed.value.length: " + seed.value.length);
             
       //key = StellarSdk.Keypair.fromSecret(seed.value);
-      if (seed.value.length != 56) {
+      if (seed.value.length != 56 && account.value.length != 56) {
         key = StellarSdk.Keypair.random();
         //console.log("key ok");
         account.value = key.publicKey();
@@ -207,17 +216,15 @@
         seed.value = key.secret();
         signer_key.value = seed.value;
         //console.log("seed ok");
-        save_seed("seed1", "", seed.value );
-        save_seed(account.value.substring(0, 5) + "_first", "", seed.value );
+        save_seed("seed1", "", seed.value,account.value );
+        save_seed(account.value.substring(0, 5) + "_first", "", seed.value,"" );
       } else {
-         //account.value = StellarSdk.Keypair.fromSeed(seed.value).publicKey();
-         account.value = StellarSdk.Keypair.fromSecret(seed.value).publicKey();
+         console.log("already have saved key");
          account_tx.address = account.value;
-         key = StellarSdk.Keypair.fromSecret(seed.value);
+         //key = StellarSdk.Keypair.fromSecret(seed.value);
+         key = gen_keypair(account.value,seed.value);
          update_key();
-      }
-      //seed.value = 'SA3CKS64WFRWU7FX2AV6J6TR4D7IRWT7BLADYFWOSJGQ4E5NX7RLDAEQ'; 
-      //account.value = 'GAMCHGO4ECUREZPKVUCQZ3NRBZMK6ESEQVHPRZ36JLUZNEH56TMKQXEB'
+      }  
    
       //asset.value = "native";
       asset.value = clone(default_asset_code.value);
@@ -367,6 +374,7 @@
       if (encrypted_seed != null) {
         //console.log(encrypted_seed[1]);
         seed.value = encrypted_seed[1];
+        key = gen_keypair(account.value,seed.value);
         update_key();      
       }    
       if (accountID != null) {
@@ -378,7 +386,7 @@
 
       //merge_accounts.disabled = true;
       //network.value ="testnet";
-      tx_status.textContent = "Idle V1.2";
+      tx_status.textContent = "Idle V1.3";
       status.textContent = "Not Connected";
       //url.value = "horizon-testnet.stellar.org";
       //port.value = "443";
@@ -404,7 +412,7 @@
       }
       
       if (typeof destination.value == "undefined"){
-        dest_seed.value = restore_seed("seed2", "");
+        //dest_seed.value = restore_seed("seed2", "");
         console.log("dest_seed.value: " + dest_seed.value);
         if (dest_seed.value.length != 0) {
           destination.value = StellarSdk.Keypair.fromSecret(dest_seed.value).publicKey();
@@ -779,7 +787,7 @@
        console.log("start escrow_setup");
        console.log(remote_txData);
        var keypair_escrow = StellarSdk.Keypair.random();
-       save_seed("escrow_"+remote_txData.stellar.payment.memo.value, "", keypair_escrow.secret() );
+       save_seed("escrow_"+remote_txData.stellar.payment.memo.value, "", keypair_escrow.secret(),"" );
        remote_txData.keypair_escrow = keypair_escrow;
        // status will be changed to "Escrow Setup Mode" to show user that we are preparing for escrow tx
        tx_status.textContent = "Escrow Setup not funded?";
@@ -1133,8 +1141,9 @@
        var tmp_seed = merge_dest_key.value;
        merge_dest_key.value = seed.value;
        seed.value = tmp_seed;
-       save_seed("seed1", "", seed.value);
+       save_seed("seed1", "", seed.value,"");
        update_seed_select();
+       key = gen_keypair(account.value,seed.value);
        update_key();
        // update federation username to new publicId
        update_federation("",chain_store['old_publickey'],chain_store['new_publickey'],"")
@@ -1152,7 +1161,7 @@
        // with start native balance for what is needed to hold present active account
        console.log("start create_acccount_if_zero");
        var clone_keypair = StellarSdk.Keypair.fromSecret(merge_dest_key.value);
-       var start_bal = ((account_obj_global.balances.length - 1) * 10) + 20.001;
+       var start_bal = ((account_obj_global.balances.length - 1) * 0.5) + 1.001;
        console.log(chain_store);
        if (chain_store["account_info"] == 404) {
          console.log("no account present so create one");         
@@ -1203,13 +1212,12 @@
        var new_nick = new_keypair.publicKey().substring(0, 5) + "_rec";
        merge_dest_key.value = new_keypair.secret();
        merge_dest.value = new_keypair.publicKey();
-       save_seed(new_nick, "", new_keypair.secret());
+       save_seed(new_nick, "", new_keypair.secret(),"");
        //chain_store['old_keypair'] = key;
        //chain_store['new_keypair'] = new_keypair;
        chain_store['new_publickey'] = new_keypair.publicKey();
        chain_store['old_publickey'] = key.publicKey();
-       //save_seed("seed1", "", new_keypair.secret());
-       var start_bal = ((account_obj_global.balances.length - 1) * 10) + 20.001;     
+       var start_bal = ((account_obj_global.balances.length - 1) * 0.5) + 1.001;     
        var tx_array = [];
 
       
@@ -1301,9 +1309,9 @@
        var new_nick = new_keypair.publicKey().substring(0, 5) + "_rec";
        merge_dest_key.value = new_keypair.secret();
        merge_dest.value = new_keypair.publicKey();
-       save_seed(new_nick, "", new_keypair.secret());
+       save_seed(new_nick, "", new_keypair.secret(),"");
        //save_seed("seed1", "", new_keypair.secret());
-       var start_bal = ((account_obj_global.balances.length - 1) * 10) + 20.001;     
+       var start_bal = ((account_obj_global.balances.length - 1) * 0.5) + 1.001;     
        console.log("start_bal needed is: " + start_bal);         
        var opp = StellarSdk.Operation.createAccount({
                    destination: new_keypair.publicKey(),
@@ -1694,7 +1702,7 @@
          
          function effectHandler(effect,fromStream) {
             console.log("effectHandler fromStream: " + fromStream);
-            disable_change_key();
+            //disable_change_key();
             //console.log("effect");
             //console.log(effect);
             //console.log(" effect.type ");
@@ -2250,6 +2258,14 @@
 
       function update_balances_set(account_obj) {
         console.log("update_balances_set");
+        enable_change_key();
+        console.log("account_obj");
+        console.log(account_obj.message);
+        console.log(account_obj.message != null);
+        if (account_obj.message != null){
+           alert(account_obj.message + ".  This may be due to zero account ballance");
+        }
+        //console.log(account_obj == null);
         //account_obj_global = clone(account_obj);
               
         clear_all_tables();
@@ -2307,21 +2323,58 @@
 
                       
       function update_key() {
-        if (seed.value.length == 56) {
-          key = StellarSdk.Keypair.fromSecret(seed.value);
-          account.value = key.publicKey();          
-        }else if (account.value.length == 56){
-          console.log("update_key has no secret, creating key fromPublicKey");
-          //key =  StellarSdk.Keypair.fromAccountId(account.value);
-          key = StellarSdk.Keypair.fromPublicKey(account.value);
-        }
+        //key = gen_keypair(account.value,seed.value);
+        account.value = key.publicKey();
+        //seed.value = key.secret();      
+        console.log("key object:");
+        console.log(key);
         account_disp.textContent = account.value;
         account_disp2.textContent = account.value;
         account_tx.address = account.value;
         tx_status.textContent = "keypair updated";
         makeCode();
       }
+
       
+      function gen_keypair(publicid,secrete_seed){
+        // will generate keypair object 
+        // if only secrete_seed will gen from that
+        // if only publicid will gen from that
+        // if both publicid and secrete_seed are provided will use secrete to gen full key
+        // originaly planed to combine secret and public key into one if have both, but this doesn't work
+        console.log("gen_keypair");
+        console.log("publicid:");
+        console.log(publicid);
+        console.log("secrete_seed");
+        console.log(secrete_seed);
+        if (publicid == null){
+          publicid = "";
+        }
+        if (secrete_seed == null){
+          secrete_seed = "";
+        }
+        var newseckey;
+        var newpubkey;
+        if (publicid.length == 56 && secrete_seed.length == 56){
+           console.log("both sec and pub");
+           newseckey = StellarSdk.Keypair.fromSecret(secrete_seed);
+           //newpubkey = StellarSdk.Keypair.fromPublicKey(publicid);
+           //newseckey._publicKey = newpubkey._publicKey.slice();
+           //sign_key = newseckey;
+        }
+        if (publicid.length != 56 && secrete_seed.length == 56) {
+          console.log("only sec");
+          newseckey = StellarSdk.Keypair.fromSecret(secrete_seed);
+          //sign_key = newseckey;         
+        }
+        if (publicid.length == 56 && secrete_seed.length != 56){     
+          console.log("only pub");
+          newseckey = StellarSdk.Keypair.fromPublicKey(publicid);
+        }
+        console.log("new key obj");
+        console.log(newseckey);
+        return newseckey;
+      }
      
 
       function update_balances() {       
@@ -2360,8 +2413,8 @@
           var asset_obj = new StellarSdk.Asset.native();
           //if (dest_balance.value == 0){
           if (new_account.checked){
-            if (amount.value < 20) {
-              alert("destination account not active must send min 20 native");
+            if (amount.value < 1) {
+              alert("destination account not active must send min 1 native");
               return;
             }
             createAccount(key);
@@ -3113,9 +3166,14 @@
         update_balances();          
       }
       
-      function save_seed(seed_nick_name_, pass_phrase_, seed_ ) {
+    
+
+      function save_seed(seed_nick_name_, pass_phrase_, seed_, publicid_ ) {
         if (typeof(Storage) !== "undefined") {
-          var encrypted = CryptoJS.AES.encrypt(seed_, pass_phrase_);       
+          var keypairstr = seed_ + publicid_;
+          console.log("saved seed");
+          console.log(keypairstr);
+          var encrypted = CryptoJS.AES.encrypt(keypairstr, pass_phrase_);       
           // Store
           localStorage.setItem(seed_nick_name_, encrypted);
           //seed.value = "seed saved to local storage"        
@@ -3151,11 +3209,43 @@
           }
           console.log("seed type: " + typeof(seed_));
           console.log("seed: " + seed_);
-          return seed_
+          //return seed_
+          return split_keypair(seed_);
         }else {
           alert("Sorry, your browser does not support Web Storage...");
         }     
-      }      
+      }
+
+      function split_keypair(pair_string){
+        // input a single string that has a secrete_seed + publicid in one string
+        // return a real stellar keypair object
+        console.log("split_keypair");
+        if (pair_string.length == 0){
+          return null;
+        }
+        var secrete_seed;
+        var publicid;
+        if (pair_string.length == 56){
+          console.log("len = 56");
+          if (pair_string.substring(0,1) == "G"){
+            publicid = pair_string;
+            secrete_seed = "";
+          }else {
+            publicid = "";
+            secrete_seed = pair_string;
+          }
+        }else {
+          secrete_seed = pair_string.substring(0, 56);
+          publicid = pair_string.substring(56, 112);
+        }
+        console.log("secret: ");
+        console.log(secrete_seed);
+        console.log("publicid:");
+        console.log(publicid);
+        return gen_keypair(publicid,secrete_seed);
+      }     
+
+     
 
       function display_localstorage_keylist() {
         save.disabled = false;
@@ -3200,22 +3290,19 @@
         console.log("seed: " + seednick);
         if (seed.length == 0) {
           return;
-        }         
-        if (typeof(Storage) !== "undefined") {
-          // Retrieve
-          var encrypted = localStorage.getItem(seed_nick.value);        
-          seed.value = CryptoJS.AES.decrypt(encrypted, pass_phrase.value).toString(CryptoJS.enc.Utf8);
-          if (pass_phrase.value.length == 0){
-            save_seed("seed1", "", seed.value);
-            signer_key.value = seed.value;
-          }
-          save.disabled = false;
-          update_seed_select()
-          update_key();
-          update_balances();
-        }else {
-          alert("Sorry, your browser does not support Web Storage...");
-        }        
+        } 
+        var newkeypair = restore_seed(seednick,pass_phrase.value); 
+        seed.value = newkeypair.secret();       
+        account.value = newkeypair.publicKey();
+        key = gen_keypair(account.value,seed.value);
+        update_key();
+        if (pass_phrase.value.length == 0){
+          save_seed("seed1", "", seed.value,account.value);
+          signer_key.value = seed.value;
+        }
+        save.disabled = false;
+        update_seed_select()       
+        update_balances();        
       }
 
        function restore_default_settings(){
@@ -4134,6 +4221,7 @@ function bin2hex (s) {
         console.log(add_signer_type.value);
         secret_key_hex.textContent = bin2hex(seed);
         var encoded_key;
+        var encoded_publickey
         if (add_signer_type.value == "preAuthTx"){
           encoded_key = StellarSdk.StrKey.encodePreAuthTx(seed);
           encoded_publickey = StellarSdk.StrKey.encodePreAuthTx(unencodedBuffer);
@@ -4144,7 +4232,7 @@ function bin2hex (s) {
         }        
         if (add_signer_type.value == "sha256Hash"){
           encoded_key = StellarSdk.StrKey.encodeSha256Hash(seed);
-          var encoded_publickey = StellarSdk.StrKey.encodeSha256Hash(unencodedBuffer);
+          encoded_publickey = StellarSdk.StrKey.encodeSha256Hash(unencodedBuffer);
           console.log("encoded_publickey");
           console.log(encoded_publickey);
           console.log("hashx_key");
@@ -4157,8 +4245,10 @@ function bin2hex (s) {
           console.log("ed25519secret_key");
           console.log(encoded_key);
           signer.value = keypair.publicKey();
-          signer_key.value = encoded_key;          
+          public_key_coded.textContent = keypair.publicKey();
+          encoded_publickey = keypair.publicKey();        
         }
+        //gen_keypair(encoded_publickey,encoded_key);
       }
 
       gen_passphrase_key.addEventListener("click", function(event) {
@@ -4202,7 +4292,7 @@ function bin2hex (s) {
         paths_destination_addressID.value = destination.value;
         dest_seed.value = new_keypair.secret();
         //update_balances();
-        amount.value = 20.1;
+        amount.value = 1.1;
         //issuer.value = "";
         memo.value = "";
         memo_mode.value = "memo.text";
@@ -4211,7 +4301,7 @@ function bin2hex (s) {
         console.log(new_account.checked);
         new_account.checked=true;
         //save_seed("seed1", "", seed.value );
-        save_seed("seed2", "", dest_seed.value );
+        save_seed("seed2", "", dest_seed.value ,"");
       });
 
       function send_escrow_to_callback(){
@@ -4415,7 +4505,8 @@ function bin2hex (s) {
         account.value = destination.value;
         account_tx.address = account.value;
         destination.value = accountId_swap;
-        paths_destination_addressID.value = destination.value;         
+        paths_destination_addressID.value = destination.value;
+        key = gen_keypair(account.value,seed.value);         
         update_key();        
         if (dest_seed.value.length == 56) {
           //var temp_key = StellarSdk.Keypair.fromSecret(dest_seed.value);
@@ -4427,10 +4518,10 @@ function bin2hex (s) {
         }
         update_balances();
         if (seed.value.length == 56){
-          save_seed("seed1", "", seed.value);
+          save_seed("seed1", "", seed.value,account.value);
         }
         if (dest_seed.value.length == 56){
-          save_seed("seed2", "", dest_seed.value);
+          save_seed("seed2", "", dest_seed.value,destination.value);
         }
         sign_tx.disabled = false;
         update_seed_select();
@@ -4468,6 +4559,42 @@ function bin2hex (s) {
         } catch(err) {
           alert("sign_tx error: " + err);
         }
+      });
+
+   function addSignatureToTransaction( signature, transaction) {
+     //var keyPair = StellarSdk.Keypair.fromPublicKey(publicKey);
+     var hint = key.signatureHint();
+     var decorated = new StellarSdk.xdr.DecoratedSignature({hint: hint, signature: signature});
+     transaction.signatures.push(decorated);
+   }
+
+       sign_tx_nano.addEventListener("click", function(event) {
+         var bip32Path = "44'/148'/0'";
+         try {
+           var transaction = new StellarSdk.Transaction(envelope_b64.value);
+           //tx.sign(signer_key);
+
+           StellarLedger.comm.create_async().then(function(comm) {
+             var api = new StellarLedger.Api(comm);
+  
+             return api.signTx_async(bip32Path, transaction).then(function (result) {
+               var signature = result['signature'];
+               // add the signature to the transaction
+               addSignatureToTransaction(signature, transaction);
+               console.log("transaction");
+               console.log(transaction);
+               var b64 = transaction.toEnvelope().toXDR().toString("base64");
+               fill_envelope_b64(b64);
+             }).catch(function (err) {
+               console.error(err);
+             });
+           });
+
+           
+         } catch(err) {
+           alert("sign_tx_nano error: " + err);
+         }          
+          
       });
 
 
@@ -4634,19 +4761,10 @@ function bin2hex (s) {
       });
 
     
-       save.addEventListener("click", function(event) {         
-        if (typeof(Storage) !== "undefined") {
-          var encrypted = CryptoJS.AES.encrypt(seed.value, pass_phrase.value);       
-          // Store
-          localStorage.setItem(seed_nick.value, encrypted);
-          //seed.value = "seed saved to local storage"
-          //save.disabled = true;
+       save.addEventListener("click", function(event) { 
+          save_seed(seed_nick.value, pass_phrase.value, seed.value, account.value );             
           update_seed_select(); 
-          update_key();
-          //update_balances();       
-        }else {
-          alert("Sorry, your browser does not support Web Storage...");
-        }
+          update_key();         
       });
 
                  
@@ -4660,9 +4778,13 @@ function bin2hex (s) {
       });
 
       restore.addEventListener("click", function(event) {
-        seed.value = restore_seed(seed_nick.value, pass_phrase.value);
+        var newkeypair = restore_seed(seed_nick.value, pass_phrase.value);
+        seed.value = newkeypair.secret();
+        account.value = newkeypair.publicKey();
+        //seed.value = restore_seed(seed_nick.value, pass_phrase.value);
         signer_key.value = seed.value;
         update_seed_select();
+        key = gen_keypair(account.value,seed.value);
         update_key();
         update_balances();
         sign_tx.disabled = false;
@@ -4725,9 +4847,39 @@ function bin2hex (s) {
 
       regen_keypair_button.addEventListener("click", function(event) {
         console.log("regen_keypair_button");
+        key = gen_keypair(account.value,seed.value);
         update_key();
         update_balances();
         sign_tx.disabled = false;
+      }); 
+
+      login_ledger_button.addEventListener("click", function(event) {
+        console.log("login_ledger_button clicked");
+
+        new StellarLedger.Api(new StellarLedger.comm(Number.MAX_VALUE)).connect(
+          function() { console.log('connected'); }, function(err) { console.error(err) }
+        );
+
+        var bip32Path = "44'/148'/0'";
+        console.log("post connect?");
+
+        StellarLedger.comm.create_async().then(function(comm) {
+          var api = new StellarLedger.Api(comm);
+          // get the public key for this bip32 path
+          return api.getPublicKey_async(bip32Path).then(function (result) {
+            var publicKey = result['publicKey'];
+            console.log("publicKey");
+            console.log(publicKey);
+            key = StellarSdk.Keypair.fromPublicKey(publicKey);
+            seed.value = "";
+            update_key();
+            update_balances();
+            sign_tx.disabled = true;
+          }).catch(function (err) {
+            console.error(err);
+          });
+        });
+        
       }); 
 
       update_fed_email.addEventListener("click", function(event) {
