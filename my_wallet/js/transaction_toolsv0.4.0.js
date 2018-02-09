@@ -3,7 +3,6 @@
 "use strict";
    
      var key;
-     //var sign_key;
      var server;
      var transaction;
 
@@ -2335,7 +2334,6 @@
       function update_key() {
         //key = gen_keypair(account.value,seed.value);
         account.value = key.publicKey();
-        //seed.value = key.secret();
         seed.value = extract_secret(key);      
         console.log("key object:");
         console.log(key);
@@ -2369,14 +2367,10 @@
         if (publicid.length == 56 && secrete_seed.length == 56){
            console.log("both sec and pub");
            newseckey = StellarSdk.Keypair.fromSecret(secrete_seed);
-           //newpubkey = StellarSdk.Keypair.fromPublicKey(publicid);
-           //newseckey._publicKey = newpubkey._publicKey.slice();
-           //sign_key = newseckey;
         }
         if (publicid.length != 56 && secrete_seed.length == 56) {
           console.log("only sec");
-          newseckey = StellarSdk.Keypair.fromSecret(secrete_seed);
-          //sign_key = newseckey;         
+          newseckey = StellarSdk.Keypair.fromSecret(secrete_seed);       
         }
         if (publicid.length == 56 && secrete_seed.length != 56){     
           console.log("only pub");
@@ -4574,17 +4568,35 @@ function bin2hex (s) {
       });
 
    function addSignatureToTransaction( signature, transaction) {
-     //var keyPair = StellarSdk.Keypair.fromPublicKey(publicKey);
-     var hint = key.signatureHint();
-     var decorated = new StellarSdk.xdr.DecoratedSignature({hint: hint, signature: signature});
-     transaction.signatures.push(decorated);
+     console.log("start addsignature");
+     console.log("tx");
+     console.log(transaction);
+     StellarLedger.comm.create_async().then(function(comm) {
+          var bip32Path = "44'/148'/0'";
+          var api = new StellarLedger.Api(comm);
+          // get the public key for this bip32 path
+          return api.getPublicKey_async(bip32Path).then(function (result) {
+            var publicKey = result['publicKey'];
+            console.log("publicKey");
+            console.log(publicKey);
+            var keyPair = StellarSdk.Keypair.fromPublicKey(publicKey);
+            var hint = keyPair.signatureHint();
+            var decorated = new StellarSdk.xdr.DecoratedSignature({hint: hint, signature: signature});
+            transaction.signatures.push(decorated);
+            console.log("transaction");
+            console.log(transaction);
+            var b64 = transaction.toEnvelope().toXDR().toString("base64");
+            fill_envelope_b64(b64);            
+          }).catch(function (err) {
+            console.error(err);
+          });
+     });
    }
 
        sign_tx_nano.addEventListener("click", function(event) {
          var bip32Path = "44'/148'/0'";
          try {
            var transaction = new StellarSdk.Transaction(envelope_b64.value);
-           //tx.sign(signer_key);
 
            StellarLedger.comm.create_async().then(function(comm) {
              var api = new StellarLedger.Api(comm);
@@ -4592,16 +4604,11 @@ function bin2hex (s) {
              return api.signTx_async(bip32Path, transaction).then(function (result) {
                var signature = result['signature'];
                // add the signature to the transaction
-               addSignatureToTransaction(signature, transaction);
-               console.log("transaction");
-               console.log(transaction);
-               var b64 = transaction.toEnvelope().toXDR().toString("base64");
-               fill_envelope_b64(b64);
+               addSignatureToTransaction(signature, transaction);               
              }).catch(function (err) {
                console.error(err);
              });
            });
-
            
          } catch(err) {
            alert("sign_tx_nano error: " + err);
