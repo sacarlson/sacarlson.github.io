@@ -213,7 +213,7 @@
         account.value = key.publicKey();
         account_tx.address = account.value;
         //console.log("account ok");
-        seed.value = key.secret();
+        seed.value = extract_secret(key);
         signer_key.value = seed.value;
         //console.log("seed ok");
         save_seed("seed1", "", seed.value,account.value );
@@ -460,6 +460,16 @@
         console.log("timer click detected, do an attachToPaymentsStream('now'); to prevent time out");
         attachToPaymentsStream('now');
         get_offers();
+      }
+
+      function extract_secret(keypair) {
+        var key_secret;
+        if (keypair._secretSeed){
+          key_secret = keypair.secret();
+        } else {
+          key_secret = "";
+        }
+        return key_secret;
       }
 
       function fill_envelope_b64(b64_tx_env){
@@ -2325,7 +2335,8 @@
       function update_key() {
         //key = gen_keypair(account.value,seed.value);
         account.value = key.publicKey();
-        //seed.value = key.secret();      
+        //seed.value = key.secret();
+        seed.value = extract_secret(key);      
         console.log("key object:");
         console.log(key);
         account_disp.textContent = account.value;
@@ -2341,7 +2352,7 @@
         // if only secrete_seed will gen from that
         // if only publicid will gen from that
         // if both publicid and secrete_seed are provided will use secrete to gen full key
-        // originaly planed to combine secret and public key into one if have both, but this doesn't work
+        // originaly planed to combine secret and public key into one if have both, but this doesn't work with unmatched keys
         console.log("gen_keypair");
         console.log("publicid:");
         console.log(publicid);
@@ -3292,7 +3303,8 @@
           return;
         } 
         var newkeypair = restore_seed(seednick,pass_phrase.value); 
-        seed.value = newkeypair.secret();       
+        //seed.value = newkeypair.secret(); 
+        seed.value = extract_secret(newkeypair)      
         account.value = newkeypair.publicKey();
         key = gen_keypair(account.value,seed.value);
         update_key();
@@ -4201,9 +4213,9 @@ function bin2hex (s) {
         var publickey_hex = toHexString(unencodedBuffer);
         key = keypair;
         sign_tx.disabled = false;
-        signer_key.value = keypair.secret();
-        seed.value = keypair.secret();
-        secret_key.textContent = keypair.secret();
+        signer_key.value = extract_secret(keypair);
+        seed.value = extract_secret(keypair);
+        secret_key.textContent = extract_secret(keypair);
         console.log("keypair");
         console.log(keypair);
         console.log(publickey.length);
@@ -4779,7 +4791,7 @@ function bin2hex (s) {
 
       restore.addEventListener("click", function(event) {
         var newkeypair = restore_seed(seed_nick.value, pass_phrase.value);
-        seed.value = newkeypair.secret();
+        seed.value = extract_secret(newkeypair);
         account.value = newkeypair.publicKey();
         //seed.value = restore_seed(seed_nick.value, pass_phrase.value);
         signer_key.value = seed.value;
