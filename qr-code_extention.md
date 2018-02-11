@@ -63,7 +63,7 @@ The QR codes contain JSON encoded data structures.
                 "value":    MEMO
             },
             "escrow": {     // (****)
-                "publicID:   ACCOUNT_ID,
+                "publicID":   ACCOUNT_ID,
                 "email":     EMAIL_ADDRESS,
                 "expire_ts": TIMESTAMP_EXPIRE,
                 "expire_dt": EXPIRE_DATE,
