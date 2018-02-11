@@ -1086,8 +1086,8 @@
       });
 
       fed_lookup.addEventListener("click", function(event) {
-        console.log("destination.value.length: " + destination.value.length);
-        if (destination.value.length == 56) {
+        console.log("x destination.value.length: " + destination.value.length);
+        if ((destination.value.length == 56) && ( destination.value.charAt( 0 ) == 'G' )) {
           reverse_federation_lookup();
         } else {
           federation_lookup();
