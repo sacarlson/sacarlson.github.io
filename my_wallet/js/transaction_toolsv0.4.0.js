@@ -1,7 +1,6 @@
 // Copyright (c) 2016 Scott Carlson sacarlson_2000@yahoo.com
 
 "use strict";
-   
      var key;
      var server;
      var transaction;
@@ -193,6 +192,11 @@
       });
 
       var qrcode2 = new QRCode(document.getElementById("qrcode2"), {
+	    width : 300,
+	    height : 300
+      });
+
+      var qrcode_envelope = new QRCode(document.getElementById("qrcode_envelope"), {
 	    width : 300,
 	    height : 300
       });
@@ -474,7 +478,11 @@
       function fill_envelope_b64(b64_tx_env){
         console.log("fill_envelope");
         console.log(b64_tx_env);
-        envelope_b64.value = b64_tx_env;
+        envelope_b64.value = encodeURIComponent(b64_tx_env);
+        console.log("post encodedURIComponent");
+        console.log(envelope_b64.value);
+        //envelope_b64.value = b64_tx_env;
+        make_qrcode_env(envelope_b64.value);
         //var my_signer = gen_my_wallet_signer_link(b64_tx_env)
         //var lab_signer = gen_lab_env_signer_link(b64_tx_env);
         //var lab_env_viewer = gen_lab_env_viewer_link(b64_tx_env);
@@ -1456,6 +1464,24 @@
        //console.log("qrcode account: " + account.value);
        qrcode2.makeCode(account.value);      
      } 
+ 
+
+     function make_qrcode_env(b64){
+       console.log("start make_qrcode_env");
+       console.log(b64);
+       //var sample_qrcode = '{"stellar":{"TransactionEnvelope":{"base64": "AAAAAP5saRvcSy2CRQaDS1EnupAyg4GZMSQTstIT8nouoaDbAAAAZADz38cAAAADAAAAAAAAAAEAAAAcKzkwWExNLVBsZWFzZWNsaWNrOmdpZnQ1Lm9yZwAAAAEAAAAAAAAAAQAAAACpgG+RdZDZvmEzTNJPQtZAN5oRURCIMY5TiI00fGtC4QAAAAAAAAAAAAAnEAAAAAAAAAABLqGg2wAAAEBX6WVBqu4Hu3nemplLsHCUOteH6tPqsGfAhuKRAt4uTT2l3pPBTXt6UtbeoeiCAUOZwI8mV4/6cH9m1GHLmOwD", "network":"7ac33997"}}}'
+       var networkcode ;
+       if (network.value === "live_default" ){        
+         networkcode = "7ac33997";
+       }else{        
+         networkcode = "cee0302d";
+       }
+       var qrcode_string = '{"stellar":{"TransactionEnvelope":{"base64":';
+       var qrcode_string = qrcode_string + b64 + ',"network":"' + networkcode + '"}}}';
+       console.log("out string");
+       console.log(qrcode_string);
+       qrcode_envelope.makeCode(qrcode_string);
+     }
 
           function email_funds_now (mode) {
             var mail = "";
@@ -4614,6 +4640,16 @@ function bin2hex (s) {
            alert("sign_tx_nano error: " + err);
          }          
           
+      });
+
+      envelope_b64.addEventListener("change", function(event) {
+         console.log("envelope_b64 change triger detected");
+         console.log("pre encoded b64 env");
+         console.log(envelope_b64.value);
+         var b64 = encodeURIComponent(envelope_b64.value);
+         console.log("post encoded");
+         console.log(b64);
+         make_qrcode_env(b64);
       });
 
 
