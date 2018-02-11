@@ -478,11 +478,11 @@
       function fill_envelope_b64(b64_tx_env){
         console.log("fill_envelope");
         console.log(b64_tx_env);
-        envelope_b64.value = encodeURIComponent(b64_tx_env);
-        console.log("post encodedURIComponent");
-        console.log(envelope_b64.value);
-        //envelope_b64.value = b64_tx_env;
-        make_qrcode_env(envelope_b64.value);
+        var b64_encoded = encodeURIComponent(b64_tx_env);
+        //console.log("post encodedURIComponent");
+        //console.log(envelope_b64.value);
+        envelope_b64.value = b64_tx_env;
+        make_qrcode_env(b64_encoded);
         //var my_signer = gen_my_wallet_signer_link(b64_tx_env)
         //var lab_signer = gen_lab_env_signer_link(b64_tx_env);
         //var lab_env_viewer = gen_lab_env_viewer_link(b64_tx_env);
