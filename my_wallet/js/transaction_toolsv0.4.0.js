@@ -478,11 +478,12 @@
       function fill_envelope_b64(b64_tx_env){
         console.log("fill_envelope");
         console.log(b64_tx_env);
-        var b64_encoded = encodeURIComponent(b64_tx_env);
+        //var b64_encoded = encodeURIComponent(b64_tx_env);
         //console.log("post encodedURIComponent");
         //console.log(envelope_b64.value);
         envelope_b64.value = b64_tx_env;
-        make_qrcode_env(b64_encoded);
+        //make_qrcode_env(b64_encoded);
+        make_qrcode_env(b64_tx_env);
         //var my_signer = gen_my_wallet_signer_link(b64_tx_env)
         //var lab_signer = gen_lab_env_signer_link(b64_tx_env);
         //var lab_env_viewer = gen_lab_env_viewer_link(b64_tx_env);
@@ -1466,7 +1467,7 @@
      } 
  
 
-     function make_qrcode_env(b64){
+     function make_qrcode_env_direct(b64){
        console.log("start make_qrcode_env");
        console.log(b64);
        //var sample_qrcode = '{"stellar":{"TransactionEnvelope":{"base64": "AAAAAP5saRvcSy2CRQaDS1EnupAyg4GZMSQTstIT8nouoaDbAAAAZADz38cAAAADAAAAAAAAAAEAAAAcKzkwWExNLVBsZWFzZWNsaWNrOmdpZnQ1Lm9yZwAAAAEAAAAAAAAAAQAAAACpgG+RdZDZvmEzTNJPQtZAN5oRURCIMY5TiI00fGtC4QAAAAAAAAAAAAAnEAAAAAAAAAABLqGg2wAAAEBX6WVBqu4Hu3nemplLsHCUOteH6tPqsGfAhuKRAt4uTT2l3pPBTXt6UtbeoeiCAUOZwI8mV4/6cH9m1GHLmOwD", "network":"7ac33997"}}}'
@@ -1481,6 +1482,51 @@
        console.log("out string");
        console.log(qrcode_string);
        qrcode_envelope.makeCode(qrcode_string);
+     }
+
+     function make_qrcode_env(b64){
+       console.log("start make_qrcode_env");
+       const node = new Ipfs({ repo: 'ipfs-' + Math.random() })
+
+       node.once('ready', () => {
+         console.log('Online status: ', node.isOnline() ? 'online' : 'offline');
+
+         // You can write more code here to use it. Use methods like 
+         // node.files.add, node.files.get. See the API docs here:
+         // https://github.com/ipfs/interface-ipfs-core/tree/master/API
+
+
+         function AddContent(new_content) {
+           console.log("Uploading content:", new_content);
+           node.files.add(new node.types.Buffer(
+             new_content
+           ),(err, filesAdded) => {
+             if (err) { return console.error('Error - IPFS files add', err, res) }
+
+             var urls = ""
+
+             filesAdded.forEach((file) => {
+               console.log('successfully stored', file.hash);
+               urls = urls + "https://ipfs.io/ipfs/" + file.hash; 
+             })
+             console.log("urls");
+             console.log(urls);
+             var networkcode ;
+             if (network.value === "live_default" ){        
+               networkcode = "7ac33997";
+             }else{        
+               networkcode = "cee0302d";
+             }
+             var qrcode_string = '{"stellar":{"TransactionEnvelope":{"url":"';
+             var qrcode_string = qrcode_string + urls + '","network":"' + networkcode + '"}}}';
+             console.log("out string");
+             console.log(qrcode_string);
+             qrcode_envelope.makeCode(qrcode_string);
+           })
+         }      
+         AddContent(b64);
+       })
+
      }
 
           function email_funds_now (mode) {
