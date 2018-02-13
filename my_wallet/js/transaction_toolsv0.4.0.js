@@ -264,7 +264,7 @@
         }
         if (params["network"]=="live"){
           net_passphrase.value = "Public Global Stellar Network ; September 2015";
-          url.value = "horizon-live.stellar.org";
+          url.value = "horizon.stellar.org";
         }
         StellarSdk.Network.use(new StellarSdk.Network(net_passphrase.value));
         active_network.textContent = net_passphrase.value ;
@@ -2281,7 +2281,7 @@
 
       
     // new method used in sdk
-    //expect(() => new StellarSdk.Server('http://horizon-live.stellar.org:1337', {allowHttp: true})).to.not.throw();
+    //expect(() => new StellarSdk.Server('http://horizon.stellar.org:1337', {allowHttp: true})).to.not.throw();
 
        function reset_horizon_server() {
         console.log("reset_horizon_server"); 
@@ -3142,7 +3142,7 @@
           net_passphrase.value = pub;
           StellarSdk.Network.use(new StellarSdk.Network(net_passphrase.value));
           //StellarSdk.Network.usePublicNetwork();
-          //hostname = "horizon-live.stellar.org";          
+          //hostname = "horizon.stellar.org";          
           current_mode.value = "Stellar horizon Live!!";
           console.log(socket);
           if (typeof(socket) !== "undefined") {
@@ -3158,7 +3158,7 @@
           open.disabled = true;
           net_passphrase.value = pub;
           StellarSdk.Network.use(new StellarSdk.Network(net_passphrase.value));
-          url.value = "horizon-live.stellar.org";
+          url.value = "horizon.stellar.org";
           port.value = "443";
           secure.value = "true";
           current_mode.value = "Stellar horizon Live!! default";
