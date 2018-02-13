@@ -105,6 +105,7 @@
       var send_tx_status = document.getElementById("send_tx_status");
       var merge_all_random = document.getElementById("merge_all_random");
       var fed_email = document.getElementById("fed_email");
+      var qrcode_env_mode = document.getElementById("qrcode_env_mode");
 
       var asset_obj = new StellarSdk.Asset.native();
       var socket;
@@ -1465,18 +1466,27 @@
        //console.log("qrcode account: " + account.value);
        qrcode2.makeCode(account.value);      
      } 
- 
+     
+     function get_networkcode(passphrase_) {
+       return new StellarSdk.Network(passphrase_)
+       .networkId().toString('hex').slice(0, 8);
+     }
+
+     function make_qrcode_env(b64) {
+       console.log("qrcode_env_mode.value");
+       console.log(qrcode_env_mode.value);
+       if (qrcode_env_mode.value == "direct"){
+          make_qrcode_env_direct(b64);
+       } else {
+          make_qrcode_env_url_xdr(b64);
+       }
+     }
 
      function make_qrcode_env_direct(b64){
        console.log("start make_qrcode_env");
        console.log(b64);
        //var sample_qrcode = '{"stellar":{"TransactionEnvelope":{"base64": "AAAAAP5saRvcSy2CRQaDS1EnupAyg4GZMSQTstIT8nouoaDbAAAAZADz38cAAAADAAAAAAAAAAEAAAAcKzkwWExNLVBsZWFzZWNsaWNrOmdpZnQ1Lm9yZwAAAAEAAAAAAAAAAQAAAACpgG+RdZDZvmEzTNJPQtZAN5oRURCIMY5TiI00fGtC4QAAAAAAAAAAAAAnEAAAAAAAAAABLqGg2wAAAEBX6WVBqu4Hu3nemplLsHCUOteH6tPqsGfAhuKRAt4uTT2l3pPBTXt6UtbeoeiCAUOZwI8mV4/6cH9m1GHLmOwD", "network":"7ac33997"}}}'
-       var networkcode ;
-       if (network.value === "live_default" ){        
-         networkcode = "7ac33997";
-       }else{        
-         networkcode = "cee0302d";
-       }
+       var networkcode = get_networkcode(net_passphrase.value);       
        var qrcode_string = '{"stellar":{"TransactionEnvelope":{"base64":';
        var qrcode_string = qrcode_string + b64 + ',"network":"' + networkcode + '"}}}';
        console.log("out string");
@@ -1484,7 +1494,7 @@
        qrcode_envelope.makeCode(qrcode_string);
      }
 
-     function make_qrcode_env(b64){
+     function make_qrcode_env_url_xdr(b64){
        console.log("start make_qrcode_env");
        const node = new Ipfs({ repo: 'ipfs-' + Math.random() })
 
@@ -1511,13 +1521,8 @@
              })
              console.log("urls");
              console.log(urls);
-             var networkcode ;
-             if (network.value === "live_default" ){        
-               networkcode = "7ac33997";
-             }else{        
-               networkcode = "cee0302d";
-             }
-             var qrcode_string = '{"stellar":{"TransactionEnvelope":{"url":"';
+             var networkcode = get_networkcode(net_passphrase.value);             
+             var qrcode_string = '{"stellar":{"TransactionEnvelope":{"url_xdr":"';
              var qrcode_string = qrcode_string + urls + '","network":"' + networkcode + '"}}}';
              console.log("out string");
              console.log(qrcode_string);
