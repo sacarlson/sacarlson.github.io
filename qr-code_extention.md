@@ -123,24 +123,32 @@ Here, network is mandatory, since it defines *where* an account has been registe
 {
     "stellar": {
         "TransactionEnvelope": {          
-            "base64":   XDR_blob,         // (***)
-            "url":      WEBHOOK_URL,       // (**)
-            "network":  NETWORK_CODE     // (*)
+            "base64":   XDR_blob,          // (*)
+            "url_xdr":  WEBHOOK_URL_XDR,   // (**)
+            "url_sig":  WEBHOOK_URL_SIG,   // (***)
+            "tx_hash":  TRANSACTION_HASH,  // (****)
+            "network":  NETWORK_CODE       // (*****)
         }
     }
 }
 ```
-*) Network is only needed if not stellar.org live network
-**) url WEBHOOK_URL is provided that would contain the base64 XDR_blob if base64 was not directly provided in QR-code
-***) base64 XDR_blob of the transaction that could signed, partly signed or fully signed with any group of operations
-note: XDR_blob can be optionaly URI encoded: var b64 = encodeURIComponent(b64);
 
-example without URI encode:
+*) base64 XDR_blob of the transaction that could signed, partly signed or fully signed with any group of operations
+
+**) url_xdr WEBHOOK_URL_XDR is provided that would contain the base64 XDR_blob if base64 was not directly provided in QR-code
+
+***) url_sig WEBHOOK_URL_SIG is optional and is the point to send back the decorated signature with webhook_url_sig.com?sig=dyqGyKpjt6j3NsIot/sw/82rD1KH0eaVYJ/4LO8szjh4rO/CZ24ihx6yRvLaGm64Na1GGy5wbqex3TkZ0v6GCg==&tx_hash=cd08cb01a02ab3a48aa2cb8f985c167c5f8c71b91e3fc9e9b74b687f712e576f  note: the sig will require uri encoding and decoding on the other end.
+
+****) tx_hash optional transaction hash of the XDR_blob sent
+
+*****) Network is only needed if not stellar.org live network
+
+
+example with direct base64:
 {"stellar":{"TransactionEnvelope":{"base64": "AAAAAP5saRvcSy2CRQaDS1EnupAyg4GZMSQTstIT8nouoaDbAAAAZADz38cAAAADAAAAAAAAAAEAAAAcKzkwWExNLVBsZWFzZWNsaWNrOmdpZnQ1Lm9yZwAAAAEAAAAAAAAAAQAAAACpgG+RdZDZvmEzTNJPQtZAN5oRURCIMY5TiI00fGtC4QAAAAAAAAAAAAAnEAAAAAAAAAABLqGg2wAAAEBX6WVBqu4Hu3nemplLsHCUOteH6tPqsGfAhuKRAt4uTT2l3pPBTXt6UtbeoeiCAUOZwI8mV4/6cH9m1GHLmOwD", "network":"7ac33997"}}}
 
-example with URI encode:
-{"stellar":{"TransactionEnvelope":{"base64":AAAAAP5saRvcSy2CRQaDS1EnupAyg4GZMSQTstIT8nouoaDbAAAAZADz38cAAAADAAAAAAAAAAEAAAAcKzkwWExNLVBsZWFzZWNsaWNrOmdpZnQ1Lm9yZwAAAAEAAAAAAAAAAQAAAACpgG%2BRdZDZvmEzTNJPQtZAN5oRURCIMY5TiI00fGtC4QAAAAAAAAAAAAAnEAAAAAAAAAABLqGg2wAAAEBX6WVBqu4Hu3nemplLsHCUOteH6tPqsGfAhuKRAt4uTT2l3pPBTXt6UtbeoeiCAUOZwI8mV4%2F6cH9m1GHLmOwD,"network":"cee0302d"}}}
-
+example with url_xdr webhook:
+{"stellar":{"TransactionEnvelope":{"url_xdr":"https://ipfs.io/ipfs/Qmd7WVrmnzbtXVFy3pkiF451edGXZx3tPWZbuJgPLeZr4D","network":"cee0302d"}}}
 
 ## Specifying a Network
 
