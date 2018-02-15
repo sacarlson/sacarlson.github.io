@@ -304,7 +304,8 @@
         if (typeof params["env_b64"] != "undefined") {
           console.log("env_b64 param detected");
           //envelope_b64.value = params["env_b64"];
-          fill_envelope_b64(params["env_b64"]);
+          fill_envelope_b64(decodeURIComponent(params["env_b64"]));
+          //fill_envelope_b64(params["env_b64"]);
           account.value = new StellarSdk.Transaction(envelope_b64.value).operations[0].destination;
           account_tx.address = account.value;
           console.log(new StellarSdk.Transaction(envelope_b64.value).operations[0].asset);

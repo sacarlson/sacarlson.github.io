@@ -232,7 +232,7 @@ div.desc {
                console.log("account type Livenet");
                network = "live";
              }
-             var env_b64 = obj.stellar.TransactionEnvelope.base64;
+             var env_b64 = encodeURIComponent(obj.stellar.TransactionEnvelope.base64);
              link = ' <a href="https://sacarlson.github.io/my_wallet/?json=%7B%22env_b64%22:%22' + env_b64 + '%22,%22network%22:%22' + network +'%22%7D">' + env_b64 + '</a> ';
              console.log("link: ");
              console.log(link);
