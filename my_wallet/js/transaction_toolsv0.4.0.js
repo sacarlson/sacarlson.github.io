@@ -188,18 +188,24 @@
 
       signer_key.value = seed.value;
       var qrcode = new QRCode(document.getElementById("qrcode"), {
-	    width : 300,
-	    height : 300
+	    width : 400,
+	    height : 400,
+        correctLevel : QRCode.CorrectLevel.L
+        //correctLevel : QRCode.CorrectLevel.H
       });
 
       var qrcode2 = new QRCode(document.getElementById("qrcode2"), {
-	    width : 300,
-	    height : 300
+	    width : 400,
+	    height : 400,
+        correctLevel : QRCode.CorrectLevel.L
+        //correctLevel : QRCode.CorrectLevel.H
       });
 
       var qrcode_envelope = new QRCode(document.getElementById("qrcode_envelope"), {
-	    width : 300,
-	    height : 300
+	    width : 400,
+	    height : 400,
+        correctLevel : QRCode.CorrectLevel.L
+        //correctLevel : QRCode.CorrectLevel.H
       });
  
       restore_default_settings();
@@ -1487,8 +1493,8 @@
        console.log(b64);
        //var sample_qrcode = '{"stellar":{"TransactionEnvelope":{"base64": "AAAAAP5saRvcSy2CRQaDS1EnupAyg4GZMSQTstIT8nouoaDbAAAAZADz38cAAAADAAAAAAAAAAEAAAAcKzkwWExNLVBsZWFzZWNsaWNrOmdpZnQ1Lm9yZwAAAAEAAAAAAAAAAQAAAACpgG+RdZDZvmEzTNJPQtZAN5oRURCIMY5TiI00fGtC4QAAAAAAAAAAAAAnEAAAAAAAAAABLqGg2wAAAEBX6WVBqu4Hu3nemplLsHCUOteH6tPqsGfAhuKRAt4uTT2l3pPBTXt6UtbeoeiCAUOZwI8mV4/6cH9m1GHLmOwD", "network":"7ac33997"}}}'
        var networkcode = get_networkcode(net_passphrase.value);       
-       var qrcode_string = '{"stellar":{"TransactionEnvelope":{"base64":';
-       var qrcode_string = qrcode_string + b64 + ',"network":"' + networkcode + '"}}}';
+       var qrcode_string = '{"stellar":{"TransactionEnvelope":{"base64":"';
+       var qrcode_string = qrcode_string + b64 + '","network":"' + networkcode + '"}}}';
        console.log("out string");
        console.log(qrcode_string);
        qrcode_envelope.makeCode(qrcode_string);

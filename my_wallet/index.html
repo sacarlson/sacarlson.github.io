@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="js/bootstrap_3.3.6/bootstrap.min.css"> 
   <link rel="stylesheet" href="table.css"> 
   <link rel="stylesheet" href="tab.css"> 
+ 
   <script src="js/jquery-2.2.1.min.js" integrity="sha384-8C+3bW/ArbXinsJduAjm9O7WNnuOcO+Bok/VScRYikawtvz4ZPrpXtGfKIewM9dK" crossorigin="anonymous"></script>
   <script src="js/qrcode.js" integrity="sha384-hYj7cf8JCFyDuU90YJY9/TgSVpAtbrqW6oQliv63kjRTr4oyOTeITwmTfSI+UC0a" crossorigin="anonymous"></script>
   <script src="js/bootstrap_3.3.6/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
@@ -112,7 +113,7 @@
   <h2>Receive Funds</h2>
   <p>Info to provide a sender that will be sending funds to you </p>
   <h3>AccountId: <span id="account_disp2"></span></h3>
-  <div id="qrcode2" style="width:300px; height:300px; margin-top:20px; margin-left: 20px;"></div><br /> 
+  <div id="qrcode2" style="width:440px; margin: auto; border: 20px solid white;"></div><br /> 
   <p>Public addressId QR-code Compatible with Centaurus: </p><br />
 </div>
 
@@ -215,7 +216,9 @@
       <option>Centaurus</option>
       <option>Stargazer</option>
     </select><br />
-    <div id="qrcode" style="width:300px; height:300px; margin-top:20px; margin-bottom: 30px; margin-left: 30px;"></div> 
+ 
+    <div id="qrcode" style="width:440px; margin: auto; border: 20px solid white;"></div> 
+
   </div>
   
 </div>
@@ -329,8 +332,9 @@ Remote Stellar laboratory Signer URL: <input id="lab_signer_url" size="30" /><br
        <label for="comment">TX Envelope Base64:</label>
        <textarea class="form-control" rows="6" id="envelope_b64"></textarea> <br />
        <p>QR-code of transaction above</p> <br />
-       <div id="qrcode_envelope" style="width:300px; height:300px; margin-top:20px; margin-left: 20px;"></div><br /> 
-      </div>                  
+       <div id="qrcode_envelope" style="width:440px; margin: auto; border: 20px solid white;"></div><br /> 
+      </div> 
+      <br />                 
    </div>
 
 

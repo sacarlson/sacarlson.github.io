@@ -127,7 +127,7 @@ div.desc {
     </div>
   </div>
   <h2> <span id="site_hostname"></span> </h2>
-  <h3> QR Code Reader V1.01 </h3>
+  <h3> QR Code Reader V1.04 </h3>
 </div>
 
 <div class="w3-row" >
@@ -177,7 +177,7 @@ div.desc {
       console.log(result);
       console.log("p0",result.charAt(0));
       console.log("p1",result.charAt(1));
-      qr.stop();
+      //qr.stop();
       shutter.play();
       var link;
       // https://wallet.funtracker.site/?json={%22seed%22:%22aaabbbccccddd%22}
@@ -211,12 +211,36 @@ div.desc {
                console.log("account type Livenet");
                network = "live";
              }
-             var seed = obj.stellar.key;
-             var link = ' <a href="https://sacarlson.github.io/my_wallet/?json=%7B%22seed%22:%22' + seed + '%22,%22network%22:%22' + network +'%22%7D">' + seed + '</a> ';
+             if (obj.stellar.key){
+               var seed = obj.stellar.key;
+               link = ' <a href="https://sacarlson.github.io/my_wallet/?json=%7B%22seed%22:%22' + seed + '%22,%22network%22:%22' + network +'%22%7D">' + seed + '</a> ';
+             } else {
+               console.log("stargazer account receive?");
+               //link = ' <a href="' + result + '">' + result + '</a> ';
+               var accID = obj.stellar.account.id
+               link = ' <a href="https://sacarlson.github.io/my_wallet/?json=%7B%22destination%22:%22' + accID + '%22,%22network%22:%22' + network +'%22%7D">' + accID + '</a> ';
+               //link = '<h3> ' + result + '</h3>';
+               //link = result ;
+             } 
+           }else if(obj.stellar.TransactionEnvelope){
+             var network;
+             console.log("result is stellar TransactionEnvelope obj");
+             if (obj.stellar.TransactionEnvelope.network == "cee0302d"){
+               console.log("account type testnet");
+               network = "test";
+             }else{
+               console.log("account type Livenet");
+               network = "live";
+             }
+             var env_b64 = obj.stellar.TransactionEnvelope.base64;
+             link = ' <a href="https://sacarlson.github.io/my_wallet/?json=%7B%22env_b64%22:%22' + env_b64 + '%22,%22network%22:%22' + network +'%22%7D">' + env_b64 + '</a> ';
+             console.log("link: ");
+             console.log(link);
+             link_d.innerHTML = link;
            }
          }
       } else {
-        console.log("link mode 3");      
+        console.log("link mode 4 url link");      
         link = ' <a href="' + result + '">' + result + '</a> ';
       }
 
@@ -234,7 +258,7 @@ div.desc {
     // stop whenever we want.
     
     stop.onclick = function () {
-      qr.stop();
+      //qr.stop();
     };
   })();
   </script>
