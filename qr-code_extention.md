@@ -124,8 +124,8 @@ Here, network is mandatory, since it defines *where* an account has been registe
     "stellar": {
         "TransactionEnvelope": {          
             "base64":   XDR_blob,          // (*)
-            "url_xdr":  WEBHOOK_URL_XDR,   // (**)
-            "url_sig":  WEBHOOK_URL_SIG,   // (***)
+            "url_xdr":  URL_TO_XDR_DATA,   // (**)
+            "url_sig":  URL_SIGNATURE_RESPONSE,   // (***)
             "tx_hash":  TRANSACTION_HASH,  // (****)
             "network":  NETWORK_CODE       // (*****)
         }
@@ -135,9 +135,13 @@ Here, network is mandatory, since it defines *where* an account has been registe
 
 *) base64 XDR_blob of the transaction that could signed, partly signed or fully signed with any group of operations
 
-**) url_xdr WEBHOOK_URL_XDR is provided that would contain the base64 XDR_blob if base64 was not directly provided in QR-code
+**) url_xdr URL_TO_XDR_DATA is provided that would contain the base64 XDR_blob if base64 was not directly provided in QR-code
 
-***) url_sig WEBHOOK_URL_SIG is optional and is the point to send back the decorated signature with webhook_url_sig.com?sig=dyqGyKpjt6j3NsIot/sw/82rD1KH0eaVYJ/4LO8szjh4rO/CZ24ihx6yRvLaGm64Na1GGy5wbqex3TkZ0v6GCg==&tx_hash=cd08cb01a02ab3a48aa2cb8f985c167c5f8c71b91e3fc9e9b74b687f712e576f  note: the sig will require uri encoding and decoding on the other end.
+***) url_sig URL_SIGNATURE_RESPONSE is optional and is the point to send back the decorated signature with webhook_url_sig.com?sig=dyqGyKpjt6j3NsIot/sw/82rD1KH0eaVYJ/4LO8szjh4rO/CZ24ihx6yRvLaGm64Na1GGy5wbqex3TkZ0v6GCg==&tx_hash=cd08cb01a02ab3a48aa2cb8f985c167c5f8c71b91e3fc9e9b74b687f712e576f  note: the sig and added values will require uri encoding and decoding on the other end.
+
+with webhook_url_sig.com?response_status=DECLINE returned (if optionaly supported the transaction will feedback decline to sign transaction.
+
+with optional webhook_url_sig.com?response_status=DECLINE&message="Why I declined to sign"
 
 ****) tx_hash optional transaction hash of the XDR_blob sent
 
