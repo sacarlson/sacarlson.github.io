@@ -616,7 +616,7 @@
        console.log("started get_remote_tx");
        console.log("xml_url");
        var client = setup_xml(xml_response_get_remote_tx);
-       client.open("GET", xml_url + '/gettx/' + txTag + "&ver=" + version, true); 
+       client.open("GET", xml_url + "tx_tag=" + txTag + "&ver=" + version, true); 
        client.send();
      }
 
